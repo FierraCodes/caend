@@ -86,6 +86,24 @@ void HyprExtras::batchMessage(const QStringList& messages) {
     });
 }
 
+namespace {
+
+// Lua needs strings quoted (e.g. a screen shader path); numbers and booleans go in bare
+QString toLuaValue(const QVariant& value) {
+    if (value.typeId() == QMetaType::Bool)
+        return value.toBool() ? u"true"_s : u"false"_s;
+    const auto str = value.toString();
+    bool isNumber = false;
+    str.toDouble(&isNumber);
+    if (isNumber || str == u"true"_s || str == u"false"_s)
+        return str;
+    auto escaped = str;
+    escaped.replace(u'\\', u"\\\\"_s).replace(u'"', u"\\\""_s);
+    return u'"' + escaped + u'"';
+}
+
+} // namespace
+
 void HyprExtras::applyOptions(const QVariantHash& options) {
     if (options.isEmpty()) {
         return;
@@ -99,7 +117,7 @@ void HyprExtras::applyOptions(const QVariantHash& options) {
             request += u"keyword "_s + it.key() + u' ' + it.value().toString() + u';';
         } else {
             const auto parts = it.key().split(u':');
-            request += u"eval hl.config({ "_s + parts.join(u" = { "_s) + u" = "_s + it.value().toString() +
+            request += u"eval hl.config({ "_s + parts.join(u" = { "_s) + u" = "_s + toLuaValue(it.value()) +
                        u" }"_s.repeated(parts.size() - 1) + u" });"_s;
         }
     }
