@@ -2,6 +2,7 @@
 
 #include "settings/rootnode.hpp"
 #include "settings/singleton.hpp"
+#include "aiconfig.hpp"
 #include "appearanceconfig.hpp"
 #include "backgroundconfig.hpp"
 #include "barconfig.hpp"
@@ -45,6 +46,7 @@ class ConfigRoot : public settings::RootNode {
     CONFIG_SUBOBJECT(SidebarConfig, sidebar)
     CONFIG_SUBOBJECT(UtilitiesConfig, utilities)
     CONFIG_SUBOBJECT(UserPaths, paths)
+    CONFIG_SUBOBJECT(AiConfig, ai)
 
 public:
     explicit ConfigRoot(const QString& path, ConfigRoot* fallback = nullptr, QObject* parent = nullptr);

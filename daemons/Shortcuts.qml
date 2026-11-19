@@ -99,6 +99,19 @@ Scope {
     // qmllint disable unresolved-type
     CustomShortcut {
         // qmllint enable unresolved-type
+        name: "aichat"
+        description: "Toggle AI chat"
+        onPressed: {
+            if (root.hasFullscreen || !GlobalConfig.ai.enabled)
+                return;
+            const screenState = ShellState.forActive();
+            screenState.aichat = !screenState.aichat;
+        }
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
         name: "utilities"
         description: "Toggle utilities"
         onPressed: {

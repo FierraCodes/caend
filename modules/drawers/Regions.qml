@@ -32,6 +32,12 @@ Region {
     }
 
     R {
+        panel: root.panels.aichat
+        x: root.panels.x - root.borderThickness
+        width: panel.width * (1 - root.panels.aichat.offsetScale) + root.borderThickness
+    }
+
+    R {
         panel: root.panels.launcher
         y: root.bottomEdge - height
         height: panel.height * (1 - root.panels.launcher.offsetScale) + root.borderThickness

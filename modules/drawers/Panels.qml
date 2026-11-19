@@ -3,6 +3,7 @@ import Quickshell
 import Caelestia.Config
 import qs.components
 import qs.modules.bar as Bar
+import qs.modules.aichat as AiChat
 import qs.modules.dashboard as Dashboard
 import qs.modules.launcher as Launcher
 import qs.modules.notifications as Notifications
@@ -33,6 +34,7 @@ Item {
     readonly property alias utilities: utilities
     readonly property alias toasts: toasts
     readonly property alias sidebar: sidebar
+    readonly property alias aichat: aichat
 
     anchors.fill: parent
     anchors.margins: borderThickness
@@ -158,5 +160,15 @@ Item {
         anchors.bottom: utilities.top
         anchors.right: parent.right
         anchors.topMargin: -notifications.anchors.topMargin
+    }
+
+    AiChat.Wrapper {
+        id: aichat
+
+        screenState: root.screenState
+
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
     }
 }

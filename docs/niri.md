@@ -11,6 +11,7 @@ binds {
     Mod+Space    { spawn "qs" "-c" "caelestia" "ipc" "call" "drawers" "toggle" "launcher"; }
     Mod+D        { spawn "qs" "-c" "caelestia" "ipc" "call" "drawers" "toggle" "dashboard"; }
     Mod+N        { spawn "qs" "-c" "caelestia" "ipc" "call" "drawers" "toggle" "sidebar"; }
+    Mod+A        { spawn "qs" "-c" "caelestia" "ipc" "call" "drawers" "toggle" "aichat"; }
     Mod+Escape   { spawn "qs" "-c" "caelestia" "ipc" "call" "drawers" "toggle" "session"; }
     Mod+L        { spawn "qs" "-c" "caelestia" "ipc" "call" "lock" "lock"; }
     Mod+Shift+S  { spawn "qs" "-c" "caelestia" "ipc" "call" "picker" "openFreeze"; }

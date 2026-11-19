@@ -10,6 +10,8 @@
 #include <qqmlengine.h>
 #include <qvariant.h>
 
+#include <memory>
+
 namespace {
 
 Q_LOGGING_CATEGORY(lcRequests, "caelestia.requests", QtInfoMsg)
@@ -82,6 +84,62 @@ void Requests::get(const QUrl& url, const QJSValue& onSuccess, const QJSValue& o
 
         reply->deleteLater();
     });
+}
+
+QObject* Requests::stream(const QUrl& url, const QString& body, const QJSValue& onLine, const QJSValue& onDone,
+    const QJSValue& headers) const {
+    if (!onLine.isCallable()) {
+        qCWarning(lcRequests) << "stream: onLine is not callable";
+        return nullptr;
+    }
+
+    QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::AlwaysNetwork);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, u"application/json"_s);
+
+    if (headers.isObject()) {
+        QJSValueIterator it(headers);
+        while (it.hasNext()) {
+            it.next();
+            request.setRawHeader(it.name().toUtf8(), it.value().toString().toUtf8());
+        }
+    }
+
+    auto* reply = m_manager->post(request, body.toUtf8());
+    QQmlEngine::setObjectOwnership(reply, QQmlEngine::CppOwnership);
+
+    // Holds a partial line between chunks
+    auto buffer = std::make_shared<QByteArray>();
+    const auto emitLines = [buffer, onLine](bool flush) {
+        qsizetype newline;
+        while ((newline = buffer->indexOf('\n')) >= 0) {
+            QJSValue(onLine).call({ QString::fromUtf8(buffer->left(newline)).trimmed() });
+            buffer->remove(0, newline + 1);
+        }
+        if (flush && !buffer->trimmed().isEmpty()) {
+            QJSValue(onLine).call({ QString::fromUtf8(*buffer).trimmed() });
+            buffer->clear();
+        }
+    };
+
+    QObject::connect(reply, &QNetworkReply::readyRead, this, [reply, buffer, emitLines] {
+        buffer->append(reply->readAll());
+        emitLines(false);
+    });
+
+    QObject::connect(reply, &QNetworkReply::finished, this, [reply, buffer, emitLines, onDone] {
+        buffer->append(reply->readAll());
+        emitLines(true);
+
+        if (onDone.isCallable()) {
+            const auto error = reply->error() == QNetworkReply::NoError ? QString() : reply->errorString();
+            QJSValue(onDone).call({ error, reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() });
+        }
+
+        reply->deleteLater();
+    });
+
+    return reply;
 }
 
 void Requests::resetCookies() const {

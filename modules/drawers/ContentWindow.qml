@@ -69,7 +69,7 @@ StyledWindow {
     name: "drawers"
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: (fsTransitionProg > 0 && contentItem.Config.general.showOverFullscreen) || (hasSpecialWorkspace && hasFullscreenOnNormalWs) ? WlrLayer.Overlay : WlrLayer.Top
-    WlrLayershell.keyboardFocus: screenState.launcher || screenState.session ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: screenState.launcher || screenState.session || screenState.aichat ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     mask: hasFullscreen ? emptyRegion : regions
 
@@ -118,6 +118,8 @@ StyledWindow {
             const conf = root.contentItem.Config;
             if ((s.launcher && conf.launcher.enabled) || (s.session && conf.session.enabled) || (s.sidebar && conf.sidebar.enabled))
                 return true;
+            if (s.aichat && GlobalConfig.ai.enabled && !GlobalConfig.ai.showOnHover)
+                return true;
             if (!conf.dashboard.showOnHover && s.dashboard && conf.dashboard.enabled)
                 return true;
             if (panels.popouts.currentName.startsWith("traymenu") && (panels.popouts.current as StackView)?.depth > 1)
@@ -129,6 +131,7 @@ StyledWindow {
             root.screenState.launcher = false;
             root.screenState.session = false;
             root.screenState.sidebar = false;
+            root.screenState.aichat = false;
             root.screenState.dashboard = false;
             panels.popouts.hasCurrent = false;
             bar.closeTray();
@@ -186,6 +189,13 @@ StyledWindow {
             id: launcherBg
 
             panel: panels.launcher
+            deformAmount: 0.1
+        }
+
+        PanelBg {
+            id: aichatBg
+
+            panel: panels.aichat
             deformAmount: 0.1
         }
 
@@ -284,6 +294,9 @@ StyledWindow {
             }
             sidebar.transform: Matrix4x4 {
                 matrix: sidebarBg.deformMatrix
+            }
+            aichat.transform: Matrix4x4 {
+                matrix: aichatBg.deformMatrix
             }
             osd.transform: Matrix4x4 {
                 matrix: osdBg.deformMatrix

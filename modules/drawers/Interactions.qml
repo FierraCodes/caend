@@ -253,6 +253,22 @@ CustomMouseArea {
                 screenState.sidebar = false;
         }
 
+        // AI chat: drag in from the left screen edge (or hover it with showOnHover); a left bar owns that edge
+        if (GlobalConfig.ai.enabled && bar.side !== "left") {
+            const edge = Math.max(Config.border.minThickness, borderThickness);
+            const chatRight = panels.x + panels.aichat.width * (1 - panels.aichat.offsetScale);
+            if (GlobalConfig.ai.showOnHover && !pressed) {
+                if (x <= edge && !screenState.aichat)
+                    screenState.aichat = true;
+                else if (screenState.aichat && x > chatRight + Config.border.rounding)
+                    screenState.aichat = false;
+            }
+            if (pressed && dragStart.x <= edge && dragX > GlobalConfig.ai.dragThreshold)
+                screenState.aichat = true;
+            else if (pressed && screenState.aichat && dragStart.x <= chatRight && dragX < -GlobalConfig.ai.dragThreshold)
+                screenState.aichat = false;
+        }
+
         // Show launcher on hover, or show/hide on drag if hover is disabled
         if (Config.launcher.showOnHover) {
             if (!screenState.launcher && inBottomPanel(panels.launcher, x, y))
