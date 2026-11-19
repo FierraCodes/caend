@@ -20,6 +20,7 @@ Scope {
     id: root
 
     readonly property PolkitAgent agent: agentLoader.item as PolkitAgent
+    readonly property string user: Quickshell.env("USER") ?? ""
     property bool waiting // A response was submitted and polkit has not answered yet
 
     // Other agents (polkit-gnome, hyprpolkitagent...) register first if autostarted, so stop them before registering ours
@@ -41,7 +42,13 @@ Scope {
         id: agentLoader
 
         PolkitAgent {
-            onAuthenticationRequestStarted: root.waiting = false
+            onAuthenticationRequestStarted: {
+                root.waiting = false;
+                // polkit lists every admin (e.g. all of wheel) and picks the first, which may not be you
+                const me = flow?.identities.find(i => !i.isGroup && i.name === root.user);
+                if (me && flow.selectedIdentity !== me)
+                    flow.selectedIdentity = me;
+            }
         }
     }
 
@@ -121,6 +128,18 @@ Scope {
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                    }
+
+                    // Several admins can approve, so show who the password is for and let you switch
+                    TextButton {
+                        readonly property var ids: root.agent?.flow?.identities ?? []
+                        readonly property var current: root.agent?.flow?.selectedIdentity ?? null
+
+                        Layout.alignment: Qt.AlignLeft
+                        visible: ids.length > 1
+                        type: TextButton.Text
+                        text: Tr.tr("Password for %1").arg(current?.displayName || current?.name || "?")
+                        onClicked: root.agent.flow.selectedIdentity = ids[(ids.indexOf(current) + 1) % ids.length]
                     }
 
                     StyledTextField {
