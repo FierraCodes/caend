@@ -6,8 +6,8 @@ import Quickshell
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
-import qs.components.controls
 import qs.components.containers
+import qs.components.controls
 import qs.services
 
 Item {
@@ -48,6 +48,12 @@ Item {
                 icon: "delete_sweep"
                 disabled: Ai.messages.length === 0
                 onClicked: Ai.clear()
+            }
+
+            IconButton {
+                type: IconButton.Text
+                icon: "close"
+                onClicked: root.screenState.aichat = false
             }
         }
 
