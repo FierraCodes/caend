@@ -120,7 +120,8 @@ Item {
         fromLeft: root.bar.side === "top"
         anchors.horizontalCenter: root.bar.side === "top" ? undefined : parent.horizontalCenter
         anchors.left: root.bar.side === "top" ? parent.left : undefined
-        anchors.top: parent.top
+        anchors.top: root.bar.side === "top" ? undefined : parent.top
+        anchors.verticalCenter: root.bar.side === "top" ? parent.verticalCenter : undefined
     }
 
     BarPopouts.ClipWrapper {
