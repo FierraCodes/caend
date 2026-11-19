@@ -110,6 +110,26 @@ class GeneralConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_SUBOBJECT(GeneralApps, apps)
     CONFIG_GLOBAL_SUBOBJECT(GeneralIdle, idle)
     CONFIG_GLOBAL_SUBOBJECT(GeneralBattery, battery)
+    // Special workspaces opened with `caelestia shell special toggle <name>`. If no window matching
+    // `class` (regex) exists, `command` is launched and its window is moved into the workspace.
+    CONFIG_GLOBAL_PROPERTY(QVariantList, specialWorkspaces,
+        DEFAULT_ARG({
+            vmap({
+                { u"name"_s, u"music"_s },
+                { u"command"_s, QStringList{ u"spotify"_s } },
+                { u"class"_s, u"^([Ss]potify|feishin|[Ss]upersonic)$"_s },
+            }),
+            vmap({
+                { u"name"_s, u"communication"_s },
+                { u"command"_s, QStringList{ u"discord"_s } },
+                { u"class"_s, u"^(discord|vesktop|equibop|whatsapp)$"_s },
+            }),
+            vmap({
+                { u"name"_s, u"sysmon"_s },
+                { u"command"_s, QStringList{ u"foot"_s, u"--app-id"_s, u"btop"_s, u"btop"_s } },
+                { u"class"_s, u"^btop$"_s },
+            }),
+        }))
 };
 
 } // namespace caelestia::shell::config

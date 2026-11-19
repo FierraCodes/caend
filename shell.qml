@@ -25,6 +25,7 @@ ShellRoot {
         Notifs;
         Players;
         Brightness;
+        SpecialWorkspaces; // Registers its IPC handler
         Weather.reload();
 
         if (GlobalConfig.utilities.vpn.enabled)
