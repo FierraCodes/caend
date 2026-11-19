@@ -79,8 +79,9 @@ Item {
         utilitiesPanel: utilities
 
         fromBottom: root.rightFlipped
-        anchors.top: root.rightFlipped ? undefined : parent.top
-        anchors.bottom: root.rightFlipped ? parent.bottom : undefined
+        // Swapping top/bottom anchors live can leave both set for a moment, stretching the panel to the
+        // screen height and keeping it that size; a y binding can flip sides safely
+        y: root.rightFlipped ? parent.height - height - anchors.bottomMargin : anchors.topMargin
         anchors.right: parent.right
     }
 
@@ -126,8 +127,9 @@ Item {
         // A top bar owns the top edge, so the dashboard rises from the bottom (the left edge is kept for the AI sidebar)
         fromBottom: root.bar.side === "top"
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: fromBottom ? undefined : parent.top
-        anchors.bottom: fromBottom ? parent.bottom : undefined
+        // Swapping top/bottom anchors live can leave both set for a moment, stretching the panel to the
+        // screen height and keeping it that size; a y binding can flip sides safely
+        y: fromBottom ? parent.height - height - anchors.bottomMargin : anchors.topMargin
     }
 
     BarPopouts.ClipWrapper {
@@ -145,16 +147,17 @@ Item {
         popouts: popoutsWrapper.content
 
         fromTop: root.rightFlipped
-        anchors.top: root.rightFlipped ? parent.top : undefined
-        anchors.bottom: root.rightFlipped ? undefined : parent.bottom
+        // Swapping top/bottom anchors live can leave both set for a moment, stretching the panel to the
+        // screen height and keeping it that size; a y binding can flip sides safely
+        y: root.rightFlipped ? anchors.topMargin : parent.height - height - anchors.bottomMargin
         anchors.right: parent.right
     }
 
     Toasts.Toasts {
         id: toasts
 
-        anchors.bottom: root.rightFlipped ? undefined : sidebar.visible ? parent.bottom : utilities.top
-        anchors.top: root.rightFlipped ? (sidebar.visible ? parent.top : utilities.bottom) : undefined
+        // Same anchor-swap problem as above, so the side is picked with y
+        y: root.rightFlipped ? (sidebar.visible ? 0 : utilities.y + utilities.height) + Tokens.padding.medium : (sidebar.visible ? parent.height : utilities.y) - height - Tokens.padding.medium
         anchors.right: sidebar.left
         anchors.margins: Tokens.padding.medium
     }

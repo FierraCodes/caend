@@ -87,15 +87,12 @@ Item {
     Loader {
         id: content
 
-        // Anchor to the inner side so the bar slides out past the screen edge while hiding
-        anchors.top: root.side === "bottom" || !root.horizontal ? parent.top : undefined
-        anchors.bottom: root.side === "top" || !root.horizontal ? parent.bottom : undefined
-        anchors.left: root.side === "right" || root.horizontal ? parent.left : undefined
-        anchors.right: root.side === "left" || root.horizontal ? parent.right : undefined
-        anchors.topMargin: root.side === "bottom" ? root.floatGap : 0
-        anchors.bottomMargin: root.side === "top" ? root.floatGap : 0
-        anchors.leftMargin: root.side === "right" ? root.floatGap : 0
-        anchors.rightMargin: root.side === "left" ? root.floatGap : 0
+        // Pinned to the inner side so the bar slides out past the screen edge while hiding. Plain geometry,
+        // not anchors: swapping anchors on a live position change left the old size stuck (a tall blank bar).
+        x: root.horizontal ? 0 : root.side === "right" ? root.floatGap : parent.width - width - root.floatGap
+        y: !root.horizontal ? 0 : root.side === "bottom" ? root.floatGap : parent.height - height - root.floatGap
+        width: root.horizontal ? parent.width : root.contentWidth
+        height: root.horizontal ? root.contentWidth : parent.height
 
         active: root.shouldBeVisible
 
