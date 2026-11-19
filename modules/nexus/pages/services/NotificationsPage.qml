@@ -177,12 +177,6 @@ PageBase {
         }
 
         ToggleRow {
-            text: Tr.tr("Input method changes")
-            checked: GlobalConfig.utilities.toasts.inputMethodChanged
-            onToggled: GlobalConfig.utilities.toasts.inputMethodChanged = checked
-        }
-
-        ToggleRow {
             text: Tr.tr("VPN changes")
             checked: GlobalConfig.utilities.toasts.vpnChanged
             onToggled: GlobalConfig.utilities.toasts.vpnChanged = checked

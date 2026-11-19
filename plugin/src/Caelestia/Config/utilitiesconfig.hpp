@@ -24,7 +24,6 @@ class UtilitiesToasts : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, capsLockChanged, true)
     CONFIG_PROPERTY(bool, numLockChanged, true)
     CONFIG_PROPERTY(bool, kbLayoutChanged, true)
-    CONFIG_PROPERTY(bool, inputMethodChanged, true)
     CONFIG_PROPERTY(bool, kbLimit, true)
     CONFIG_PROPERTY(bool, vpnChanged, true)
     CONFIG_PROPERTY(bool, nowPlaying, false)

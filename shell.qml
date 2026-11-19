@@ -27,7 +27,7 @@ ShellRoot {
         Players;
         Brightness;
         SpecialApps; // Registers its IPC handler
-        Fcitx; // fcitx5 toasts and IPC
+        Fcitx; // Registers its IPC handler
         Weather.reload();
 
         if (GlobalConfig.utilities.vpn.enabled)
