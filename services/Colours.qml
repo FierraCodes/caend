@@ -83,6 +83,8 @@ Singleton {
     }
 
     function reloadHyprRules(): void {
+        if (!Compositor.capabilities.layerRules)
+            return; // Niri: set layer-rule for namespace "caelestia-drawers" in config.kdl
         let rule, trEnabled;
         if (Hypr.usingLua) {
             rule = `eval hl.layer_rule({ match = { namespace = "caelestia-drawers" }, %1 = %2 })`;

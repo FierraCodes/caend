@@ -11,6 +11,8 @@ Scope {
     id: root
 
     function applyGameMode(): void {
+        if (!Compositor.capabilities.runtimeOptions)
+            return;
         Hypr.extras.applyOptions(GlobalConfig.utilities.gameMode.options);
     }
 
@@ -19,7 +21,7 @@ Scope {
             root.applyGameMode();
             if (GlobalConfig.utilities.toasts.gameModeChanged)
                 Toaster.toast(Tr.tr("Game mode enabled"), Tr.tr("Disabled Hyprland animations, blur, gaps and shadows"), "gamepad");
-        } else if (enableDisable) {
+        } else if (enableDisable && Compositor.capabilities.runtimeOptions) {
             Hypr.extras.message("reload");
             if (GlobalConfig.utilities.toasts.gameModeChanged)
                 Toaster.toast(Tr.tr("Game mode disabled"), Tr.tr("Hyprland settings restored"), "gamepad");
@@ -42,7 +44,7 @@ Scope {
                 root.applyGameMode();
         }
 
-        target: Hypr
+        target: Compositor.isHyprland ? Hypr : null
     }
 
     IpcHandler {
