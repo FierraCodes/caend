@@ -86,11 +86,16 @@ Singleton {
             const base = (p?.baseUrl ?? p?.endpoint ?? "").replace(/\/+$/, "");
             if (!p?.id || !base)
                 continue;
+            const gemini = p.format === "gemini";
             list[p.id] = {
                 name: p.name ?? p.id,
-                format: "openai",
-                endpoint: base.endsWith("/chat/completions") ? base : `${base}/chat/completions`,
-                keyless: p.keyless ?? false
+                format: gemini ? "gemini" : "openai",
+                base,
+                endpoint: gemini || base.endsWith("/chat/completions") ? base : `${base}/chat/completions`,
+                keyless: p.keyless ?? false,
+                keyHeader: p.keyHeader ?? "",
+                keyPrefix: p.keyPrefix ?? "",
+                headers: p.headers ?? {}
             };
         }
         return list;
@@ -142,7 +147,10 @@ Singleton {
             name: `${provider.name} ${model}`,
             format: provider.format,
             model,
-            endpoint: provider.format === "gemini" ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse` : provider.endpoint,
+            endpoint: provider.format === "gemini" ? `${provider.base ?? "https://generativelanguage.googleapis.com/v1beta"}/models/${model}:streamGenerateContent?alt=sse` : provider.endpoint,
+            keyHeader: provider.keyHeader ?? "",
+            keyPrefix: provider.keyPrefix ?? "",
+            headers: provider.headers ?? {},
             keyId: provider.keyless ? "" : providerId,
             keyLink: provider.keyLink
         };
@@ -288,6 +296,12 @@ Singleton {
                 Authorization: `Bearer ${key}`
             } : {};
         }
+        // Custom providers can name their own key header (e.g. Azure's "api-key") and add fixed headers
+        if (model.keyHeader && key)
+            headers = {
+                [model.keyHeader]: model.keyPrefix + key
+            };
+        headers = Object.assign({}, model.headers ?? {}, headers);
 
         const index = messages.length;
         messages = [...messages, {
