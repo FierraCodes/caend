@@ -47,63 +47,64 @@ PageBase {
 
     Component.onCompleted: check()
 
-    // checkupdates (pacman-contrib) uses its own db copy, so checking never needs root
-    Process {
-        id: repoCheck
-
-        command: ["sh", "-c", "command -v checkupdates >/dev/null || exit 3; checkupdates; [ $? -eq 2 ] && exit 0"]
-        stdout: StdioCollector {
-            onStreamFinished: root.repoCount = text.trim() ? text.trim().split("\n").length : 0
-        }
-        onExited: code => {
-            if (code === 3)
-                root.repoCount = -2;
-        }
-    }
-
-    Process {
-        id: aurCheck
-
-        command: ["sh", "-c", "if command -v paru >/dev/null; then paru -Qua; elif command -v yay >/dev/null; then yay -Qua; else exit 3; fi"]
-        stdout: StdioCollector {
-            onStreamFinished: root.aurCount = text.trim() ? text.trim().split("\n").length : 0
-        }
-        onExited: code => {
-            if (code === 3)
-                root.aurCount = -2;
-        }
-    }
-
-    Process {
-        id: shellCheck
-
-        command: ["sh", "-c", 'git -C "$1" fetch -q && git -C "$1" log --format=%s HEAD..@{u}', "sh", Quickshell.shellDir]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.shellCommits = text.trim() ? text.trim().split("\n") : [];
-                root.shellChecked = true;
-            }
-        }
-    }
-
-    Process {
-        id: job
-
-        stdout: SplitParser {
-            onRead: line => root.log += root.strip(line) + "\n"
-        }
-        onExited: code => {
-            root.log += code === 0 ? Tr.tr("\n[done]\n") : Tr.tr("\n[exited with code %1]\n").arg(code);
-            root.running = "";
-            root.check();
-        }
-    }
-
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         width: root.cappedWidth
         spacing: Tokens.spacing.extraSmall / 2
+
+        // Processes live here: PageBase only takes Items as children
+        // checkupdates (pacman-contrib) uses its own db copy, so checking never needs root
+        Process {
+            id: repoCheck
+
+            command: ["sh", "-c", "command -v checkupdates >/dev/null || exit 3; checkupdates; [ $? -eq 2 ] && exit 0"]
+            stdout: StdioCollector {
+                onStreamFinished: root.repoCount = text.trim() ? text.trim().split("\n").length : 0
+            }
+            onExited: code => {
+                if (code === 3)
+                    root.repoCount = -2;
+            }
+        }
+
+        Process {
+            id: aurCheck
+
+            command: ["sh", "-c", "if command -v paru >/dev/null; then paru -Qua; elif command -v yay >/dev/null; then yay -Qua; else exit 3; fi"]
+            stdout: StdioCollector {
+                onStreamFinished: root.aurCount = text.trim() ? text.trim().split("\n").length : 0
+            }
+            onExited: code => {
+                if (code === 3)
+                    root.aurCount = -2;
+            }
+        }
+
+        Process {
+            id: shellCheck
+
+            command: ["sh", "-c", 'git -C "$1" fetch -q && git -C "$1" log --format=%s HEAD..@{u}', "sh", Quickshell.shellDir]
+            stdout: StdioCollector {
+                onStreamFinished: {
+                    root.shellCommits = text.trim() ? text.trim().split("\n") : [];
+                    root.shellChecked = true;
+                }
+            }
+        }
+
+        Process {
+            id: job
+
+            stdout: SplitParser {
+                onRead: line => root.log += root.strip(line) + "\n"
+            }
+            onExited: code => {
+                root.log += code === 0 ? Tr.tr("\n[done]\n") : Tr.tr("\n[exited with code %1]\n").arg(code);
+                root.running = "";
+                root.check();
+            }
+        }
 
         // System
         SectionHeader {
