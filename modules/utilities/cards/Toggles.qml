@@ -2,7 +2,9 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Services.UPower
 import Caelestia.Components
 import Caelestia.Config
 import Caelestia.I18n
@@ -30,6 +32,9 @@ StyledRect {
 
             if (item.id === "vpn")
                 return GlobalConfig.utilities.vpn.selectedProvider.length > 0;
+            // Hyprland-only (screen shader, hyprsunset)
+            if ((item.id === "antiFlashbang" || item.id === "nightLight") && !Compositor.capabilities.runtimeOptions)
+                return false;
 
             seenIds.add(item.id);
             return true;
@@ -143,6 +148,66 @@ StyledRect {
                         icon: "notifications_off"
                         checked: PersistentState.doNotDisturb
                         onClicked: PersistentState.doNotDisturb = !PersistentState.doNotDisturb
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "antiFlashbang"
+                    delegate: Toggle {
+                        icon: "brightness_6"
+                        checked: GlobalConfig.utilities.antiFlashbang !== "off"
+                        onClicked: GlobalConfig.utilities.antiFlashbang = checked ? "off" : "strong"
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "powerProfile"
+                    delegate: Toggle {
+                        // Cycles power saver -> balanced -> performance
+                        icon: PowerProfiles.profile === PowerProfile.PowerSaver ? "energy_savings_leaf" : PowerProfiles.profile === PowerProfile.Performance ? "rocket_launch" : "balance"
+                        checked: PowerProfiles.profile !== PowerProfile.Balanced
+                        onClicked: {
+                            const order = [PowerProfile.PowerSaver, PowerProfile.Balanced, ...(PowerProfiles.hasPerformanceProfile ? [PowerProfile.Performance] : [])];
+                            PowerProfiles.profile = order[(order.indexOf(PowerProfiles.profile) + 1) % order.length];
+                        }
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "nightLight"
+                    delegate: Toggle {
+                        icon: "nightlight"
+                        checked: NightLight.enabled
+                        onClicked: NightLight.enabled = !NightLight.enabled
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "darkMode"
+                    delegate: Toggle {
+                        icon: "dark_mode"
+                        checked: !Colours.light
+                        onClicked: Colours.setMode(Colours.light ? "dark" : "light")
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "colorPicker"
+                    delegate: Toggle {
+                        icon: "colorize"
+                        inactiveOnColour: Colours.palette.m3onSurfaceVariant
+                        isToggle: false
+                        onClicked: {
+                            root.screenState.utilities = false;
+                            Quickshell.execDetached(["hyprpicker", "-a"]);
+                        }
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "screenshot"
+                    delegate: Toggle {
+                        icon: "screenshot_region"
+                        inactiveOnColour: Colours.palette.m3onSurfaceVariant
+                        isToggle: false
+                        onClicked: {
+                            root.screenState.utilities = false;
+                            Quickshell.execDetached(["qs", "-c", "caelestia", "ipc", "call", "picker", "openFreeze"]);
+                        }
                     }
                 }
                 DelegateChoice {

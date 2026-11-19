@@ -94,6 +94,12 @@ class UtilitiesConfig : public settings::ObjectNode {
             LIST_ENTRY(wallpaperPlaying, true),
             LIST_ENTRY(dnd, true),
             LIST_ENTRY(vpn, false),
+            LIST_ENTRY(antiFlashbang, true),
+            LIST_ENTRY(powerProfile, true),
+            LIST_ENTRY(nightLight, false),
+            LIST_ENTRY(darkMode, false),
+            LIST_ENTRY(colorPicker, false),
+            LIST_ENTRY(screenshot, false),
         }))
 };
 
