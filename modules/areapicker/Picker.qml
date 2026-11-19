@@ -356,6 +356,7 @@ notify-send -a caelestia "$2" "$3"`, Tr.tr("Can't open the editor"), Tr.tr("Need
 
                     icon: modelData.icon
                     isToggle: true
+                    checkedRadius: height / 2 // stay round to match the pill toolbar
                     checked: root.loader.action === modelData.action
                     onClicked: root.loader.action = modelData.action
                 }
