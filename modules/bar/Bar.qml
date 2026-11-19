@@ -227,6 +227,20 @@ GridLayout {
                 }
             }
             DelegateChoice {
+                roleValue: "resources"
+                delegate: EntryWrapper {
+                    BarResources {}
+                }
+            }
+            DelegateChoice {
+                roleValue: "weather"
+                delegate: EntryWrapper {
+                    BarWeather {
+                        screenState: root.screenState
+                    }
+                }
+            }
+            DelegateChoice {
                 roleValue: "media"
                 delegate: EntryWrapper {
                     BarMedia {

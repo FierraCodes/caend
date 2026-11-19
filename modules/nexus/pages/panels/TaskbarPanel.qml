@@ -16,6 +16,8 @@ PageBase {
             activeWindow: Tr.tr("Active window"),
             tray: Tr.tr("Tray"),
             media: Tr.tr("Media"),
+            resources: Tr.tr("Resources"),
+            weather: Tr.tr("Weather"),
             utilButtons: Tr.tr("Util buttons"),
             clock: Tr.tr("Clock"),
             statusIcons: Tr.tr("Status icons"),

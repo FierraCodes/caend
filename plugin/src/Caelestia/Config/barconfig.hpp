@@ -138,6 +138,8 @@ class BarConfig : public settings::ObjectNode {
             LIST_ENTRY(spacer, true),
             LIST_ENTRY(tray, true),
             LIST_ENTRY(media, false),
+            LIST_ENTRY(resources, false),
+            LIST_ENTRY(weather, false),
             LIST_ENTRY(utilButtons, false),
             LIST_ENTRY(clock, true),
             LIST_ENTRY(statusIcons, true),
