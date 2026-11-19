@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Polkit
+import M3Shapes
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
@@ -125,11 +126,18 @@ Scope {
                     StyledTextField {
                         id: input
 
+                        readonly property bool masked: !(root.agent?.flow?.responseVisible ?? false)
+                        readonly property list<int> shapes: [MaterialShape.Clover4Leaf, MaterialShape.Arrow, MaterialShape.Pill, MaterialShape.SoftBurst, MaterialShape.Diamond, MaterialShape.ClamShell, MaterialShape.Pentagon]
+                        readonly property real shapeSize: Tokens.font.body.medium.pointSize * 1.3
+
                         Layout.fillWidth: true
                         focus: true
                         enabled: !root.waiting
                         placeholderText: (root.agent?.flow?.inputPrompt ?? "").trim().replace(/:$/, "") || Tr.tr("Password")
-                        echoMode: root.agent?.flow?.responseVisible ? TextInput.Normal : TextInput.Password
+                        echoMode: masked ? TextInput.Password : TextInput.Normal
+                        // Masked input is drawn as end4-style shapes, so hide the real dots and cursor
+                        color: masked ? "transparent" : Colours.palette.m3onSurface
+                        cursorVisible: !masked
                         isError: root.agent?.flow?.failed ?? false
                         errorText: Tr.tr("Wrong password, try again")
                         onAccepted: submit.clicked()
@@ -137,6 +145,35 @@ Scope {
                         onEnabledChanged: if (enabled) {
                             text = "";
                             forceActiveFocus();
+                        }
+
+                        Row {
+                            x: input.leftPadding
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.verticalCenterOffset: (input.topPadding - input.bottomPadding) / 2
+                            spacing: Tokens.spacing.extraSmall
+                            visible: input.masked
+
+                            Repeater {
+                                // Only as many shapes as fit in the field
+                                model: Math.min(input.text.length, Math.floor((input.width - input.leftPadding - input.rightPadding) / (input.shapeSize + Tokens.spacing.extraSmall)))
+
+                                MaterialShape {
+                                    required property int index
+
+                                    implicitSize: input.shapeSize
+                                    shape: input.shapes[index % input.shapes.length]
+                                    color: Colours.palette.m3onSurface
+                                    scale: 0
+                                    Component.onCompleted: scale = 1
+
+                                    Behavior on scale {
+                                        Anim {
+                                            type: Anim.FastSpatial
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
