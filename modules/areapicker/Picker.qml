@@ -315,8 +315,8 @@ notify-send -a caelestia "$2" "$3"`, Tr.tr("Can't open the editor"), Tr.tr("Need
         anchors.top: parent.top
         anchors.topMargin: Tokens.padding.extraLarge
 
-        implicitWidth: actions.implicitWidth + Tokens.padding.small * 2
-        implicitHeight: actions.implicitHeight + Tokens.padding.small * 2
+        implicitWidth: actions.implicitWidth + Tokens.padding.medium * 2
+        implicitHeight: actions.implicitHeight + Tokens.padding.medium * 2
         radius: Tokens.rounding.full
         color: Colours.palette.m3surfaceContainer
         visible: !root.pressed && !root.loader.closing && !root.capturing
