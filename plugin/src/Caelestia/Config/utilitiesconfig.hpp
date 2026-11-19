@@ -78,6 +78,8 @@ class UtilitiesConfig : public settings::ObjectNode {
 
     CONFIG_PROPERTY(bool, enabled, true)
     CONFIG_PROPERTY(int, maxToasts, 4)
+    // Dims the screen when its content is very bright (Hyprland screen shader): "off", "weak" or "strong"
+    CONFIG_GLOBAL_PROPERTY(QString, antiFlashbang, u"off"_s)
     CONFIG_SUBOBJECT(UtilitiesCards, cards)
     CONFIG_GLOBAL_SUBOBJECT(UtilitiesToasts, toasts)
     CONFIG_GLOBAL_SUBOBJECT(UtilitiesVpn, vpn)

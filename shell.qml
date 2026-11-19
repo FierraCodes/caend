@@ -55,6 +55,7 @@ ShellRoot {
     Shortcuts {}
     BatteryMonitor {}
     GameMode {}
+    AntiFlashbang {}
     IdleInhibit {}
     IdleMonitors {
         lock: lock
