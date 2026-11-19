@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Caelestia.Config
 import qs.components
+import qs.components.effects
 import qs.services
 import qs.utils
 import qs.modules.bar.components.status
@@ -127,11 +128,13 @@ StyledRect {
                 DelegateChoice {
                     roleValue: "inputMethod"
                     delegate: EntryWrapper {
-                        StyledText {
-                            animate: true
-                            text: Fcitx.label
-                            color: root.colour
-                            font: Tokens.font.mono.medium
+                        // fcitx5's own icon for the current input method, recoloured like the other icons
+                        ColouredIcon {
+                            implicitWidth: Tokens.font.body.small.pointSize * 2
+                            implicitHeight: Tokens.font.body.small.pointSize * 2
+                            source: Fcitx.item ? Icons.getTrayIcon(Fcitx.item.id, Fcitx.item.icon) : ""
+                            colour: root.colour
+                            layer.enabled: true
                         }
                     }
                 }
