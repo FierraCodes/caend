@@ -262,11 +262,14 @@ CustomMouseArea {
                 screenState.sidebar = false;
         }
 
-        // AI chat: drag in from the left screen edge (or hover it with showOnHover); a left bar owns that edge
-        if (GlobalConfig.ai.enabled && bar.side !== "left") {
+        // AI chat: drag in from the left screen edge (or hover it with showOnHover). A left bar shares that
+        // edge: once the bar is out, a drag from the screen edge pulls the chat out from under it.
+        const leftBar = bar.side === "left";
+        const barOut = Config.bar.persistent || screenState.bar;
+        if (GlobalConfig.ai.enabled && (!leftBar || barOut)) {
             const edge = Math.max(Config.border.minThickness, borderThickness);
-            const chatRight = panels.x + panels.aichat.width * (1 - panels.aichat.offsetScale);
-            if (GlobalConfig.ai.showOnHover && !pressed) {
+            const chatRight = leftBar ? panels.aiShift : panels.x + panels.aichat.width * (1 - panels.aichat.offsetScale);
+            if (GlobalConfig.ai.showOnHover && !pressed && !leftBar) {
                 if (x <= edge && !screenState.aichat)
                     screenState.aichat = true;
                 else if (screenState.aichat && x > chatRight + Config.border.rounding)
