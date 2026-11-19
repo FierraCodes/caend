@@ -52,8 +52,10 @@ Item {
         Anim {}
     }
 
+    // On the right/bottom the position follows the animated size, so a separate position animation would lag
+    // behind it and pull the popout off the bar. Only animate it there when moving to or from detached mode.
     Behavior on x {
-        enabled: !root.horizontal || root.offsetScale < 1
+        enabled: root.side === "right" ? root.content.isDetached : !root.horizontal || root.offsetScale < 1
 
         Anim {
             duration: content.animLength
@@ -62,7 +64,7 @@ Item {
     }
 
     Behavior on y {
-        enabled: root.horizontal || root.offsetScale < 1
+        enabled: root.side === "bottom" ? root.content.isDetached : root.horizontal || root.offsetScale < 1
 
         Anim {
             duration: content.animLength
