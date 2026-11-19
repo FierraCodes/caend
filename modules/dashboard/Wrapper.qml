@@ -53,6 +53,7 @@ Item {
         active: root.shouldBeActive || root.visible
 
         sourceComponent: Content {
+            tabsAtBottom: root.fromBottom
             screenState: root.screenState
             facePicker: root.facePicker
         }

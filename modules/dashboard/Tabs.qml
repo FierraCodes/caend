@@ -15,6 +15,8 @@ Item {
     required property real nonAnimWidth
     required property ScreenState screenState
     required property var tabs
+    // Separator and indicator above the tab buttons instead of below (tabs on the dashboard's bottom edge)
+    property bool flipped
 
     readonly property alias count: bar.count
 
@@ -25,7 +27,7 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.top: root.flipped ? indicator.bottom : parent.top
         anchors.topMargin: Tokens.sizes.dashboard.tabIndicatorSpacing
 
         currentIndex: root.screenState.dashboardTab
@@ -58,8 +60,8 @@ Item {
     Item {
         id: indicator
 
-        anchors.top: bar.bottom
-        anchors.topMargin: 5
+        anchors.top: root.flipped ? separator.bottom : bar.bottom
+        anchors.topMargin: root.flipped ? 0 : 5
 
         implicitWidth: {
             const tab = bar.currentItem;
@@ -79,8 +81,10 @@ Item {
 
         clip: true
 
+        // Twice as tall and clipped, so only the edge facing the tabs is rounded
         StyledRect {
-            anchors.top: parent.top
+            anchors.top: root.flipped ? undefined : parent.top
+            anchors.bottom: root.flipped ? parent.bottom : undefined
             anchors.left: parent.left
             anchors.right: parent.right
             implicitHeight: parent.implicitHeight * 2
@@ -101,7 +105,7 @@ Item {
     StyledRect {
         id: separator
 
-        anchors.top: indicator.bottom
+        anchors.top: root.flipped ? parent.top : indicator.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 

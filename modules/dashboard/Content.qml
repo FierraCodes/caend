@@ -14,6 +14,9 @@ Item {
 
     required property ScreenState screenState
     required property FileDialog facePicker
+    // Tabs along the bottom edge; used when the dashboard rises from the bottom, so resizing on tab switch
+    // never moves the tabs away from the cursor
+    property bool tabsAtBottom
 
     readonly property var dashboardTabs: {
         const allTabs = [
@@ -46,7 +49,7 @@ Item {
     }
 
     readonly property real nonAnimWidth: dashboardTabs.length > 0 ? view.implicitWidth + viewWrapper.anchors.margins * 2 : 0
-    readonly property real nonAnimHeight: dashboardTabs.length > 0 ? tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2 : 0
+    readonly property real nonAnimHeight: dashboardTabs.length > 0 ? tabs.implicitHeight + tabs.edgeMargin + view.implicitHeight + viewWrapper.anchors.margins * 2 : 0
 
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
@@ -54,12 +57,17 @@ Item {
     Tabs {
         id: tabs
 
-        anchors.top: parent.top
+        readonly property real edgeMargin: CUtils.clamp(anchors.margins - Config.border.thickness, 0, anchors.margins)
+
+        anchors.top: root.tabsAtBottom ? undefined : parent.top
+        anchors.bottom: root.tabsAtBottom ? parent.bottom : undefined
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: CUtils.clamp(anchors.margins - Config.border.thickness, 0, anchors.margins)
+        anchors.topMargin: edgeMargin
+        anchors.bottomMargin: edgeMargin
         anchors.margins: Tokens.padding.large
 
+        flipped: root.tabsAtBottom
         nonAnimWidth: root.nonAnimWidth - anchors.margins * 2
         screenState: root.screenState
         tabs: root.dashboardTabs
@@ -68,10 +76,10 @@ Item {
     ClipRect {
         id: viewWrapper
 
-        anchors.top: tabs.bottom
+        anchors.top: root.tabsAtBottom ? parent.top : tabs.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.bottom: root.tabsAtBottom ? tabs.top : parent.bottom
         anchors.margins: Tokens.padding.large
 
         radius: Tokens.rounding.large
