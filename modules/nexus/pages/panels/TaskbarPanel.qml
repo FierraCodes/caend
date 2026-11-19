@@ -15,6 +15,7 @@ PageBase {
             spacer: Tr.tr("Spacer"),
             activeWindow: Tr.tr("Active window"),
             tray: Tr.tr("Tray"),
+            media: Tr.tr("Media"),
             utilButtons: Tr.tr("Util buttons"),
             clock: Tr.tr("Clock"),
             statusIcons: Tr.tr("Status icons"),

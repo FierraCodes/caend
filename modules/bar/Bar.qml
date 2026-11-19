@@ -227,6 +227,14 @@ GridLayout {
                 }
             }
             DelegateChoice {
+                roleValue: "media"
+                delegate: EntryWrapper {
+                    BarMedia {
+                        screenState: root.screenState
+                    }
+                }
+            }
+            DelegateChoice {
                 roleValue: "utilButtons"
                 delegate: EntryWrapper {
                     UtilButtons {}
