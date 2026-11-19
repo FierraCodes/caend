@@ -3,6 +3,7 @@
 //@ pragma DefaultEnv QS_DROP_EXPENSIVE_FONTS=1
 //@ pragma DefaultEnv QSG_RENDER_LOOP=threaded
 //@ pragma DefaultEnv QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
+//@ pragma DefaultEnv QT_IM_MODULES=wayland;fcitx
 
 import QtQuick
 import Quickshell
@@ -26,6 +27,7 @@ ShellRoot {
         Players;
         Brightness;
         SpecialWorkspaces; // Registers its IPC handler
+        InputMethod; // fcitx5 toasts and IPC
         Weather.reload();
 
         if (GlobalConfig.utilities.vpn.enabled)

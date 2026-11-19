@@ -38,6 +38,8 @@ StyledRect {
     function collapsed(entry: var): bool {
         if (entry.id === "lockStatus")
             return !Compositor.capsLock && !Compositor.numLock;
+        if (entry.id === "inputMethod")
+            return !InputMethod.available;
         return false;
     }
 
@@ -117,6 +119,17 @@ StyledRect {
                         StyledText {
                             animate: true
                             text: Compositor.kbLayout
+                            color: root.colour
+                            font: Tokens.font.mono.medium
+                        }
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "inputMethod"
+                    delegate: EntryWrapper {
+                        StyledText {
+                            animate: true
+                            text: InputMethod.label
                             color: root.colour
                             font: Tokens.font.mono.medium
                         }

@@ -122,6 +122,7 @@ class BarConfig : public settings::ObjectNode {
             LIST_ENTRY(audio, false),
             LIST_ENTRY(microphone, false),
             LIST_ENTRY(kbLayout, false),
+            LIST_ENTRY(inputMethod, true),
             LIST_ENTRY(network, true),
             LIST_ENTRY(bluetooth, true),
             LIST_ENTRY(battery, true),

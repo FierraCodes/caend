@@ -11,6 +11,7 @@ PageBase {
     readonly property var builtinIcons: ({
             lockStatus: Tr.tr("Lock keys"),
             kbLayout: Tr.tr("Keyboard layout"),
+            inputMethod: Tr.tr("Input method (fcitx5)"),
             audio: Tr.tr("Speakers"),
             microphone: Tr.tr("Microphone"),
             network: Tr.tr("Network"),
