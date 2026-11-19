@@ -24,7 +24,7 @@ StyledRect {
     }
 
     implicitWidth: horizontal ? layout.implicitWidth + root.padding * 2 : Tokens.sizes.bar.innerWidth
-    implicitHeight: horizontal ? Math.max(Tokens.sizes.bar.innerWidth, layout.implicitHeight) : layout.implicitHeight + root.padding * 2
+    implicitHeight: horizontal ? Tokens.sizes.bar.innerWidth : layout.implicitHeight + root.padding * 2
 
     color: Qt.alpha(Colours.tPalette.m3surfaceContainer, Config.bar.clock.background ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Tokens.rounding.full
@@ -88,13 +88,15 @@ StyledRect {
             }
         }
 
-        // Hour over minute (over seconds) on every bar orientation
-        ColumnLayout {
+        // Vertical bars stack hour over minute; horizontal bars read "12 / 34"
+        GridLayout {
             Layout.alignment: Qt.AlignCenter
-            spacing: root.stackSpacing
+            flow: root.horizontal ? GridLayout.LeftToRight : GridLayout.TopToBottom
+            rowSpacing: root.stackSpacing
+            columnSpacing: Tokens.spacing.extraSmall
 
             StyledText {
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignCenter
                 text: Time.hourStr
                 font: root.fontFor(text, hourMetrics.width)
                 color: root.colour
@@ -108,7 +110,15 @@ StyledRect {
             }
 
             StyledText {
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignCenter
+                visible: root.horizontal
+                text: "/"
+                font: root.font.build()
+                color: Colours.palette.m3outline
+            }
+
+            StyledText {
+                Layout.alignment: Qt.AlignCenter
                 text: Time.minuteStr
                 font: root.fontFor(text, minMetrics.width)
                 color: root.colour
@@ -121,8 +131,16 @@ StyledRect {
                 }
             }
 
+            StyledText {
+                Layout.alignment: Qt.AlignCenter
+                visible: root.horizontal && Config.bar.clock.showSeconds
+                text: "/"
+                font: root.font.build()
+                color: Colours.palette.m3outline
+            }
+
             Loader {
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignCenter
                 asynchronous: true
                 active: Config.bar.clock.showSeconds
                 visible: active
