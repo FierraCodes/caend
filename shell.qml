@@ -26,7 +26,7 @@ ShellRoot {
         Notifs;
         Players;
         Brightness;
-        SpecialWorkspaces; // Registers its IPC handler
+        SpecialApps; // Registers its IPC handler
         InputMethod; // fcitx5 toasts and IPC
         Weather.reload();
 

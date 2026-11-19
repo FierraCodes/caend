@@ -22,7 +22,7 @@ Singleton {
         try {
             return !!rule.class && new RegExp(rule.class).test(cls);
         } catch (e) {
-            console.warn(`[SpecialWorkspaces] Bad class regex for "${rule.name}":`, e);
+            console.warn(`[SpecialApps] Bad class regex for "${rule.name}":`, e);
             return false;
         }
     }
