@@ -36,6 +36,16 @@ The alternative (end4 as base, re-skin with caelestia drawers) is viable since e
 
 ---
 
+### Ground rule: port end4's *features*, not its code
+
+Fierra's goal: Caelestia's smoothness with end4's integration and customizability. Fierra also reports that end4-pC stutters every few minutes. The code backs that up: end4-pC declares about **238 `Process {}` blocks** (shelling out to bash/python) and 31 services with timers, while caelestia has about **33**. Caelestia does the heavy work in its C++ plugin instead.
+
+So every end4 feature that comes over gets rewritten in the caelestia style:
+- No polling `Timer` + `Process` loops. Use events (D-Bus, file watches, compositor event streams) or a C++ `Service` in `plugin/src/Caelestia/Services`.
+- Long-lived helpers (one process that streams JSON), not a new process per tick.
+- UI built from caelestia components and animation tokens, so it moves like the rest of the shell.
+- Settings exposed through caelestia's typed config + nexus pages, so end4-level customizability doesn't mean end4-style config sprawl.
+
 ## 3. Component-by-component picks
 
 | Area | Take from | Notes |
