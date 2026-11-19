@@ -34,6 +34,7 @@ Singleton {
     }
 
     onAvailableChanged: refresh()
+    Component.onCompleted: refresh() // fcitx5 may already be in the tray when the shell starts
 
     Connections {
         function onIconChanged(): void {
