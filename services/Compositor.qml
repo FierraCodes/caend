@@ -3,6 +3,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Caelestia
+import Caelestia.Config
 import Caelestia.I18n
 
 // Compositor-neutral front for the shell. Hyprland state comes from `Hypr`;
@@ -206,7 +208,7 @@ Singleton {
         onTriggered: niriEvents.running = true
     }
 
-    // Caps/Num lock on non-Hyprland: read keyboard LEDs. Hyprland gets these from HyprExtras.
+    // Caps/Num lock on non-Hyprland: read keyboard LEDs. Hyprland gets these (and their toasts) from HyprExtras.
     QtObject {
         id: leds
 
@@ -214,6 +216,12 @@ Singleton {
         property string numPath
         readonly property bool caps: capsFile.text().trim() === "1"
         readonly property bool num: numFile.text().trim() === "1"
+
+        // Same toasts the Hyprland backend sends from C++
+        onCapsChanged: if (GlobalConfig.utilities.toasts.capsLockChanged)
+            Toaster.toast(caps ? Tr.tr("Caps lock enabled") : Tr.tr("Caps lock disabled"), caps ? Tr.tr("Caps lock is currently enabled") : Tr.tr("Caps lock is currently disabled"), caps ? "keyboard_capslock_badge" : "keyboard_capslock")
+        onNumChanged: if (GlobalConfig.utilities.toasts.numLockChanged)
+            Toaster.toast(num ? Tr.tr("Num lock enabled") : Tr.tr("Num lock disabled"), num ? Tr.tr("Num lock is currently enabled") : Tr.tr("Num lock is currently disabled"), num ? "looks_one" : "timer_1")
     }
 
     Process {
