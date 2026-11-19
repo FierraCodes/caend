@@ -1,7 +1,7 @@
 #include "filesystemmodel.hpp"
 
 #include <qdiriterator.h>
-#include <qmediaformat.h>
+#include <qmimedatabase.h>
 #include <qtconcurrentrun.h>
 
 #include <algorithm>
@@ -345,10 +345,15 @@ FileSystemModel::ScanFilters FileSystemModel::filtersFor(
 
         QSet<QString> videoMimeTypes;
         if (videos) {
-            const auto formats = QMediaFormat().supportedFileFormats(QMediaFormat::Decode);
-            for (const auto format : formats) {
-                const auto mimeType = QMediaFormat(format).mimeType();
-                if (!mimeType.name().startsWith(u"video/"_s))
+            // Asking QMediaFormat starts the FFmpeg backend, which probes every GPU's decoders (waking an
+            // NVIDIA dGPU and loading CUDA) just to list wallpapers, so use the containers FFmpeg always reads.
+            static const QStringList k_videoMimes = { u"video/mp4"_s, u"video/webm"_s, u"video/x-matroska"_s,
+                u"video/quicktime"_s, u"video/x-msvideo"_s, u"video/mpeg"_s, u"video/ogg"_s, u"video/x-flv"_s,
+                u"video/3gpp"_s, u"video/mp2t"_s };
+            const QMimeDatabase db;
+            for (const auto& name : k_videoMimes) {
+                const auto mimeType = db.mimeTypeForName(name);
+                if (!mimeType.isValid())
                     continue;
                 videoMimeTypes << mimeType.name();
                 filters.nameFilters << mimeType.globPatterns();
