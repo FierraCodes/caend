@@ -410,8 +410,8 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
             }
         },
         "transparency": {
-            "enabled": false,
-            "base": 0.85,
+            "enabled": true,
+            "base": 0.8,
             "layers": 0.4
         }
     },
