@@ -45,7 +45,7 @@ Scope {
             onAuthenticationRequestStarted: {
                 root.waiting = false;
                 // polkit lists every admin (e.g. all of wheel) and picks the first, which may not be you
-                const me = flow?.identities.find(i => !i.isGroup && i.name === root.user);
+                const me = flow?.identities.find(i => !i.isGroup && i.string === root.user);
                 if (me && flow.selectedIdentity !== me)
                     flow.selectedIdentity = me;
             }
@@ -138,7 +138,7 @@ Scope {
                         Layout.alignment: Qt.AlignLeft
                         visible: ids.length > 1
                         type: TextButton.Text
-                        text: Tr.tr("Password for %1").arg(current?.displayName || current?.name || "?")
+                        text: Tr.tr("Password for %1").arg(current?.displayName || current?.string || "?")
                         onClicked: root.agent.flow.selectedIdentity = ids[(ids.indexOf(current) + 1) % ids.length]
                     }
 
@@ -165,7 +165,8 @@ Scope {
                         color: masked ? "transparent" : Colours.palette.m3onSurface
                         hideCursor: masked
                         isError: root.agent?.flow?.failed ?? false
-                        errorText: Tr.tr("Wrong password, try again")
+                        // polkit's own message says why it failed (e.g. a broken helper), not just "wrong"
+                        errorText: root.agent?.flow?.supplementaryIsError ? root.agent.flow.supplementaryMessage : Tr.tr("Wrong password, try again")
                         onAccepted: submit.clicked()
                         Keys.onEscapePressed: root.agent?.flow?.cancelAuthenticationRequest()
                         onEnabledChanged: if (enabled) {
