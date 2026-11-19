@@ -90,13 +90,13 @@ StyledWindow {
         id: emptyRegion
 
         x: panels.notifications.x + panels.x
-        y: panels.notifications.y + root.borderThickness
+        y: panels.notifications.y + panels.y
         width: panels.notifications.width
         height: panels.notifications.height
 
         Region {
             x: root.width - width
-            y: panels.osdWrapper.y + root.borderThickness
+            y: panels.osdWrapper.y + panels.y
             width: panels.osdWrapper.width * (1 - panels.osd.offsetScale) + root.borderThickness
             height: panels.osd.height
         }
@@ -169,10 +169,10 @@ StyledWindow {
             anchors.margins: -50 // Make border thicker to smooth out bulge from closed drawers
             group: blobGroup
             radius: root.borderRounding
-            borderLeft: (bar.onRight ? root.borderThickness : bar.implicitWidth) - anchors.margins - root.sdfBorderOffset
-            borderRight: (bar.onRight ? bar.implicitWidth : root.borderThickness) - anchors.margins - root.sdfBorderOffset
-            borderTop: root.borderThickness - anchors.margins - root.sdfBorderOffset
-            borderBottom: root.borderThickness - anchors.margins - root.sdfBorderOffset
+            borderLeft: (bar.side === "left" ? bar.thickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
+            borderRight: (bar.side === "right" ? bar.thickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
+            borderTop: (bar.side === "top" ? bar.thickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
+            borderBottom: (bar.side === "bottom" ? bar.thickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
         }
 
         PanelBg {
@@ -235,13 +235,15 @@ StyledWindow {
         PanelBg {
             id: popoutBg
 
-            // Extra width (towards the bar) to prevent vertical movement deformation partially detaching panel from bar
+            // Extra size (towards the bar) to prevent movement deformation partially detaching panel from bar
             property real extraWidth: panels.popouts.isDetached ? 0 : 0.2
 
             panel: panels.popoutsWrapper
             deformAmount: panels.popouts.isDetached ? 0.05 : panels.popouts.hasCurrent ? 0.15 : 0.1
-            x: panels.popoutsWrapper.x + panels.popouts.x + panels.x - (bar.onRight ? 0 : panels.popouts.width * extraWidth)
-            implicitWidth: panels.popouts.width * (1 + extraWidth)
+            x: panels.popoutsWrapper.x + panels.popouts.x + panels.x - (bar.side === "left" ? panels.popouts.width * extraWidth : 0)
+            y: panels.popoutsWrapper.y + panels.popouts.y + panels.y - (bar.side === "top" ? panels.popouts.height * extraWidth : 0)
+            implicitWidth: panels.popouts.width * (bar.horizontal ? 1 : 1 + extraWidth)
+            implicitHeight: panels.popouts.height * (bar.horizontal ? 1 + extraWidth : 1)
 
             Behavior on extraWidth {
                 Anim {}
@@ -300,9 +302,10 @@ StyledWindow {
         BarWrapper {
             id: bar
 
-            x: onRight ? parent.width - width : 0
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
+            x: side === "right" ? parent.width - width : 0
+            y: side === "bottom" ? parent.height - height : 0
+            width: horizontal ? parent.width : implicitWidth
+            height: horizontal ? implicitHeight : parent.height
 
             screen: root.screen
             screenState: root.screenState
@@ -342,7 +345,7 @@ StyledWindow {
 
         group: blobGroup
         x: panel.x + panels.x
-        y: panel.y + root.borderThickness
+        y: panel.y + panels.y
         implicitWidth: panel.width
         implicitHeight: panel.height
         radius: Tokens.rounding.extraLarge

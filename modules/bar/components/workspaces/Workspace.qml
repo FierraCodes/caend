@@ -33,6 +33,9 @@ Item {
     readonly property bool focused: activeWsId === ws
     readonly property list<int> focusedShapeList: [MaterialShape.Slanted, MaterialShape.Oval, MaterialShape.Pill, MaterialShape.Triangle, MaterialShape.Arrow, MaterialShape.Diamond, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.VerySunny, MaterialShape.Sunny, MaterialShape.Cookie4Sided, MaterialShape.Cookie6Sided, MaterialShape.Cookie7Sided, MaterialShape.Cookie9Sided, MaterialShape.Cookie12Sided, MaterialShape.Clover4Leaf, MaterialShape.SoftBurst, MaterialShape.Ghostish]
 
+    // Horizontal bars turn the whole widget by -90°, so glyphs turn back to stay upright
+    readonly property real glyphRotation: Config.bar.position === "top" || Config.bar.position === "bottom" ? 90 : 0
+
     property color offMonitorColour: Colours.palette.m3outlineVariant
     readonly property bool onOtherMonitor: {
         if (Config.bar.workspaces.perMonitor)
@@ -140,6 +143,7 @@ Item {
             }
             color: root.fgColour
             verticalAlignment: Qt.AlignVCenter
+            rotation: root.glyphRotation
             font.family: Tokens.font.workspaces
         }
     }
@@ -153,6 +157,7 @@ Item {
             text: iconCacher.icon
             color: root.fgColour
             verticalAlignment: Qt.AlignVCenter
+            rotation: root.glyphRotation
 
             WsIconCacher {
                 id: iconCacher
@@ -228,6 +233,7 @@ Item {
 
                     grade: 0
                     horizontalAlignment: Text.AlignHCenter
+                    rotation: root.glyphRotation
                     text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
                     color: root.onOtherMonitor ? root.offMonitorColour : Colours.palette.m3onSurfaceVariant
 

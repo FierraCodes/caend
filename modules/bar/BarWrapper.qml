@@ -15,10 +15,15 @@ Item {
     required property BarPopouts.Wrapper popouts
     required property bool fullscreen
 
-    readonly property bool onRight: Config.bar.position === "right"
+    // Screen edge the bar sits on: "left" (default), "right", "top" or "bottom"
+    readonly property string side: ["right", "top", "bottom"].includes(Config.bar.position) ? Config.bar.position : "left"
+    readonly property bool onRight: side === "right"
+    readonly property bool horizontal: side === "top" || side === "bottom"
     readonly property bool disabled: Strings.testRegexList(Config.bar.excludedScreens, screen.name)
 
-    readonly property int clampedWidth: Math.max(Config.border.minThickness, implicitWidth)
+    // How far the bar currently reaches in from its screen edge
+    property real thickness: fullscreen ? 0 : Config.border.thickness
+    readonly property int clampedThickness: Math.max(Config.border.minThickness, thickness)
     readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
     readonly property int contentWidth: Tokens.sizes.bar.innerWidth + padding * 2
     readonly property int exclusiveZone: !disabled && (Config.bar.persistent || screenState.bar) ? contentWidth : Config.border.thickness
@@ -29,24 +34,26 @@ Item {
         (content.item as Bar)?.closeTray();
     }
 
-    function checkPopout(y: real): void {
-        (content.item as Bar)?.checkPopout(y);
+    // pos is the coordinate along the bar (y for vertical bars, x for horizontal ones)
+    function checkPopout(pos: real): void {
+        (content.item as Bar)?.checkPopout(pos);
     }
 
-    function handleWheel(y: real, angleDelta: point): void {
-        (content.item as Bar)?.handleWheel(y, angleDelta);
+    function handleWheel(pos: real, angleDelta: point): void {
+        (content.item as Bar)?.handleWheel(pos, angleDelta);
     }
 
     clip: true
-    visible: width > Config.border.thickness
-    implicitWidth: fullscreen ? 0 : Config.border.thickness
+    visible: thickness > Config.border.thickness
+    implicitWidth: horizontal ? 0 : thickness
+    implicitHeight: horizontal ? thickness : 0
 
     states: State {
         name: "visible"
         when: root.shouldBeVisible
 
         PropertyChanges {
-            root.implicitWidth: root.contentWidth
+            root.thickness: root.contentWidth
         }
     }
 
@@ -57,7 +64,7 @@ Item {
 
             Anim {
                 target: root
-                property: "implicitWidth"
+                property: "thickness"
             }
         },
         Transition {
@@ -66,7 +73,7 @@ Item {
 
             Anim {
                 target: root
-                property: "implicitWidth"
+                property: "thickness"
                 type: Anim.Emphasized
             }
         }
@@ -75,16 +82,18 @@ Item {
     Loader {
         id: content
 
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        // Anchor to the screen edge so the bar clips away from it while hiding
-        anchors.left: root.onRight ? parent.left : undefined
-        anchors.right: root.onRight ? undefined : parent.right
+        // Anchor to the inner side so the bar slides out past the screen edge while hiding
+        anchors.top: root.side === "bottom" || !root.horizontal ? parent.top : undefined
+        anchors.bottom: root.side === "top" || !root.horizontal ? parent.bottom : undefined
+        anchors.left: root.side === "right" || root.horizontal ? parent.left : undefined
+        anchors.right: root.side === "left" || root.horizontal ? parent.right : undefined
 
         active: root.shouldBeVisible
 
         sourceComponent: Bar {
-            width: root.contentWidth
+            width: root.horizontal ? undefined : root.contentWidth
+            height: root.horizontal ? root.contentWidth : undefined
+            horizontal: root.horizontal
             screen: root.screen
             screenState: root.screenState
             popouts: root.popouts

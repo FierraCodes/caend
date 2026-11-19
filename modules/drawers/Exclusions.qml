@@ -13,27 +13,31 @@ Scope {
     required property Bar.BarWrapper bar
 
     ExclusionZone {
+        side: "left"
         anchors.left: true
-        exclusiveZone: root.bar.onRight ? contentItem.Config.border.thickness : root.bar.exclusiveZone
     }
 
     ExclusionZone {
+        side: "top"
         anchors.top: true
     }
 
     ExclusionZone {
+        side: "right"
         anchors.right: true
-        exclusiveZone: root.bar.onRight ? root.bar.exclusiveZone : contentItem.Config.border.thickness
     }
 
     ExclusionZone {
+        side: "bottom"
         anchors.bottom: true
     }
 
     component ExclusionZone: StyledWindow {
+        required property string side
+
         screen: root.screen
         name: "border-exclusion"
-        exclusiveZone: contentItem.Config.border.thickness
+        exclusiveZone: root.bar.side === side ? root.bar.exclusiveZone : contentItem.Config.border.thickness
         mask: Region {}
         implicitWidth: 1
         implicitHeight: 1

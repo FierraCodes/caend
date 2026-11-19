@@ -36,8 +36,11 @@ Item {
 
     anchors.fill: parent
     anchors.margins: borderThickness
-    anchors.leftMargin: bar.onRight ? borderThickness : bar.implicitWidth
-    anchors.rightMargin: bar.onRight ? bar.implicitWidth : borderThickness
+    // The bar's side is as deep as the bar; every other side is the border
+    anchors.leftMargin: bar.side === "left" ? bar.thickness : borderThickness
+    anchors.rightMargin: bar.side === "right" ? bar.thickness : borderThickness
+    anchors.topMargin: bar.side === "top" ? bar.thickness : borderThickness
+    anchors.bottomMargin: bar.side === "bottom" ? bar.thickness : borderThickness
 
     Item {
         id: osdWrapper

@@ -17,9 +17,17 @@ PageBase {
         MenuItem {
             text: Tr.trCtx("Right", "bar position")
             icon: "align_horizontal_right"
+        },
+        MenuItem {
+            text: Tr.trCtx("Top", "bar position")
+            icon: "align_vertical_top"
+        },
+        MenuItem {
+            text: Tr.trCtx("Bottom", "bar position")
+            icon: "align_vertical_bottom"
         }
     ]
-    readonly property list<string> positionValues: ["left", "right"]
+    readonly property list<string> positionValues: ["left", "right", "top", "bottom"]
 
     title: Tr.tr("Taskbar")
     isSubPage: true

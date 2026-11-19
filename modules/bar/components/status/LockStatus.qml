@@ -1,19 +1,24 @@
 import QtQuick
 import QtQuick.Layouts
+import Caelestia.Config
 import qs.components
 import qs.services
 
-ColumnLayout {
+GridLayout {
     id: root
 
     required property color colour
     required property int parentSpacing
+    readonly property bool horizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
 
     property real gap: Compositor.capsLock && Compositor.numLock ? parentSpacing : 0
-    property real capsHeight: Compositor.capsLock ? capslockIcon.implicitHeight : 0
-    property real numHeight: Compositor.numLock ? numlockIcon.implicitHeight : 0
+    // Size along the bar; animated so icons slide in and out
+    property real capsHeight: Compositor.capsLock ? (horizontal ? capslockIcon.implicitWidth : capslockIcon.implicitHeight) : 0
+    property real numHeight: Compositor.numLock ? (horizontal ? numlockIcon.implicitWidth : numlockIcon.implicitHeight) : 0
 
-    spacing: Math.round(gap)
+    flow: horizontal ? GridLayout.LeftToRight : GridLayout.TopToBottom
+    rowSpacing: Math.round(gap)
+    columnSpacing: Math.round(gap)
 
     Behavior on gap {
         Anim {
@@ -34,8 +39,8 @@ ColumnLayout {
     }
 
     Item {
-        implicitWidth: capslockIcon.implicitWidth
-        implicitHeight: Math.round(root.capsHeight)
+        implicitWidth: root.horizontal ? Math.round(root.capsHeight) : capslockIcon.implicitWidth
+        implicitHeight: root.horizontal ? capslockIcon.implicitHeight : Math.round(root.capsHeight)
 
         MaterialIcon {
             id: capslockIcon
@@ -63,8 +68,8 @@ ColumnLayout {
     }
 
     Item {
-        implicitWidth: numlockIcon.implicitWidth
-        implicitHeight: Math.round(root.numHeight)
+        implicitWidth: root.horizontal ? Math.round(root.numHeight) : numlockIcon.implicitWidth
+        implicitHeight: root.horizontal ? numlockIcon.implicitHeight : Math.round(root.numHeight)
 
         MaterialIcon {
             id: numlockIcon
