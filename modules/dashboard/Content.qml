@@ -7,6 +7,7 @@ import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
+import qs.components.controls
 import qs.components.filedialog
 
 Item {
@@ -14,6 +15,9 @@ Item {
 
     required property ScreenState screenState
     required property FileDialog facePicker
+    // Tabs as a rail on the left instead of a row on top; used when the dashboard slides in from the left,
+    // so switching tabs (and resizing) never moves the tabs away from the cursor
+    property bool sideTabs
 
     readonly property var dashboardTabs: {
         const allTabs = [
@@ -45,8 +49,14 @@ Item {
         return allTabs.filter(tab => tab.enabled);
     }
 
-    readonly property real nonAnimWidth: dashboardTabs.length > 0 ? view.implicitWidth + viewWrapper.anchors.margins * 2 : 0
-    readonly property real nonAnimHeight: dashboardTabs.length > 0 ? tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2 : 0
+    readonly property real nonAnimWidth: dashboardTabs.length > 0 ? view.implicitWidth + viewWrapper.anchors.margins * 2 + (sideTabs ? rail.implicitWidth + rail.anchors.leftMargin : 0) : 0
+    readonly property real nonAnimHeight: {
+        if (dashboardTabs.length === 0)
+            return 0;
+        if (sideTabs)
+            return Math.max(view.implicitHeight, rail.implicitHeight) + viewWrapper.anchors.margins * 2;
+        return tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2;
+    }
 
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
@@ -60,16 +70,42 @@ Item {
         anchors.topMargin: CUtils.clamp(anchors.margins - Config.border.thickness, 0, anchors.margins)
         anchors.margins: Tokens.padding.large
 
+        visible: !root.sideTabs
         nonAnimWidth: root.nonAnimWidth - anchors.margins * 2
         screenState: root.screenState
         tabs: root.dashboardTabs
     }
 
+    ColumnLayout {
+        id: rail
+
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.leftMargin: Tokens.padding.large
+        visible: root.sideTabs
+        spacing: Tokens.spacing.small
+
+        Repeater {
+            model: ScriptModel {
+                values: root.sideTabs ? root.dashboardTabs : []
+            }
+
+            IconButton {
+                required property var modelData
+                required property int index
+
+                type: root.screenState.dashboardTab === index ? IconButton.Filled : IconButton.Text
+                icon: modelData.iconName
+                onClicked: root.screenState.dashboardTab = index
+            }
+        }
+    }
+
     ClipRect {
         id: viewWrapper
 
-        anchors.top: tabs.bottom
-        anchors.left: parent.left
+        anchors.top: root.sideTabs ? parent.top : tabs.bottom
+        anchors.left: root.sideTabs ? rail.right : parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: Tokens.padding.large
