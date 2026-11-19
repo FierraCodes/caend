@@ -13,6 +13,7 @@ import qs.modules.areapicker
 import qs.modules.background
 import qs.modules.drawers
 import qs.modules.lock
+import qs.modules.lockosd
 import qs.modules.polkit
 import qs.daemons
 
@@ -48,6 +49,7 @@ ShellRoot {
     Background {}
     Drawers {}
     AreaPicker {}
+    LockOsd {}
     Lock {
         id: lock
     }
