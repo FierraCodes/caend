@@ -227,6 +227,12 @@ GridLayout {
                 }
             }
             DelegateChoice {
+                roleValue: "utilButtons"
+                delegate: EntryWrapper {
+                    UtilButtons {}
+                }
+            }
+            DelegateChoice {
                 roleValue: "power"
                 delegate: EntryWrapper {
                     Power {
