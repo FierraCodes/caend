@@ -15,6 +15,10 @@ VisualSource::VisualSource(QObject* parent)
 
 QMediaPlayer* VisualSource::ensurePlayer() {
     if (!m_player) {
+        // Prefer VA-API (the iGPU on hybrid laptops) over CUDA so live wallpapers don't wake a dGPU;
+        // CUDA stays as the fallback for NVIDIA-only machines. Read once when the FFmpeg backend starts.
+        if (!qEnvironmentVariableIsSet("QT_FFMPEG_DECODING_HW_DEVICE_TYPES"))
+            qputenv("QT_FFMPEG_DECODING_HW_DEVICE_TYPES", "vaapi,cuda");
         m_player = new QMediaPlayer(this);
         m_player->setLoops(QMediaPlayer::Infinite);
         QObject::connect(m_player, &QMediaPlayer::mediaStatusChanged, this, &VisualSource::onMediaStatusChanged);
