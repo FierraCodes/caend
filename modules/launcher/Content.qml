@@ -15,12 +15,13 @@ Item {
     required property ScreenState screenState
     required property var panels
     required property real maxHeight
+    property bool floating // Spotlight layout: search on top, results below
 
     readonly property int padding: Tokens.padding.large
     readonly property int rounding: Tokens.rounding.extraLarge
 
     implicitWidth: listWrapper.width + padding * 2
-    implicitHeight: search.height + listWrapper.height + padding + search.anchors.bottomMargin
+    implicitHeight: search.height + listWrapper.height + padding + (floating ? search.anchors.topMargin : search.anchors.bottomMargin)
 
     Item {
         id: listWrapper
@@ -29,8 +30,10 @@ Item {
         implicitHeight: list.height + root.padding
 
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: search.top
+        anchors.bottom: root.floating ? undefined : search.top
         anchors.bottomMargin: root.padding
+        anchors.top: root.floating ? search.bottom : undefined
+        anchors.topMargin: root.padding
 
         ContentList {
             id: list
@@ -52,9 +55,10 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.bottom: root.floating ? undefined : parent.bottom
+        anchors.top: root.floating ? parent.top : undefined
         anchors.margins: root.padding
-        anchors.bottomMargin: CUtils.clamp(root.padding - Config.border.thickness, 0, root.padding)
+        anchors.bottomMargin: root.floating ? root.padding : CUtils.clamp(root.padding - Config.border.thickness, 0, root.padding)
 
         topPadding: Math.round((Tokens.padding.medium + Tokens.padding.large) / 2)
         bottomPadding: Math.round((Tokens.padding.medium + Tokens.padding.large) / 2)

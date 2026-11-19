@@ -44,6 +44,8 @@ class LauncherConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, showOnHover, false)
     CONFIG_PROPERTY(int, maxShown, 7)
     CONFIG_PROPERTY(int, maxWallpapers, 9)
+    // Spotlight-style: float near the top of the screen instead of rising from the bottom edge
+    CONFIG_PROPERTY(bool, floating, true)
     CONFIG_GLOBAL_PROPERTY(QString, specialPrefix, u"@"_s)
     CONFIG_GLOBAL_PROPERTY(QString, actionPrefix, u"/"_s)
     // end4-style search prefixes. Without a prefix the results mix apps, math, actions, a command and a web search

@@ -2,8 +2,8 @@ import QtQuick
 import Quickshell
 import Caelestia.Config
 import qs.components
-import qs.modules.bar as Bar
 import qs.modules.aichat as AiChat
+import qs.modules.bar as Bar
 import qs.modules.dashboard as Dashboard
 import qs.modules.launcher as Launcher
 import qs.modules.notifications as Notifications
@@ -110,7 +110,8 @@ Item {
         panels: root
 
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
+        anchors.bottom: launcher.floating ? undefined : parent.bottom
+        y: launcher.floating ? Math.round(parent.height * 0.2) : 0
     }
 
     Dashboard.Wrapper {

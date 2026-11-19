@@ -15,7 +15,12 @@ Item {
 
     readonly property bool shouldBeActive: screenState.launcher && Config.launcher.enabled
 
+    readonly property bool floating: Config.launcher.floating
+    property real fullHeight: content.implicitHeight
+
     readonly property real maxHeight: {
+        if (floating)
+            return screen.height * 0.6;
         let max = screen.height - Config.border.thickness * 2 + Tokens.padding.extraLarge;
         if (screenState.dashboard)
             max -= panels.dashboard.nonAnimHeight;
@@ -26,14 +31,16 @@ Item {
 
     onShouldBeActiveChanged: {
         if (shouldBeActive)
-            implicitHeight = Qt.binding(() => content.implicitHeight);
+            fullHeight = Qt.binding(() => content.implicitHeight);
         else
-            implicitHeight = implicitHeight; // Break binding during close anim
+            fullHeight = fullHeight; // Break binding during close anim
     }
 
     visible: offsetScale < 1
-    anchors.bottomMargin: (-implicitHeight - 5) * offsetScale
-    implicitHeight: content.implicitHeight
+    // Docked: slides out of the bottom edge. Floating: unfolds downwards from its top edge
+    anchors.bottomMargin: floating ? 0 : (-implicitHeight - 5) * offsetScale
+    implicitHeight: floating ? fullHeight * (1 - offsetScale) : fullHeight
+    clip: floating
     implicitWidth: content.implicitWidth || 630 // Hard coded fallback for first open
     opacity: 1 - offsetScale
 
@@ -55,6 +62,7 @@ Item {
             screenState: root.screenState
             panels: root.panels
             maxHeight: root.maxHeight
+            floating: root.floating
         }
     }
 }
