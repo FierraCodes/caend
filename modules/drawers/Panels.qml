@@ -36,7 +36,8 @@ Item {
 
     anchors.fill: parent
     anchors.margins: borderThickness
-    anchors.leftMargin: bar.implicitWidth
+    anchors.leftMargin: bar.onRight ? borderThickness : bar.implicitWidth
+    anchors.rightMargin: bar.onRight ? bar.implicitWidth : borderThickness
 
     Item {
         id: osdWrapper

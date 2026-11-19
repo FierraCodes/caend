@@ -15,6 +15,7 @@ Item {
     required property BarPopouts.Wrapper popouts
     required property bool fullscreen
 
+    readonly property bool onRight: Config.bar.position === "right"
     readonly property bool disabled: Strings.testRegexList(Config.bar.excludedScreens, screen.name)
 
     readonly property int clampedWidth: Math.max(Config.border.minThickness, implicitWidth)
@@ -76,7 +77,9 @@ Item {
 
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        anchors.right: parent.right
+        // Anchor to the screen edge so the bar clips away from it while hiding
+        anchors.left: root.onRight ? parent.left : undefined
+        anchors.right: root.onRight ? undefined : parent.right
 
         active: root.shouldBeVisible
 

@@ -3,10 +3,23 @@ pragma ComponentBehavior: Bound
 import QtQuick.Layouts
 import Caelestia.Config
 import Caelestia.I18n
+import qs.components.controls
 import qs.modules.nexus.common
 
 PageBase {
     id: root
+
+    readonly property list<MenuItem> positionItems: [
+        MenuItem {
+            text: Tr.trCtx("Left", "bar position")
+            icon: "align_horizontal_left"
+        },
+        MenuItem {
+            text: Tr.trCtx("Right", "bar position")
+            icon: "align_horizontal_right"
+        }
+    ]
+    readonly property list<string> positionValues: ["left", "right"]
 
     title: Tr.tr("Taskbar")
     isSubPage: true
@@ -23,8 +36,16 @@ PageBase {
             text: Tr.tr("Behaviour")
         }
 
-        ToggleRow {
+        SelectRow {
             first: true
+            label: Tr.tr("Position")
+            subtext: Tr.tr("Which screen edge the bar sits on")
+            menuItems: root.positionItems
+            active: root.positionItems[Math.max(0, root.positionValues.indexOf(GlobalConfig.bar.position))]
+            onSelected: item => GlobalConfig.bar.position = root.positionValues[root.positionItems.indexOf(item)]
+        }
+
+        ToggleRow {
             text: Tr.tr("Persistent")
             subtext: Tr.tr("Keep the bar visible at all times")
             checked: Config.bar.persistent
