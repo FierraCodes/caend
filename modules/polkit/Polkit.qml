@@ -52,8 +52,9 @@ Scope {
 
     Connections {
         function onAuthenticationFailed(): void {
+            // Only a failure after you submitted is a wrong password; others are sessions polkit restarted
+            root.failed = root.waiting;
             root.waiting = false;
-            root.failed = true;
         }
 
         target: root.agent?.flow ?? null
