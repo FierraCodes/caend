@@ -74,6 +74,8 @@ Item {
                         currentItem.onClicked();
                     else
                         currentItem.modelData.onClicked(list.currentList);
+                } else if (typeof currentItem.modelData?.onClicked === "function") {
+                    currentItem.modelData.onClicked(list.currentList); // Spotlight results
                 } else {
                     Apps.launch(currentItem.modelData);
                     root.screenState.launcher = false;

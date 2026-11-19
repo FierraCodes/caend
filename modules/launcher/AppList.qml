@@ -27,7 +27,15 @@ StyledListView {
     }
 
     function stateForText(text: string): string {
-        const prefix = GlobalConfig.launcher.actionPrefix;
+        const conf = GlobalConfig.launcher;
+        if (conf.webPrefix && text.startsWith(conf.webPrefix))
+            return "web";
+        if (conf.shellPrefix && text.startsWith(conf.shellPrefix))
+            return "shell";
+        if (conf.clipboardPrefix && text.startsWith(conf.clipboardPrefix))
+            return "clipboard";
+
+        const prefix = conf.actionPrefix;
         if (text.startsWith(prefix)) {
             for (const action of ["calc", "scheme", "variant"])
                 if (text.startsWith(`${prefix}${action} `))
@@ -36,7 +44,8 @@ StyledListView {
             return "actions";
         }
 
-        return "apps";
+        // Nothing matched: offer web search and running it as a command, Spotlight style
+        return text.trim() && Apps.search(text).length === 0 ? "spotlight" : "apps";
     }
 
     function resultsForText(text: string): var {
@@ -49,6 +58,14 @@ StyledListView {
             return Schemes.query(text);
         case "variant":
             return M3Variants.query(text);
+        case "web":
+            return [Spotlight.web(text.slice(GlobalConfig.launcher.webPrefix.length))];
+        case "shell":
+            return Spotlight.shell(text.slice(GlobalConfig.launcher.shellPrefix.length));
+        case "clipboard":
+            return Spotlight.clipboard(text.slice(GlobalConfig.launcher.clipboardPrefix.length));
+        case "spotlight":
+            return [Spotlight.web(text), ...Spotlight.shell(text)];
         default:
             return Apps.search(text);
         }
@@ -87,6 +104,8 @@ StyledListView {
     onStateChanged: {
         if (state === "scheme" || state === "variant")
             Schemes.reload();
+        else if (state === "clipboard")
+            Spotlight.reloadClipboard();
     }
 
     Component.onCompleted: displayText = search.text
@@ -101,6 +120,34 @@ StyledListView {
         },
         State {
             name: "actions"
+
+            PropertyChanges {
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "web"
+
+            PropertyChanges {
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "shell"
+
+            PropertyChanges {
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "clipboard"
+
+            PropertyChanges {
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "spotlight"
 
             PropertyChanges {
                 root.delegate: actionItem
