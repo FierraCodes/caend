@@ -69,6 +69,15 @@ So every end4 feature that comes over gets rewritten in the caelestia style:
 
 ---
 
+### Config parity goal (Fierra, 2026-11-19)
+
+**Every customization option end4-pC has should exist in caend**, including bar position. Scale: end4-pC's `modules/common/Config.qml` declares about **745** properties; caelestia's C++ config has about **295** `CONFIG_PROPERTY` entries. A lot overlap, but expect a few hundred new typed options plus nexus pages.
+
+How to get there:
+1. **Parity table first.** Mechanically list every end4 `Config.options.*` key, map it to an existing caelestia key or mark it "new", and group it by feature. That becomes the porting checklist and keeps settings from being forgotten.
+2. **Bar position is the big structural one.** end4 has `bar.bottom`, `vertical` layouts (`verticalBar`), `cornerStyle` (hug/float/plain/M3/panel/split), `autoHide`. Caelestia's bar is always a vertical bar on the left edge, and `modules/drawers` (`Exclusions`, `Regions`, `Panels`, border) assumes that. Add `bar.position: left|right|top|bottom` and make the drawers, the border and the popouts orientation-aware *before* porting other bar options. Corner styles and auto-hide come after that.
+3. Everything else is additive: one typed config node + one nexus page per ported feature, done as part of that feature's port.
+
 ## 4. Architecture and dependency conflicts
 
 1. **Config systems.** caelestia's typed C++ `Config` vs end4's `Config.options.*` JsonAdapter. Every end4 module reads `Config.options.x.y`. Plan: add new typed nodes to the C++ config (`plugin/src/Caelestia/Config/*config.hpp`) for each ported feature, then mechanically rewrite `Config.options.foo` → caelestia's `GlobalConfig.foo` access. Do not run two config files.
