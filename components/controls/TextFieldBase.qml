@@ -7,6 +7,8 @@ import qs.services
 TextField {
     id: root
 
+    property bool hideCursor // For callers that draw the text themselves
+
     implicitWidth: contentWidth + leftPadding + rightPadding
     implicitHeight: contentHeight + topPadding + bottomPadding
 
@@ -71,7 +73,7 @@ TextField {
         }
 
         Binding {
-            when: !root.activeFocus || !root.cursorVisible
+            when: !root.activeFocus || !root.cursorVisible || root.hideCursor
             cursor.opacity: 0
         }
 

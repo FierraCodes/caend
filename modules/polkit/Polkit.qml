@@ -137,7 +137,7 @@ Scope {
                         echoMode: masked ? TextInput.Password : TextInput.Normal
                         // Masked input is drawn as end4-style shapes, so hide the real dots and cursor
                         color: masked ? "transparent" : Colours.palette.m3onSurface
-                        cursorVisible: !masked
+                        hideCursor: masked
                         isError: root.agent?.flow?.failed ?? false
                         errorText: Tr.tr("Wrong password, try again")
                         onAccepted: submit.clicked()
@@ -156,7 +156,10 @@ Scope {
 
                             Repeater {
                                 // Only as many shapes as fit in the field
-                                model: Math.min(input.text.length, Math.floor((input.width - input.leftPadding - input.rightPadding) / (input.shapeSize + Tokens.spacing.extraSmall)))
+                                // Index list so ScriptModel keeps existing shapes and only animates new ones
+                                model: ScriptModel {
+                                    values: [...Array(Math.max(0, Math.min(input.text.length, Math.floor((input.width - input.leftPadding - input.rightPadding) / (input.shapeSize + Tokens.spacing.extraSmall) - 1)))).keys()]
+                                }
 
                                 MaterialShape {
                                     required property int index
@@ -173,6 +176,14 @@ Scope {
                                         }
                                     }
                                 }
+                            }
+
+                            StyledRect {
+                                anchors.verticalCenter: parent.verticalCenter
+                                implicitWidth: 1.5
+                                implicitHeight: input.shapeSize * 1.2
+                                visible: input.activeFocus && input.enabled
+                                color: Colours.palette.m3primary
                             }
                         }
                     }
