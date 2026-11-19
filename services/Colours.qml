@@ -87,10 +87,10 @@ Singleton {
             return; // Niri: set layer-rule for these namespaces in config.kdl
         let rule, trEnabled;
         if (Hypr.usingLua) {
-            rule = `eval hl.layer_rule({ match = { namespace = "^caelestia-(drawers|polkit|lock-osd)$" }, %1 = %2 })`;
+            rule = `eval hl.layer_rule({ match = { namespace = "^caelestia-(drawers|polkit|lock-osd|network-prompt)$" }, %1 = %2 })`;
             trEnabled = transparency.enabled;
         } else {
-            rule = "keyword layerrule %1 %2, match:namespace ^caelestia-(drawers|polkit|lock-osd)$";
+            rule = "keyword layerrule %1 %2, match:namespace ^caelestia-(drawers|polkit|lock-osd|network-prompt)$";
             trEnabled = transparency.enabled ? 1 : 0;
         }
         // Fade (not slide) when shell layers like the polkit dialog map and unmap

@@ -15,6 +15,7 @@ import qs.modules.drawers
 import qs.modules.lock
 import qs.modules.lockosd
 import qs.modules.polkit
+import qs.modules.networkprompt
 import qs.daemons
 
 ShellRoot {
@@ -54,6 +55,7 @@ ShellRoot {
         id: lock
     }
     Polkit {}
+    NetworkPrompt {}
 
     // Daemons
     Shortcuts {}

@@ -19,7 +19,7 @@ binds {
 
 // The shell draws its drawers on this layer namespace
 layer-rule {
-    match namespace="^caelestia-(drawers|polkit|lock-osd)$"
+    match namespace="^caelestia-(drawers|polkit|lock-osd|network-prompt)$"
 }
 ```
 
