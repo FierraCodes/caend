@@ -9,19 +9,21 @@ import qs.services
 StyledRect {
     id: root
 
-    // Horizontal bars turn the whole widget by -90°, so glyphs turn back to stay upright
-    readonly property real glyphRotation: Config.bar.position === "top" || Config.bar.position === "bottom" ? 90 : 0
+    readonly property bool horizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
 
-    implicitWidth: Tokens.sizes.bar.innerWidth
-    implicitHeight: column.implicitHeight + Tokens.padding.extraSmall * 2
+    implicitWidth: horizontal ? column.implicitWidth + Tokens.padding.extraSmall * 2 : Tokens.sizes.bar.innerWidth
+    implicitHeight: horizontal ? Tokens.sizes.bar.innerWidth : column.implicitHeight + Tokens.padding.extraSmall * 2
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.full
 
-    Column {
+    Grid {
         id: column
 
         anchors.centerIn: parent
+        flow: root.horizontal ? Grid.LeftToRight : Grid.TopToBottom
+        rows: root.horizontal ? 1 : -1
+        columns: root.horizontal ? -1 : 1
         spacing: Tokens.spacing.extraSmall
 
         Button {
@@ -82,7 +84,6 @@ StyledRect {
 
         MaterialIcon {
             anchors.centerIn: parent
-            rotation: root.glyphRotation
             text: button.icon
             color: button.active ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
         }
