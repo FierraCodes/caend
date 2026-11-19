@@ -9,7 +9,8 @@ import Caelestia.I18n
 
 // LLM chat for the AI sidebar. Requests stream through Caelestia's C++ HTTP client (no curl or scripts);
 // API keys live in the desktop keyring via secret-tool and never touch disk or process arguments.
-// Formats: "gemini" (Google) and "openai" (OpenAI-compatible: Mistral, Ollama, extra models).
+// Formats: "gemini" (Google) and "openai" (OpenAI-compatible: OpenRouter, OpenAI, Anthropic, Mistral, Groq,
+// DeepSeek, xAI, Ollama, extra models).
 Singleton {
     id: root
 
@@ -23,45 +24,68 @@ Singleton {
     property var apiKeys: ({})
     property bool keysLoaded
 
+    // Every provider takes any of its model ids as "provider:model", e.g. "openrouter:openai/gpt-4o".
+    // format "openai" means an OpenAI-compatible chat completions endpoint.
+    readonly property var providers: ({
+            gemini: {
+                name: "Gemini",
+                format: "gemini",
+                keyLink: "https://aistudio.google.com/app/apikey"
+            },
+            openrouter: {
+                name: "OpenRouter",
+                format: "openai",
+                endpoint: "https://openrouter.ai/api/v1/chat/completions",
+                keyLink: "https://openrouter.ai/keys"
+            },
+            openai: {
+                name: "OpenAI",
+                format: "openai",
+                endpoint: "https://api.openai.com/v1/chat/completions",
+                keyLink: "https://platform.openai.com/api-keys"
+            },
+            anthropic: {
+                name: "Anthropic",
+                format: "openai",
+                endpoint: "https://api.anthropic.com/v1/chat/completions",
+                keyLink: "https://console.anthropic.com/settings/keys"
+            },
+            mistral: {
+                name: "Mistral",
+                format: "openai",
+                endpoint: "https://api.mistral.ai/v1/chat/completions",
+                keyLink: "https://console.mistral.ai/api-keys"
+            },
+            groq: {
+                name: "Groq",
+                format: "openai",
+                endpoint: "https://api.groq.com/openai/v1/chat/completions",
+                keyLink: "https://console.groq.com/keys"
+            },
+            deepseek: {
+                name: "DeepSeek",
+                format: "openai",
+                endpoint: "https://api.deepseek.com/chat/completions",
+                keyLink: "https://platform.deepseek.com/api_keys"
+            },
+            xai: {
+                name: "xAI",
+                format: "openai",
+                endpoint: "https://api.x.ai/v1/chat/completions",
+                keyLink: "https://console.x.ai"
+            },
+            ollama: {
+                name: "Ollama",
+                format: "openai",
+                endpoint: `${GlobalConfig.ai.ollamaEndpoint.replace(/\/+$/, "")}/v1/chat/completions`,
+                keyless: true
+            }
+        })
+
+    // Shown by /model; any other "provider:model" id works too
     property list<var> ollamaModels: []
     readonly property var models: {
-        const list = [
-            {
-                id: "gemini-2.5-flash",
-                name: "Gemini 2.5 Flash",
-                format: "gemini",
-                endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse",
-                keyId: "gemini",
-                keyLink: "https://aistudio.google.com/app/apikey"
-            },
-            {
-                id: "gemini-3-flash",
-                name: "Gemini 3 Flash",
-                format: "gemini",
-                endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent?alt=sse",
-                keyId: "gemini",
-                keyLink: "https://aistudio.google.com/app/apikey"
-            },
-            {
-                id: "mistral-medium-latest",
-                name: "Mistral Medium",
-                format: "openai",
-                model: "mistral-medium-latest",
-                endpoint: "https://api.mistral.ai/v1/chat/completions",
-                keyId: "mistral",
-                keyLink: "https://console.mistral.ai/api-keys"
-            },
-            {
-                id: "mistral-small-latest",
-                name: "Mistral Small",
-                format: "openai",
-                model: "mistral-small-latest",
-                endpoint: "https://api.mistral.ai/v1/chat/completions",
-                keyId: "mistral",
-                keyLink: "https://console.mistral.ai/api-keys"
-            },
-            ...ollamaModels
-        ];
+        const list = ["gemini:gemini-2.5-flash", "gemini:gemini-2.5-pro", "openrouter:openrouter/auto", "mistral:mistral-medium-latest", "mistral:mistral-small-latest", ...ollamaModels].map(id => resolveModel(id));
         for (const m of GlobalConfig.ai.extraModels) {
             if (!m?.model || !m?.endpoint)
                 continue;
@@ -76,7 +100,7 @@ Singleton {
         }
         return list;
     }
-    readonly property var currentModel: models.find(m => m.id === GlobalConfig.ai.model) ?? models[0]
+    readonly property var currentModel: models.find(m => m.id === GlobalConfig.ai.model) ?? resolveModel(GlobalConfig.ai.model) ?? models[0]
 
     readonly property string systemPrompt: {
         const subs = {
@@ -89,6 +113,25 @@ Singleton {
         for (const key in subs)
             prompt = prompt.split(key).join(subs[key]);
         return prompt;
+    }
+
+    // "provider:model" -> model object, or null if the provider is unknown
+    function resolveModel(id: string): var {
+        const sep = id.indexOf(":");
+        const providerId = sep > 0 ? id.slice(0, sep) : "";
+        const provider = providers[providerId];
+        const model = id.slice(sep + 1);
+        if (!provider || !model)
+            return null;
+        return {
+            id,
+            name: `${provider.name} ${model}`,
+            format: provider.format,
+            model,
+            endpoint: provider.format === "gemini" ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse` : provider.endpoint,
+            keyId: provider.keyless ? "" : providerId,
+            keyLink: provider.keyLink
+        };
     }
 
     function addMessage(content: string, role: string): void {
@@ -131,14 +174,14 @@ Singleton {
         if (cmd === "clear") {
             clear();
         } else if (cmd === "model") {
-            const match = models.find(m => m.id.toLowerCase() === arg.toLowerCase());
+            const match = models.find(m => m.id.toLowerCase() === arg.toLowerCase()) ?? resolveModel(arg);
             if (match) {
                 GlobalConfig.ai.model = match.id;
                 addMessage(Tr.tr("Model set to %1").arg(match.name), interfaceRole);
                 if (match.keyId && keysLoaded && !apiKeys[match.keyId])
                     addKeyAdvice(match);
             } else {
-                addMessage(Tr.tr("Models:\n\n%1").arg(models.map(m => `- \`${m.id}\` ${m.name}`).join("\n")), interfaceRole);
+                addMessage(Tr.tr("Models:\n\n%1\n\nAny model works as `/model provider:model-id`, e.g. `/model openrouter:openai/gpt-4o`. Providers: %2").arg(models.map(m => `- \`${m.id}\``).join("\n")).arg(Object.keys(providers).join(", ")), interfaceRole);
             }
         } else if (cmd === "key") {
             const model = currentModel;
@@ -305,14 +348,7 @@ Singleton {
         }
         Requests.get(`${base}/api/tags`, text => {
             try {
-                ollamaModels = JSON.parse(text).models.map(m => ({
-                            id: `ollama:${m.name}`,
-                            name: `Ollama ${m.name}`,
-                            format: "openai",
-                            model: m.name,
-                            endpoint: `${base}/v1/chat/completions`,
-                            keyId: ""
-                        }));
+                ollamaModels = JSON.parse(text).models.map(m => `ollama:${m.name}`);
             } catch (e) {
                 ollamaModels = [];
             }
