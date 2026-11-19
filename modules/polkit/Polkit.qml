@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Polkit
 import Caelestia.Config
@@ -17,12 +18,30 @@ import qs.services
 Scope {
     id: root
 
+    readonly property PolkitAgent agent: agentLoader.item as PolkitAgent
     property bool waiting // A response was submitted and polkit has not answered yet
 
-    PolkitAgent {
-        id: agent
+    // Other agents (polkit-gnome, hyprpolkitagent...) register first if autostarted, so stop them before registering ours
+    Process {
+        running: true
+        command: ["pkill", "-f", "polkit-gnome-authentication-agent-1|hyprpolkitagent|polkit-kde-authentication-agent-1|polkit-mate-authentication-agent-1|lxpolkit|lxqt-policykit-agent"]
+        onExited: registerDelay.start()
+    }
 
-        onAuthenticationRequestStarted: root.waiting = false
+    // polkitd frees the agent slot once it sees the old agent's bus name vanish
+    Timer {
+        id: registerDelay
+
+        interval: 500
+        onTriggered: agentLoader.active = true
+    }
+
+    LazyLoader {
+        id: agentLoader
+
+        PolkitAgent {
+            onAuthenticationRequestStarted: root.waiting = false
+        }
     }
 
     Connections {
@@ -30,11 +49,11 @@ Scope {
             root.waiting = false;
         }
 
-        target: agent.flow
+        target: root.agent?.flow ?? null
     }
 
     LazyLoader {
-        active: agent.isActive
+        active: root.agent?.isActive ?? false
 
         StyledWindow {
             name: "polkit"
@@ -97,7 +116,7 @@ Scope {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: agent.flow?.message ?? ""
+                        text: root.agent?.flow?.message ?? ""
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -109,12 +128,12 @@ Scope {
                         Layout.fillWidth: true
                         focus: true
                         enabled: !root.waiting
-                        placeholderText: (agent.flow?.inputPrompt ?? "").trim().replace(/:$/, "") || Tr.tr("Password")
-                        echoMode: agent.flow?.responseVisible ? TextInput.Normal : TextInput.Password
-                        isError: agent.flow?.failed ?? false
+                        placeholderText: (root.agent?.flow?.inputPrompt ?? "").trim().replace(/:$/, "") || Tr.tr("Password")
+                        echoMode: root.agent?.flow?.responseVisible ? TextInput.Normal : TextInput.Password
+                        isError: root.agent?.flow?.failed ?? false
                         errorText: Tr.tr("Wrong password, try again")
                         onAccepted: submit.clicked()
-                        Keys.onEscapePressed: agent.flow?.cancelAuthenticationRequest()
+                        Keys.onEscapePressed: root.agent?.flow?.cancelAuthenticationRequest()
                         onEnabledChanged: if (enabled) {
                             text = "";
                             forceActiveFocus();
@@ -128,7 +147,7 @@ Scope {
                         TextButton {
                             text: Tr.trCtx("Cancel", "button")
                             type: TextButton.Text
-                            onClicked: agent.flow?.cancelAuthenticationRequest()
+                            onClicked: root.agent?.flow?.cancelAuthenticationRequest()
                         }
 
                         TextButton {
@@ -139,7 +158,7 @@ Scope {
                             disabled: root.waiting || !input.text
                             onClicked: {
                                 root.waiting = true;
-                                agent.flow?.submit(input.text);
+                                root.agent?.flow?.submit(input.text);
                             }
                         }
                     }
