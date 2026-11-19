@@ -20,9 +20,7 @@ Scope {
     id: root
 
     readonly property PolkitAgent agent: agentLoader.item as PolkitAgent
-    readonly property string user: Quickshell.env("USER") ?? ""
-    property bool failed // Last real attempt failed (not counting identity switches)
-    property bool switching
+    property bool failed
     property bool waiting // A response was submitted and polkit has not answered yet
 
     // Other agents (polkit-gnome, hyprpolkitagent...) register first if autostarted, so stop them before registering ours
@@ -44,17 +42,10 @@ Scope {
         id: agentLoader
 
         PolkitAgent {
+            // No automatic identity switch: each cancelled PAM conversation counts toward pam_faillock's lockout
             onAuthenticationRequestStarted: {
                 root.waiting = false;
-                // polkit lists every admin (e.g. all of wheel) and picks the first, which may not be you
-                const me = flow?.identities.find(i => !i.isGroup && i.string === root.user);
                 root.failed = false;
-                if (me && flow.selectedIdentity !== me) {
-                    // Switching cancels the first session, which Quickshell reports as a failure
-                    root.switching = true;
-                    flow.selectedIdentity = me;
-                    root.switching = false;
-                }
             }
         }
     }
@@ -62,8 +53,7 @@ Scope {
     Connections {
         function onAuthenticationFailed(): void {
             root.waiting = false;
-            if (!root.switching)
-                root.failed = true;
+            root.failed = true;
         }
 
         target: root.agent?.flow ?? null
