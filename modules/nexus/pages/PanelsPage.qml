@@ -44,11 +44,32 @@ PageBase {
         }
 
         NavRow {
-            last: true
             icon: "construction"
             text: Tr.tr("Utilities")
             subtext: Config.utilities.enabled ? Tr.trCtx("Enabled", "panel status") : Tr.trCtx("Disabled", "panel status")
             onClicked: root.nState.openSubPage(5)
+        }
+
+        NavRow {
+            icon: "lock"
+            text: Tr.tr("Lock screen")
+            subtext: GlobalConfig.lock.unlockKeyring ? Tr.tr("Unlocks keyring") : Tr.tr("Keyring left locked")
+            onClicked: root.nState.openSubPage(11)
+        }
+
+        NavRow {
+            icon: "smart_toy"
+            text: Tr.tr("AI chat")
+            subtext: Config.ai.enabled ? Tr.trCtx("Enabled", "panel status") : Tr.trCtx("Disabled", "panel status")
+            onClicked: root.nState.openSubPage(12)
+        }
+
+        NavRow {
+            last: true
+            icon: "workspaces"
+            text: Tr.tr("Special workspaces")
+            subtext: Tr.tr("%1 configured").arg(GlobalConfig.general.specialWorkspaces.length)
+            onClicked: root.nState.openSubPage(13)
         }
     }
 }

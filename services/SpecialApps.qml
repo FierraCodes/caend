@@ -11,7 +11,7 @@ import Caelestia.Config
 Singleton {
     id: root
 
-    readonly property list<var> rules: GlobalConfig.general.specialWorkspaces
+    readonly property list<var> rules: GlobalConfig.general.specialWorkspaces.filter(r => r.enabled ?? true)
     property var pending: ({}) // name -> launch time (ms), cleared when the window shows up
 
     function ruleFor(name: string): var {

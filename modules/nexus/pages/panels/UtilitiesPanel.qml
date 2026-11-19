@@ -1,12 +1,31 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
 import Caelestia.I18n
+import qs.components.controls
 import qs.modules.nexus.common
 
 PageBase {
     id: root
+
+    readonly property list<MenuItem> flashbangItems: [
+        MenuItem {
+            text: Tr.trCtx("Off", "anti-flashbang strength")
+            icon: "brightness_7"
+        },
+        MenuItem {
+            text: Tr.trCtx("Weak", "anti-flashbang strength")
+            icon: "brightness_6"
+        },
+        MenuItem {
+            text: Tr.trCtx("Strong", "anti-flashbang strength")
+            icon: "brightness_4"
+        }
+    ]
+
+    readonly property list<string> flashbangValues: ["off", "weak", "strong"]
 
     function isToggleOn(id: string): bool {
         const item = Config.utilities.quickToggles.values.find(t => t.id === id);
@@ -50,6 +69,21 @@ PageBase {
             subtext: Tr.tr("Show the utilities panel")
             checked: Config.utilities.enabled
             onToggled: GlobalConfig.utilities.enabled = checked
+        }
+
+        // Screen (Hyprland only)
+        SectionHeader {
+            text: Tr.tr("Screen")
+        }
+
+        SelectRow {
+            first: true
+            last: true
+            label: Tr.tr("Anti-flashbang")
+            subtext: Tr.tr("Dim bright screens with a shader (Hyprland only)")
+            menuItems: root.flashbangItems
+            active: root.flashbangItems[Math.max(0, root.flashbangValues.indexOf(GlobalConfig.utilities.antiFlashbang))]
+            onSelected: item => GlobalConfig.utilities.antiFlashbang = root.flashbangValues[root.flashbangItems.indexOf(item)]
         }
 
         // Cards
@@ -135,12 +169,58 @@ PageBase {
         }
 
         ToggleRow {
-            last: true
             text: Tr.tr("VPN")
             subtext: Tr.tr("Connect or disconnect the VPN")
             disabled: !Config.utilities.cards.quickToggles
             checked: root.isToggleOn("vpn")
             onToggled: root.setToggleOn("vpn", checked)
+        }
+
+        Repeater {
+            model: [
+                {
+                    id: "antiFlashbang",
+                    text: Tr.tr("Anti-flashbang"),
+                    subtext: Tr.tr("Dim bright screens")
+                },
+                {
+                    id: "powerProfile",
+                    text: Tr.tr("Power profile"),
+                    subtext: Tr.tr("Cycle power saver, balanced and performance")
+                },
+                {
+                    id: "nightLight",
+                    text: Tr.tr("Night light"),
+                    subtext: Tr.tr("Warm the screen with hyprsunset")
+                },
+                {
+                    id: "darkMode",
+                    text: Tr.tr("Dark mode"),
+                    subtext: Tr.tr("Switch between light and dark schemes")
+                },
+                {
+                    id: "colorPicker",
+                    text: Tr.tr("Colour picker"),
+                    subtext: Tr.tr("Pick a colour from the screen with hyprpicker")
+                },
+                {
+                    id: "screenshot",
+                    text: Tr.tr("Screenshot"),
+                    subtext: Tr.tr("Open the screenshot picker")
+                }
+            ]
+
+            ToggleRow {
+                required property var modelData
+                required property int index
+
+                last: index === 5
+                text: modelData.text
+                subtext: modelData.subtext
+                disabled: !Config.utilities.cards.quickToggles
+                checked: root.isToggleOn(modelData.id)
+                onToggled: root.setToggleOn(modelData.id, checked)
+            }
         }
     }
 }

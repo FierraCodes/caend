@@ -38,6 +38,13 @@ PageBase {
             onToggled: GlobalConfig.launcher.showOnHover = checked
         }
 
+        ToggleRow {
+            text: Tr.tr("Floating")
+            subtext: Tr.tr("Float near the top of the screen like Spotlight, instead of rising from the bottom edge")
+            checked: Config.launcher.floating
+            onToggled: GlobalConfig.launcher.floating = checked
+        }
+
         TextFieldRow {
             id: prefixRow
 
@@ -57,6 +64,81 @@ PageBase {
                 GlobalConfig.launcher.actionPrefix = value || "/";
                 if (GlobalConfig.launcher.actionPrefix === "/")
                     clear();
+            }
+        }
+
+        // Search (end4-style prefixes)
+        SectionHeader {
+            text: Tr.tr("Search")
+        }
+
+        ToggleRow {
+            first: true
+            text: Tr.tr("Show command, math and web results")
+            subtext: Tr.tr("Add them to every search, not only when a prefix is typed")
+            checked: GlobalConfig.launcher.showDefaultActionsWithoutPrefix
+            onToggled: GlobalConfig.launcher.showDefaultActionsWithoutPrefix = checked
+        }
+
+        TextFieldRow {
+            label: Tr.tr("Web search URL")
+            subtext: Tr.tr("%s is replaced with the search")
+            value: GlobalConfig.launcher.webSearchUrl
+            placeholderText: "https://duckduckgo.com/?q=%s"
+            onEditingFinished: value => GlobalConfig.launcher.webSearchUrl = value || "https://duckduckgo.com/?q=%s"
+        }
+
+        Repeater {
+            model: [
+                {
+                    key: "appPrefix",
+                    label: Tr.tr("Apps only")
+                },
+                {
+                    key: "mathPrefix",
+                    label: Tr.tr("Math")
+                },
+                {
+                    key: "webPrefix",
+                    label: Tr.tr("Web search")
+                },
+                {
+                    key: "shellPrefix",
+                    label: Tr.tr("Run command")
+                },
+                {
+                    key: "clipboardPrefix",
+                    label: Tr.tr("Clipboard history")
+                },
+                {
+                    key: "emojiPrefix",
+                    label: Tr.tr("Emoji")
+                },
+                {
+                    key: "symbolPrefix",
+                    label: Tr.tr("Material symbols")
+                },
+                {
+                    key: "keybindPrefix",
+                    label: Tr.tr("Keybinds")
+                }
+            ]
+
+            TextFieldRow {
+                required property var modelData
+                required property int index
+
+                last: index === 7
+                label: Tr.tr("%1 prefix").arg(modelData.label)
+                errorText: Tr.tr("Prefix must not be alphanumeric")
+                value: GlobalConfig.launcher[modelData.key]
+                maximumLength: 1
+                smallField: true
+                validate: /^[^a-zA-Z0-9\s]$/
+                onEditingFinished: value => {
+                    if (field.valid)
+                        GlobalConfig.launcher[modelData.key] = value;
+                }
             }
         }
 

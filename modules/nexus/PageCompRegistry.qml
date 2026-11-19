@@ -140,6 +140,17 @@ QtObject {
                 Component {
                     BarClock {}
                 }
+
+                // caend panels (indices 11-13)
+                Component {
+                    LockPanel {}
+                }
+                Component {
+                    AiPanel {}
+                }
+                Component {
+                    SpecialAppsPanel {}
+                }
             }
         },
         Component {
