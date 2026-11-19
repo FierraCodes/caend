@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Caelestia.Config
 import qs.components.misc
 
 Scope {
@@ -37,6 +38,16 @@ Scope {
         // refuses capture when locked)
         sourceComponent: ScreencopyView {
             captureSource: Quickshell.screens[0]
+        }
+    }
+
+    // end4's lock.launchOnStartup. Delayed so the screencopy preload above can finish first
+    Timer {
+        running: true
+        interval: 1000
+        onTriggered: {
+            if (GlobalConfig.lock.lockOnStartup)
+                lock.locked = true;
         }
     }
 
