@@ -37,11 +37,13 @@ Item {
     readonly property alias toasts: toasts
     readonly property alias sidebar: sidebar
     readonly property alias aichat: aichat
+    // With a left bar the AI drawer opens at the screen edge and pushes the bar right by this much
+    readonly property real aiShift: bar.side === "left" ? aichat.implicitWidth * (1 - aichat.offsetScale) : 0
 
     anchors.fill: parent
     anchors.margins: borderThickness
     // The bar's side is as deep as the bar; every other side is the border
-    anchors.leftMargin: bar.side === "left" ? bar.thickness : borderThickness
+    anchors.leftMargin: bar.side === "left" ? bar.thickness + aiShift : borderThickness
     anchors.rightMargin: bar.side === "right" ? bar.thickness : borderThickness
     anchors.topMargin: bar.side === "top" ? bar.thickness : borderThickness
     anchors.bottomMargin: bar.side === "bottom" ? bar.thickness : borderThickness
@@ -183,5 +185,7 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        // Left bar: sit left of the bar at the screen edge (its width is what pushes the bar over)
+        anchors.leftMargin: root.bar.side === "left" ? -implicitWidth - root.bar.thickness : (-implicitWidth - 5) * offsetScale
     }
 }

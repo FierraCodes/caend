@@ -171,7 +171,7 @@ StyledWindow {
             anchors.margins: -50 // Make border thicker to smooth out bulge from closed drawers
             group: blobGroup
             radius: root.contentItem.Config.bar.cornerStyle === "plain" ? 0 : root.borderRounding
-            borderLeft: (bar.side === "left" ? root.barFrameThickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
+            borderLeft: (bar.side === "left" ? root.barFrameThickness + panels.aiShift : root.borderThickness) - anchors.margins - root.sdfBorderOffset
             borderRight: (bar.side === "right" ? root.barFrameThickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
             borderTop: (bar.side === "top" ? root.barFrameThickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
             borderBottom: (bar.side === "bottom" ? root.barFrameThickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
@@ -329,7 +329,7 @@ StyledWindow {
         BarWrapper {
             id: bar
 
-            x: side === "right" ? parent.width - width : 0
+            x: side === "right" ? parent.width - width : side === "left" ? panels.aiShift : 0
             y: side === "bottom" ? parent.height - height : 0
             width: horizontal ? parent.width : implicitWidth
             height: horizontal ? implicitHeight : parent.height

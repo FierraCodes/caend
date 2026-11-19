@@ -19,9 +19,9 @@ Region {
     readonly property real topEdge: bar.side === "top" ? bar.thickness - borderThickness : 0
     readonly property real bottomEdge: bar.side === "bottom" ? win.height - bar.thickness + borderThickness : win.height
 
-    x: (bar.side === "left" ? bar.clampedThickness : clampedThickness) + win.dragMaskPadding
+    x: (bar.side === "left" ? bar.x + bar.clampedThickness : clampedThickness) + win.dragMaskPadding
     y: (bar.side === "top" ? bar.clampedThickness : clampedThickness) + win.dragMaskPadding
-    width: win.width - (bar.horizontal ? clampedThickness : bar.clampedThickness) - clampedThickness - win.dragMaskPadding * 2
+    width: win.width - (bar.horizontal ? clampedThickness : bar.clampedThickness) - clampedThickness - win.dragMaskPadding * 2 - (bar.side === "left" ? bar.x : 0)
     height: win.height - (bar.horizontal ? bar.clampedThickness : clampedThickness) - clampedThickness - win.dragMaskPadding * 2
     intersection: Intersection.Xor
 
@@ -33,7 +33,7 @@ Region {
 
     R {
         panel: root.panels.aichat
-        x: root.panels.x - root.borderThickness
+        x: root.bar.side === "left" ? root.panels.x + panel.x : root.panels.x - root.borderThickness
         width: panel.width * (1 - root.panels.aichat.offsetScale) + root.borderThickness
     }
 

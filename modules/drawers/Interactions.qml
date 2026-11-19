@@ -38,7 +38,7 @@ CustomMouseArea {
         case "bottom":
             return y > height - depth;
         default:
-            return x < depth;
+            return x >= bar.x && x < bar.x + depth; // bar.x > 0 while the AI drawer pushes a left bar over
         }
     }
 
