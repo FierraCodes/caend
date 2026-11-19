@@ -3,105 +3,116 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Caelestia.Config
+import Caelestia.I18n
 import qs.services
+import qs.utils
 
+// end4-style recorder: wf-recorder for a region or the focused output, with system audio and/or mic.
+// The process lives as long as the recording, so its running state needs no polling.
 Singleton {
     id: root
 
-    readonly property alias running: props.running
-    readonly property alias paused: props.paused
-    readonly property alias elapsed: props.elapsed
-    property int refCount: 0
-    property bool needsStart
-    property list<string> startArgs
-    property bool needsStop
-    property bool needsPause
+    readonly property bool running: proc.running
+    readonly property bool paused: false // wf-recorder can't pause
+    property real elapsed
+    property int refCount // Kept for Ref users; nothing to poll anymore
+    property string file
+    property bool pendingSound
 
-    function start(extraArgs = []): void {
-        needsStart = true;
-        startArgs = extraArgs;
-        checkProc.running = true;
+    // $1 file, $2 geometry ("x,y wxh", empty = whole output), $3 output, $4 system audio, $5 mic
+    readonly property string script: `mkdir -p "$(dirname "$1")"
+sysmon="$(pactl get-default-sink 2>/dev/null).monitor"
+micsrc="$(pactl get-default-source 2>/dev/null)"
+mods=""
+audio=""
+if [ "$4" = 1 ] && [ "$5" = 1 ]; then
+    m=$(pactl load-module module-null-sink sink_name=caend_rec_mix sink_properties=device.description=CaendRecordMix) && mods="$m"
+    m=$(pactl load-module module-loopback source="$sysmon" sink=caend_rec_mix latency_msec=30) && mods="$mods $m"
+    m=$(pactl load-module module-loopback source="$micsrc" sink=caend_rec_mix latency_msec=30) && mods="$mods $m"
+    audio=caend_rec_mix.monitor
+elif [ "$4" = 1 ]; then
+    audio="$sysmon"
+elif [ "$5" = 1 ]; then
+    audio="$micsrc"
+fi
+file="$1"; geom="$2"; out="$3"
+set -- --pixel-format yuv420p -f "$file"
+if [ -n "$geom" ]; then set -- "$@" --geometry "$geom"; else set -- "$@" -o "$out"; fi
+[ -n "$audio" ] && set -- "$@" "--audio=$audio"
+wf-recorder "$@" &
+pid=$!
+trap 'kill -INT "$pid" 2>/dev/null' INT TERM
+wait "$pid"
+wait "$pid"
+code=$?
+for m in $mods; do pactl unload-module "$m"; done
+exit $code`
+
+    // Region recordings pick their area with the shell's area picker, which calls startRegion()
+    signal regionRequested
+
+    function start(region = false, sound = false): void {
+        if (running)
+            return;
+        pendingSound = sound;
+        if (region)
+            regionRequested();
+        else
+            launch("", Compositor.focusedOutput);
+    }
+
+    function startRegion(geometry: string): void {
+        launch(geometry, "");
     }
 
     function stop(): void {
-        needsStop = true;
-        checkProc.running = true;
+        proc.signal(2); // SIGINT lets wf-recorder finalise the file
     }
 
     function togglePause(): void {
-        needsPause = true;
-        checkProc.running = true;
     }
 
-    PersistentProperties {
-        id: props
-
-        property bool running: false
-        property bool paused: false
-        property real elapsed: 0 // Might get too large for int
-
-        reloadableId: "recorder"
+    function launch(geometry: string, output: string): void {
+        file = `${Paths.recsdir}/recording_${Qt.formatDateTime(new Date(), "yyyy-MM-dd_hh.mm.ss")}.mp4`;
+        elapsed = 0;
+        proc.command = ["sh", "-c", script, "sh", file, geometry, output, pendingSound ? "1" : "0", GlobalConfig.utilities.recordMicrophone ? "1" : "0"];
+        proc.running = true;
     }
 
     Process {
-        id: checkProc
+        id: proc
 
-        running: true
-        command: ["pidof", "gpu-screen-recorder"]
+        onRunningChanged: {
+            if (running)
+                Quickshell.execDetached(["notify-send", "-a", "caelestia", Tr.tr("Recording started"), root.file.split("/").pop()]);
+        }
         onExited: code => {
-            const running = code === 0;
-
-            if (running && root.needsStop) {
-                commandProc.exec(["caelestia", "record"]);
-                props.running = false;
-                props.paused = false;
-            } else if (running && root.needsPause) {
-                commandProc.exec(["caelestia", "record", "-p"]);
-                props.paused = !props.paused;
-            } else if (!running && root.needsStart) {
-                commandProc.exec(["caelestia", "record", ...root.startArgs]);
-                props.running = true;
-                props.paused = false;
-                props.elapsed = 0;
-            } else if (running !== props.running && !commandProc.running) {
-                // The recording was started/stopped outside the shell (e.g. via
-                // keybind), or our command finished without reaching the optimistic state
-                props.running = running;
-                props.paused = false;
-                props.elapsed = 0;
-            }
-
-            root.needsStart = false;
-            root.needsStop = false;
-            root.needsPause = false;
+            if (code === 127)
+                Quickshell.execDetached(["notify-send", "-a", "caelestia", Tr.tr("Recording failed"), Tr.tr("Needs wf-recorder")]);
+            else
+                Quickshell.execDetached(["notify-send", "-a", "caelestia", Tr.tr("Recording saved"), root.file]);
         }
     }
 
-    Process {
-        id: commandProc
+    // For keybinds: qs -c caelestia ipc call recorder toggle region-sound
+    IpcHandler {
+        function toggle(mode: string): void {
+            if (root.running)
+                root.stop();
+            else
+                root.start(mode.startsWith("region"), mode.endsWith("sound"));
+        }
 
-        // The command owns the transition: `caelestia record` blocks on slurp for
-        // region captures, and waits for the recorder to finalise the file when
-        // stopping. Reconcile once it has actually finished.
-        onExited: checkProc.running = true
-    }
-
-    // Only poll while something is showing the state, i.e. the utilities drawer is open
-    Timer {
-        interval: 1000
-        running: root.refCount > 0
-        repeat: true
-        triggeredOnStart: true
-
-        onTriggered: checkProc.running = true
+        target: "recorder"
     }
 
     Connections {
         function onSecondsChanged(): void {
-            props.elapsed++;
+            root.elapsed++;
         }
 
-        enabled: props.running && !props.paused
+        enabled: root.running
         target: Time
     }
 }

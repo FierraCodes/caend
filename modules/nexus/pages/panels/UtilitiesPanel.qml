@@ -107,6 +107,13 @@ PageBase {
         }
 
         ToggleRow {
+            text: Tr.tr("Record microphone")
+            subtext: Tr.tr("Mix your default microphone into screen recordings")
+            checked: GlobalConfig.utilities.recordMicrophone
+            onToggled: GlobalConfig.utilities.recordMicrophone = checked
+        }
+
+        ToggleRow {
             last: true
             text: Tr.tr("Quick toggles")
             subtext: Tr.tr("Show the quick toggles card")

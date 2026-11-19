@@ -92,6 +92,7 @@ Dependencies:
 - `qt6-multimedia`
 - [`qt6-m3shapes-git`](https://github.com/soramanew/m3shapes)
 - [`swappy`](https://github.com/jtheoof/swappy)
+- [`wf-recorder`](https://github.com/ammen99/wf-recorder) (screen recording)
 - [`fish`](https://github.com/fish-shell/fish-shell)
 - [`bash`](https://www.gnu.org/software/bash)
 

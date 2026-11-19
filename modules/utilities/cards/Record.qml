@@ -97,19 +97,19 @@ StyledRect {
                         icon: "screenshot_region"
                         text: Tr.tr("Record region")
                         activeText: Tr.trCtx("Region", "recording mode")
-                        onClicked: Recorder.start(["-r"])
+                        onClicked: Recorder.start(true, false)
                     },
                     MenuItem {
                         icon: "select_to_speak"
                         text: Tr.tr("Record fullscreen with sound")
                         activeText: Tr.trCtx("Fullscreen", "recording mode")
-                        onClicked: Recorder.start(["-s"])
+                        onClicked: Recorder.start(false, true)
                     },
                     MenuItem {
                         icon: "volume_up"
                         text: Tr.tr("Record region with sound")
                         activeText: Tr.trCtx("Region", "recording mode")
-                        onClicked: Recorder.start(["-sr"])
+                        onClicked: Recorder.start(true, true)
                     }
                 ]
             }
@@ -251,29 +251,6 @@ StyledRect {
 
             ButtonRow {
                 spacing: Tokens.spacing.extraSmall
-
-                IconButton {
-                    shapeMorph: true
-                    isRound: true
-                    label.animate: true
-                    icon: Recorder.paused ? "play_arrow" : "pause"
-                    isToggle: true
-                    checked: Recorder.paused
-                    type: IconButton.Tonal
-                    font: Tokens.font.icon.medium
-                    onClicked: {
-                        Recorder.togglePause();
-                        internalChecked = Recorder.paused;
-                    }
-
-                    implicitWidth: {
-                        // Ensure even size so icon is centered properly
-                        const h = label.implicitHeight + Tokens.padding.large * 2;
-                        if (h % 2 !== 0)
-                            return h + 1;
-                        return h;
-                    }
-                }
 
                 IconButton {
                     shapeMorph: true

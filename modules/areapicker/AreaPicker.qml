@@ -94,6 +94,19 @@ Scope {
         target: "picker"
     }
 
+    // Region recordings reuse the picker to choose the area, live (not frozen)
+    Connections {
+        function onRegionRequested(): void {
+            root.freeze = false;
+            root.closing = false;
+            root.clipboardOnly = false;
+            root.action = "record";
+            root.activeAsync = true;
+        }
+
+        target: Recorder
+    }
+
     // qmllint disable unresolved-type
     CustomShortcut {
         // qmllint enable unresolved-type

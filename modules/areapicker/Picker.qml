@@ -84,6 +84,12 @@ MouseArea {
     }
 
     function save(): void {
+        if (root.loader.action === "record") {
+            // wf-recorder takes layout coordinates, the picker works in this screen's
+            Recorder.startRegion(`${Math.round(screen.x + rsx)},${Math.round(screen.y + rsy)} ${Math.round(sw)}x${Math.round(sh)}`);
+            closeAnim.start();
+            return;
+        }
         const tmpfile = Qt.resolvedUrl(`/tmp/caelestia-picker-${Quickshell.processId}-${Date.now()}.png`);
         CUtils.saveItem(screencopy, tmpfile, Qt.rect(Math.ceil(rsx), Math.ceil(rsy), Math.floor(sw), Math.floor(sh)), path => {
             // The path is passed as $1, never spliced into the scripts
@@ -319,7 +325,7 @@ notify-send -a caelestia "$2" "$3"`, Tr.tr("Can't open the editor"), Tr.tr("Need
         implicitHeight: actions.implicitHeight + Tokens.padding.medium * 2
         radius: Tokens.rounding.full
         color: Colours.palette.m3surfaceContainer
-        visible: !root.pressed && !root.loader.closing && !root.capturing
+        visible: !root.pressed && !root.loader.closing && !root.capturing && root.loader.action !== "record"
 
         Row {
             id: actions
