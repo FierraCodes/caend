@@ -142,7 +142,7 @@ StyledRect {
         signal clicked
         signal rightClicked
 
-        anchors.verticalCenter: root.horizontal ? parent.verticalCenter : undefined
+        y: root.horizontal ? (row.height - height) / 2 : 0 // Anchors aren't allowed inside the vertical Column
         implicitWidth: root.size
         implicitHeight: root.size
 
