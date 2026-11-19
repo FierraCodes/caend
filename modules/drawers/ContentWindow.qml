@@ -210,6 +210,8 @@ StyledWindow {
 
             panel: panels.aichat
             deformAmount: 0.1
+            // With a left bar the chat sits inside the widened frame; its own blob only bulges against the corners
+            visible: bar.side !== "left"
         }
 
         PanelBg {
