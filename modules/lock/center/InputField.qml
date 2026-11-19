@@ -169,11 +169,6 @@ Item {
             PauseAnimation {
                 duration: 180 * Tokens.anim.durations.scale
             }
-            PropertyAction {
-                target: charShape
-                property: "shape"
-                value: MaterialShape.Circle
-            }
             ParallelAnimation {
                 Anim {
                     target: charShape
