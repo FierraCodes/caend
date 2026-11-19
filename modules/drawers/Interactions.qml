@@ -27,6 +27,7 @@ CustomMouseArea {
     // Where edge panels meet their edge: the screen edge, or the bar when it is on that side
     readonly property real rightEdge: bar.side === "right" ? width - bar.thickness : width
     readonly property real topEdge: bar.side === "top" ? bar.thickness : 0
+    readonly property real leftEdge: bar.side === "left" ? bar.thickness : 0
     readonly property real bottomEdge: bar.side === "bottom" ? height - bar.thickness : height
 
     function inBarDepth(x: real, y: real, depth: real): bool {
@@ -86,6 +87,16 @@ CustomMouseArea {
     function inTopPanel(panel: Item, x: real, y: real): bool {
         const panelHeight = panel.height * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
         return y >= topEdge && y < topEdge + Math.max(Config.border.minThickness, Config.border.thickness + panelHeight) && withinPanelWidth(panel, x, y);
+    }
+
+    function inLeftPanel(panel: Item, x: real, y: real): bool {
+        const panelWidth = panel.width * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
+        return x >= leftEdge && x < leftEdge + Math.max(Config.border.minThickness, Config.border.thickness + panelWidth) && withinPanelHeight(panel, x, y);
+    }
+
+    // The dashboard drops from the top, or slides from the left edge when the bar is on top
+    function inDashboard(x: real, y: real): bool {
+        return panels.dashboard.fromLeft ? inLeftPanel(panels.dashboard, x, y) : inTopPanel(panels.dashboard, x, y);
     }
 
     function inBottomPanel(panel: Item, x: real, y: real, isCorner = false): bool {
@@ -260,7 +271,7 @@ CustomMouseArea {
         }
 
         // Show dashboard on hover
-        const showDashboard = Config.dashboard.showOnHover && inTopPanel(panels.dashboard, x, y);
+        const showDashboard = Config.dashboard.showOnHover && inDashboard(x, y);
 
         // Always update visibility based on hover if not in shortcut mode
         if (!dashboardShortcutActive) {
@@ -271,11 +282,15 @@ CustomMouseArea {
         }
 
         // Show/hide dashboard on drag (for touchscreen devices)
-        if (pressed && inTopPanel(panels.dashboard, dragStart.x, dragStart.y) && withinPanelWidth(panels.dashboard, x, y)) {
-            if (dragY > Config.dashboard.dragThreshold)
-                screenState.dashboard = true;
-            else if (dragY < -Config.dashboard.dragThreshold)
-                screenState.dashboard = false;
+        if (pressed && inDashboard(dragStart.x, dragStart.y)) {
+            const fromLeft = panels.dashboard.fromLeft;
+            const drag = fromLeft ? dragX : dragY;
+            if (fromLeft ? withinPanelHeight(panels.dashboard, x, y) : withinPanelWidth(panels.dashboard, x, y)) {
+                if (drag > Config.dashboard.dragThreshold)
+                    screenState.dashboard = true;
+                else if (drag < -Config.dashboard.dragThreshold)
+                    screenState.dashboard = false;
+            }
         }
 
         // Show utilities on hover
@@ -309,7 +324,7 @@ CustomMouseArea {
                 root.sidebarShortcutActive = false;
 
                 // Also hide dashboard and OSD if they're not being hovered
-                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
+                const inDashboardArea = root.inDashboard(root.mouseX, root.mouseY);
                 const inOsdArea = root.inRightPanel(root.panels.osdWrapper, root.mouseX, root.mouseY);
 
                 if (!inDashboardArea) {
@@ -325,7 +340,7 @@ CustomMouseArea {
         function onDashboardChanged() {
             if (root.screenState.dashboard) {
                 // Dashboard became visible, immediately check if this should be shortcut mode
-                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
+                const inDashboardArea = root.inDashboard(root.mouseX, root.mouseY);
                 if (!inDashboardArea) {
                     root.dashboardShortcutActive = true;
                 }

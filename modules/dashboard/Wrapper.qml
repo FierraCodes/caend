@@ -30,9 +30,12 @@ Item {
     readonly property real nonAnimHeight: (content.item as Content)?.nonAnimHeight ?? 0
     readonly property bool shouldBeActive: screenState.dashboard && Config.dashboard.enabled
     property real offsetScale: shouldBeActive ? 0 : 1
+    // Slide in from the left screen edge instead of dropping from the top (used with a top bar)
+    property bool fromLeft
 
     visible: offsetScale < 1
-    anchors.topMargin: (-implicitHeight - 5) * offsetScale
+    anchors.topMargin: fromLeft ? 0 : (-implicitHeight - 5) * offsetScale
+    anchors.leftMargin: fromLeft ? (-implicitWidth - 5) * offsetScale : 0
     implicitHeight: content.implicitHeight
     implicitWidth: content.implicitWidth || 854 // Hard coded fallback for first open
     opacity: 1 - offsetScale

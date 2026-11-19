@@ -116,7 +116,8 @@ Item {
 
         screenState: root.screenState
 
-        // A top bar keeps its centre for the bar's own popouts, so the dashboard moves to the left corner
+        // A top bar keeps its centre for the bar's own popouts, so the dashboard slides in from the left edge
+        fromLeft: root.bar.side === "top"
         anchors.horizontalCenter: root.bar.side === "top" ? undefined : parent.horizontalCenter
         anchors.left: root.bar.side === "top" ? parent.left : undefined
         anchors.top: parent.top
