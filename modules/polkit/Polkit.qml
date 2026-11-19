@@ -86,7 +86,7 @@ Scope {
                 width: Math.min(parent.width - Tokens.padding.extraLargeIncreased, 420)
                 implicitHeight: layout.implicitHeight + Tokens.padding.large * 3
                 radius: Tokens.rounding.extraLarge
-                color: Colours.palette.m3surfaceContainerHigh
+                color: Colours.tPalette.m3surfaceContainerHigh
 
                 scale: 0.9
                 Component.onCompleted: scale = 1
