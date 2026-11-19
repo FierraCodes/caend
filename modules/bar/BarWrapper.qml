@@ -34,6 +34,8 @@ Item {
     readonly property int exclusiveZone: !disabled && (Config.bar.persistent || screenState.bar) ? stripWidth : Config.border.thickness
     readonly property bool shouldBeVisible: !fullscreen && !disabled && (Config.bar.persistent || screenState.bar || isHovered)
     property bool isHovered
+    // Rebuilds the bar on an orientation flip: entries swap anchors/flow live and keep stale sizes otherwise
+    property bool reloading
 
     function closeTray(): void {
         (content.item as Bar)?.closeTray();
@@ -52,6 +54,12 @@ Item {
     visible: thickness > Config.border.thickness
     implicitWidth: horizontal ? 0 : thickness
     implicitHeight: horizontal ? thickness : 0
+
+    onHorizontalChanged: {
+        popouts.hasCurrent = false;
+        reloading = true;
+        Qt.callLater(() => reloading = false);
+    }
 
     states: State {
         name: "visible"
@@ -94,7 +102,7 @@ Item {
         width: root.horizontal ? parent.width : root.contentWidth
         height: root.horizontal ? root.contentWidth : parent.height
 
-        active: root.shouldBeVisible
+        active: root.shouldBeVisible && !root.reloading
 
         sourceComponent: Bar {
             width: root.horizontal ? undefined : root.contentWidth
