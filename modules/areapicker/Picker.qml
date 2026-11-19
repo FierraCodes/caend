@@ -5,8 +5,10 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Caelestia
+import Caelestia.Config
 import Caelestia.I18n
 import qs.components
+import qs.components.controls
 import qs.components.effects
 import qs.services
 
@@ -17,6 +19,7 @@ MouseArea {
     required property ShellScreen screen
 
     property bool onClient
+    property bool capturing // Hides the toolbar so a live capture doesn't include it
 
     property real realBorderWidth: onClient ? (Hypr.options["general:border_size"] ?? 1) : 2
     property real realRounding: onClient ? (Hypr.options["decoration:rounding"] ?? 0) : 0
@@ -83,10 +86,33 @@ MouseArea {
     function save(): void {
         const tmpfile = Qt.resolvedUrl(`/tmp/caelestia-picker-${Quickshell.processId}-${Date.now()}.png`);
         CUtils.saveItem(screencopy, tmpfile, Qt.rect(Math.ceil(rsx), Math.ceil(rsy), Math.floor(sw), Math.floor(sh)), path => {
-            if (root.loader.clipboardOnly) {
+            // The path is passed as $1, never spliced into the scripts
+            const sh = (script, ...args) => Quickshell.execDetached(["sh", "-c", script, "sh", path, ...args]);
+            switch (root.loader.action) {
+            case "copy":
                 Quickshell.execDetached(["sh", "-c", "wl-copy --type image/png < " + path]);
                 Quickshell.execDetached(["notify-send", "-a", "caelestia-cli", "-i", path, Tr.tr("Screenshot taken"), Tr.tr("Screenshot copied to clipboard")]);
-            } else {
+                break;
+            case "ocr":
+                sh(`langs=$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)
+text=$(tesseract "$1" stdout \${langs:+-l "$langs"} 2>/dev/null)
+if [ -n "$text" ]; then printf '%s' "$text" | wl-copy && notify-send -a caelestia -i "$1" "$2" "$text"
+else notify-send -a caelestia "$3" "$4"; fi
+rm -f "$1"`, Tr.tr("Text copied"), Tr.tr("No text found"), Tr.tr("Needs tesseract and its language data"));
+                break;
+            case "qr":
+                sh(`text=$(ZXingReader -single -bytes "$1" 2>/dev/null || zbarimg -q --raw "$1" 2>/dev/null)
+if [ -n "$text" ]; then printf '%s' "$text" | wl-copy && notify-send -a caelestia "$2" "$text"
+else notify-send -a caelestia "$3" "$4"; fi
+rm -f "$1"`, Tr.tr("QR code copied"), Tr.tr("No QR code found"), Tr.tr("Needs zxing-cpp or zbar"));
+                break;
+            case "search":
+                // Same as end4: Google Lens needs a public URL, so the snip is uploaded to uguu.se (expires in a few hours)
+                sh(`url=$(curl -sF "files[]=@$1" https://uguu.se/upload | jq -r '.files[0].url')
+[ -n "$url" ] && [ "$url" != null ] && xdg-open "https://lens.google.com/uploadbyurl?url=$url"
+rm -f "$1"`);
+                break;
+            default:
                 Quickshell.execDetached(["swappy", "-f", path]);
             }
             closeAnim.start();
@@ -139,6 +165,7 @@ MouseArea {
             save();
         } else {
             overlay.visible = border.visible = false;
+            capturing = true;
             screencopy.visible = false;
             screencopy.active = true;
         }
@@ -278,6 +305,60 @@ MouseArea {
 
         Behavior on border.color {
             CAnim {}
+        }
+    }
+
+    // end4-style action toolbar
+    StyledRect {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Tokens.padding.extraLarge
+
+        implicitWidth: actions.implicitWidth + Tokens.padding.small * 2
+        implicitHeight: actions.implicitHeight + Tokens.padding.small * 2
+        radius: Tokens.rounding.full
+        color: Colours.palette.m3surfaceContainer
+        visible: !root.pressed && !root.loader.closing && !root.capturing
+
+        Row {
+            id: actions
+
+            anchors.centerIn: parent
+            spacing: Tokens.spacing.small
+
+            Repeater {
+                model: [
+                    {
+                        action: "copy",
+                        icon: "content_copy"
+                    },
+                    {
+                        action: "edit",
+                        icon: "edit"
+                    },
+                    {
+                        action: "ocr",
+                        icon: "document_scanner"
+                    },
+                    {
+                        action: "qr",
+                        icon: "qr_code_scanner"
+                    },
+                    {
+                        action: "search",
+                        icon: "image_search"
+                    }
+                ]
+
+                IconButton {
+                    required property var modelData
+
+                    icon: modelData.icon
+                    isToggle: true
+                    checked: root.loader.action === modelData.action
+                    onClicked: root.loader.action = modelData.action
+                }
+            }
         }
     }
 

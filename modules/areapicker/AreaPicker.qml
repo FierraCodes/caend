@@ -14,6 +14,8 @@ Scope {
         property bool freeze
         property bool closing
         property bool clipboardOnly
+        // What happens to the snip, from end4's region selector: copy, edit, ocr, qr or search
+        property string action: clipboardOnly ? "copy" : "edit"
 
         Variants {
             model: Screens.screens
@@ -52,6 +54,7 @@ Scope {
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = false;
+            root.action = root.clipboardOnly ? "copy" : "edit";
             root.activeAsync = true;
         }
 
@@ -59,6 +62,7 @@ Scope {
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = false;
+            root.action = root.clipboardOnly ? "copy" : "edit";
             root.activeAsync = true;
         }
 
@@ -66,6 +70,7 @@ Scope {
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = true;
+            root.action = root.clipboardOnly ? "copy" : "edit";
             root.activeAsync = true;
         }
 
@@ -73,6 +78,16 @@ Scope {
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = true;
+            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.activeAsync = true;
+        }
+
+        // end4 snip actions, always frozen so the picked area is what was on screen
+        function openAction(action: string): void {
+            root.freeze = true;
+            root.closing = false;
+            root.clipboardOnly = false;
+            root.action = action;
             root.activeAsync = true;
         }
 
@@ -88,6 +103,7 @@ Scope {
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = false;
+            root.action = root.clipboardOnly ? "copy" : "edit";
             root.activeAsync = true;
         }
     }
@@ -101,6 +117,7 @@ Scope {
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = false;
+            root.action = root.clipboardOnly ? "copy" : "edit";
             root.activeAsync = true;
         }
     }
@@ -114,6 +131,7 @@ Scope {
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = true;
+            root.action = root.clipboardOnly ? "copy" : "edit";
             root.activeAsync = true;
         }
     }
@@ -127,6 +145,7 @@ Scope {
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = true;
+            root.action = root.clipboardOnly ? "copy" : "edit";
             root.activeAsync = true;
         }
     }
