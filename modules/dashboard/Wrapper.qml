@@ -53,7 +53,6 @@ Item {
         active: root.shouldBeActive || root.visible
 
         sourceComponent: Content {
-            sideTabs: root.fromLeft
             screenState: root.screenState
             facePicker: root.facePicker
         }
