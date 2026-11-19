@@ -21,6 +21,8 @@ Scope {
 
     readonly property PolkitAgent agent: agentLoader.item as PolkitAgent
     readonly property string user: Quickshell.env("USER") ?? ""
+    property bool failed // Last real attempt failed (not counting identity switches)
+    property bool switching
     property bool waiting // A response was submitted and polkit has not answered yet
 
     // Other agents (polkit-gnome, hyprpolkitagent...) register first if autostarted, so stop them before registering ours
@@ -46,8 +48,13 @@ Scope {
                 root.waiting = false;
                 // polkit lists every admin (e.g. all of wheel) and picks the first, which may not be you
                 const me = flow?.identities.find(i => !i.isGroup && i.string === root.user);
-                if (me && flow.selectedIdentity !== me)
+                root.failed = false;
+                if (me && flow.selectedIdentity !== me) {
+                    // Switching cancels the first session, which Quickshell reports as a failure
+                    root.switching = true;
                     flow.selectedIdentity = me;
+                    root.switching = false;
+                }
             }
         }
     }
@@ -55,6 +62,8 @@ Scope {
     Connections {
         function onAuthenticationFailed(): void {
             root.waiting = false;
+            if (!root.switching)
+                root.failed = true;
         }
 
         target: root.agent?.flow ?? null
@@ -164,7 +173,7 @@ Scope {
                         // Masked input is drawn as end4-style shapes, so hide the real dots and cursor
                         color: masked ? "transparent" : Colours.palette.m3onSurface
                         hideCursor: masked
-                        isError: root.agent?.flow?.failed ?? false
+                        isError: root.failed
                         // polkit's own message says why it failed (e.g. a broken helper), not just "wrong"
                         errorText: root.agent?.flow?.supplementaryIsError ? root.agent.flow.supplementaryMessage : Tr.tr("Wrong password, try again")
                         onAccepted: submit.clicked()
@@ -247,7 +256,7 @@ Scope {
 
                                         anchors.centerIn: parent
                                         implicitSize: input.shapeSize * 1.5
-                                        shape: input.shapes[char.index % input.shapes.length]
+                                        shape: input.shapes[char.index % input.shapes.length] ?? MaterialShape.Circle
                                         color: Colours.palette.m3onSurface
                                     }
                                 }
@@ -273,6 +282,7 @@ Scope {
                             disabled: root.waiting || !input.text
                             onClicked: {
                                 root.waiting = true;
+                                root.failed = false;
                                 root.agent?.flow?.submit(input.text);
                             }
                         }
