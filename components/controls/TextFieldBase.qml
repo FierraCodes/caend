@@ -38,6 +38,7 @@ TextField {
         property bool disableBlink
 
         x: root.cursorRectangle.x
+        visible: !root.hideCursor
         y: root.cursorRectangle.y
         implicitWidth: 1.5
         implicitHeight: root.cursorRectangle.height

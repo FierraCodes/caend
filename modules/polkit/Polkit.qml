@@ -127,8 +127,15 @@ Scope {
                         id: input
 
                         readonly property bool masked: !(root.agent?.flow?.responseVisible ?? false)
-                        readonly property list<int> shapes: [MaterialShape.Clover4Leaf, MaterialShape.Arrow, MaterialShape.Pill, MaterialShape.SoftBurst, MaterialShape.Diamond, MaterialShape.ClamShell, MaterialShape.Pentagon]
-                        readonly property real shapeSize: Tokens.font.body.medium.pointSize * 1.3
+                        readonly property list<int> shapes: {
+                            const shapes = [MaterialShape.Slanted, MaterialShape.Arch, MaterialShape.Fan, MaterialShape.Arrow, MaterialShape.SemiCircle, MaterialShape.Triangle, MaterialShape.Diamond, MaterialShape.ClamShell, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.Sunny, MaterialShape.VerySunny, MaterialShape.Cookie4Sided, MaterialShape.Ghostish, MaterialShape.SoftBurst];
+                            for (let i = shapes.length - 1; i > 0; i--) {
+                                const j = Math.floor(Math.random() * (i + 1));
+                                [shapes[i], shapes[j]] = [shapes[j], shapes[i]];
+                            }
+                            return shapes;
+                        }
+                        readonly property real shapeSize: Tokens.font.body.medium.pointSize
 
                         Layout.fillWidth: true
                         focus: true
@@ -161,29 +168,69 @@ Scope {
                                     values: [...Array(Math.max(0, Math.min(input.text.length, Math.floor((input.width - input.leftPadding - input.rightPadding) / (input.shapeSize + Tokens.spacing.extraSmall) - 1)))).keys()]
                                 }
 
-                                MaterialShape {
+                                // Same pop-in as the lockscreen: grow in wide, then settle at the shape's own size
+                                Item {
+                                    id: char
+
                                     required property int index
 
-                                    implicitSize: input.shapeSize
-                                    shape: input.shapes[index % input.shapes.length]
-                                    color: Colours.palette.m3onSurface
-                                    scale: 0
-                                    Component.onCompleted: scale = 1
+                                    implicitWidth: input.shapeSize
+                                    implicitHeight: input.shapeSize
 
-                                    Behavior on scale {
-                                        Anim {
-                                            type: Anim.FastSpatial
+                                    SequentialAnimation {
+                                        running: true
+
+                                        ParallelAnimation {
+                                            Anim {
+                                                target: char
+                                                property: "opacity"
+                                                from: 0
+                                                to: 1
+                                                type: Anim.DefaultEffects
+                                            }
+                                            Anim {
+                                                target: char
+                                                property: "scale"
+                                                from: 0
+                                                to: 1
+                                                type: Anim.FastSpatial
+                                            }
+                                            Anim {
+                                                target: char
+                                                property: "implicitWidth"
+                                                from: input.shapeSize
+                                                to: input.shapeSize * 1.3
+                                                type: Anim.DefaultEffects
+                                            }
+                                        }
+                                        PauseAnimation {
+                                            duration: 180 * Tokens.anim.durations.scale
+                                        }
+                                        ParallelAnimation {
+                                            Anim {
+                                                target: charShape
+                                                property: "scale"
+                                                to: 2 / 3
+                                                type: Anim.FastSpatial
+                                            }
+                                            Anim {
+                                                target: char
+                                                property: "implicitWidth"
+                                                to: input.shapeSize
+                                                type: Anim.DefaultEffects
+                                            }
                                         }
                                     }
-                                }
-                            }
 
-                            StyledRect {
-                                anchors.verticalCenter: parent.verticalCenter
-                                implicitWidth: 1.5
-                                implicitHeight: input.shapeSize * 1.2
-                                visible: input.activeFocus && input.enabled
-                                color: Colours.palette.m3primary
+                                    MaterialShape {
+                                        id: charShape
+
+                                        anchors.centerIn: parent
+                                        implicitSize: input.shapeSize * 1.5
+                                        shape: input.shapes[char.index % input.shapes.length]
+                                        color: Colours.palette.m3onSurface
+                                    }
+                                }
                             }
                         }
                     }
