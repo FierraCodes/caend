@@ -163,14 +163,31 @@ GridLayout {
                         implicitWidth: root.horizontal ? workspaces.implicitHeight : workspaces.implicitWidth
                         implicitHeight: root.horizontal ? workspaces.implicitWidth : workspaces.implicitHeight
 
-                        Workspaces {
+                        Loader {
                             id: workspaces
 
                             objectName: "taskbarWorkspaces"
                             anchors.centerIn: parent
                             rotation: root.horizontal ? -90 : 0
-                            screen: root.screen
-                            fullscreen: root.fullscreen
+                            sourceComponent: Compositor.isNiri ? niriWs : hyprWs
+                        }
+
+                        Component {
+                            id: hyprWs
+
+                            Workspaces {
+                                screen: root.screen
+                                fullscreen: root.fullscreen
+                            }
+                        }
+
+                        Component {
+                            id: niriWs
+
+                            NiriWorkspaces {
+                                screen: root.screen
+                                fullscreen: root.fullscreen
+                            }
                         }
                     }
                 }

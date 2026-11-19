@@ -228,7 +228,7 @@ rm -f "$1"`);
     }
 
     Process {
-        running: true
+        running: Compositor.isHyprland
         command: ["hyprctl", "cursorpos", "-j"]
         stdout: StdioCollector {
             onStreamFinished: {

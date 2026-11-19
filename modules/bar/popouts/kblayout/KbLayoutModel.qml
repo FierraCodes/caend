@@ -5,6 +5,7 @@ import Quickshell.Io
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
+import qs.services
 
 // TODO: handle this better later
 
@@ -18,16 +19,22 @@ Item {
     property bool _notifiedLimit: false
 
     function start() {
+        if (Compositor.isNiri)
+            return _fromNiri();
         xkbXmlBase.running = true;
         getKbLayoutOpt.running = true;
     }
 
     function refresh() {
+        if (Compositor.isNiri)
+            return _fromNiri();
         _notifiedLimit = false;
         getKbLayoutOpt.running = true;
     }
 
     function switchTo(idx) {
+        if (Compositor.isNiri)
+            return Compositor.niriAction(["switch-layout", String(idx)]);
         switchProc.command = ["hyprctl", "switchxkblayout", "all", String(idx)];
         switchProc.running = true;
     }
@@ -65,6 +72,19 @@ Item {
             tmp.forEach(t => layoutsModel.append(t));
             fetchActiveLayouts.running = true;
         }
+    }
+
+    // Niri already reports full layout names and the active index over its event stream
+    function _fromNiri() {
+        layoutsModel.clear();
+        Compositor.niriKbNames.forEach((name, i) => layoutsModel.append({
+                layoutIndex: i,
+                token: name,
+                label: name
+            }));
+        activeIndex = Compositor.niriKbIdx;
+        activeLabel = Compositor.niriKbNames[activeIndex] ?? "";
+        _rebuildVisible();
     }
 
     function _short(desc) {
@@ -126,6 +146,18 @@ Item {
     }
 
     visible: false
+
+    Connections {
+        function onNiriKbIdxChanged(): void {
+            model._fromNiri();
+        }
+
+        function onNiriKbNamesChanged(): void {
+            model._fromNiri();
+        }
+
+        target: Compositor.isNiri ? Compositor : null
+    }
 
     ListModel {
         id: visibleModel

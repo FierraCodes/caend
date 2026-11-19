@@ -38,6 +38,10 @@ Singleton {
     readonly property string activeWindowTitle: isHyprland ? (Hypr.activeToplevel?.title ?? "") : (niri.focusedWindow?.title ?? "")
     readonly property string activeWindowAppId: isHyprland ? (Hypr.activeToplevel?.lastIpcObject.class ?? "") : (niri.focusedWindow?.app_id ?? "")
     readonly property bool hasActiveWindow: isHyprland ? !!Hypr.activeToplevel : !!niri.focusedWindow
+    readonly property var niriWorkspaces: niri.workspaces
+    readonly property var niriWindows: niri.windows
+    readonly property list<string> niriKbNames: niri.kbNames
+    readonly property int niriKbIdx: niri.kbIdx
     readonly property int activeWsId: isHyprland ? Hypr.activeWsId : (niri.focusedWorkspace?.id ?? 1)
     readonly property string focusedOutput: isHyprland ? (Hypr.focusedMonitor?.name ?? "") : (niri.focusedWorkspace?.output ?? "")
 
@@ -80,6 +84,11 @@ Singleton {
             Hypr.focusWorkspace(ws);
         else if (isNiri)
             niriAction(["focus-workspace", String(ws)]);
+    }
+
+    // Niri workspace indices are per output, so focus that output first
+    function focusNiriWorkspace(output: string, idx: int): void {
+        Quickshell.execDetached(["sh", "-c", 'niri msg action focus-monitor "$1" && niri msg action focus-workspace "$2"', "sh", output, String(idx)]);
     }
 
     // delta < 0: previous workspace, > 0: next workspace

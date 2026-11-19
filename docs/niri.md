@@ -27,10 +27,14 @@ layer-rule {
 
 ## What works on Niri today
 
-- Bar active-window title, caps/num lock indicators, keyboard layout, workspace scroll on the bar
-- Lock screen state messages, notifications, idle DPMS (`power-off-monitors`)
+- Bar workspaces (per output, sorted by index) with window icons; click to focus, scroll to switch
+- Active-window title and preview popout, keyboard layout popout and switching
+- Caps/num lock indicators and OSD, notifications, lock screen, idle DPMS (`power-off-monitors`)
+- The AI drawer reserves its width while open, so windows make room for it
 
 ## Not yet (Hyprland-only for now)
 
-- Workspaces widget and window icons, special workspaces, window-info panel,
-  area-picker window snapping, game mode, runtime blur/transparency layer rules
+- Special workspaces, window-info panel, area-picker window snapping, keybind search
+- Game mode, anti-flashbang shader, runtime blur/transparency layer rules
+  (add blur for `caelestia-drawers` in your own `layer-rule` if your Niri version supports it)
+- Clicking outside an open drawer does not close it (Niri has no focus-grab protocol); use the bind again or Escape
