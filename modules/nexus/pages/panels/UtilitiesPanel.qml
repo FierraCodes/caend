@@ -222,5 +222,21 @@ PageBase {
                 onToggled: root.setToggleOn(modelData.id, checked)
             }
         }
+
+        SectionHeader {
+            text: Tr.tr("Caps / Num lock")
+        }
+
+        StepperRow {
+            first: true
+            last: true
+            label: Tr.tr("Indicator duration")
+            subtext: Tr.tr("Milliseconds the caps/num lock pill stays on screen")
+            value: GlobalConfig.osd.lockKeysHideDelay
+            from: 250
+            to: 5000
+            stepSize: 250
+            onMoved: v => GlobalConfig.osd.lockKeysHideDelay = v
+        }
     }
 }

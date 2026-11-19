@@ -50,7 +50,7 @@ Scope {
     Timer {
         id: hideTimer
 
-        interval: 1500
+        interval: GlobalConfig.osd.lockKeysHideDelay
         onTriggered: root.shown = false
     }
 
