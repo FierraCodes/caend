@@ -411,7 +411,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
         },
         "transparency": {
             "enabled": true,
-            "base": 0.8,
+            "base": 0.7,
             "layers": 0.4
         }
     },
