@@ -14,6 +14,8 @@ StyledRect {
     readonly property bool horizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
     readonly property var player: Players.active
     readonly property bool playing: player?.isPlaying ?? false
+    // Media is the second dashboard tab unless the main tab is turned off
+    readonly property int mediaTab: Config.dashboard.showDashboard ? 1 : 0
     readonly property real size: Tokens.sizes.bar.innerWidth - Tokens.padding.small
 
     visible: !!player
@@ -23,7 +25,7 @@ StyledRect {
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.full
 
-    // Body: left opens the dashboard, middle toggles playback, back/forward skip
+    // Body: left opens dashboard > media, middle toggles playback, back/forward skip
     StateLayer {
         radius: Tokens.rounding.full
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton
@@ -34,8 +36,12 @@ StyledRect {
                 root.player?.previous();
             else if (event.button === Qt.ForwardButton)
                 root.player?.next();
-            else
-                root.screenState.dashboard = !root.screenState.dashboard;
+            else if (root.screenState.dashboard && root.screenState.dashboardTab === root.mediaTab)
+                root.screenState.dashboard = false;
+            else {
+                root.screenState.dashboardTab = root.mediaTab;
+                root.screenState.dashboard = true;
+            }
         }
     }
 
@@ -76,8 +82,7 @@ StyledRect {
 
             StyledText {
                 width: Math.min(implicitWidth, 120)
-                text: root.player?.trackArtist ?? ""
-                visible: text.length > 0
+                text: root.player?.trackTitle ?? ""
                 font: Tokens.font.label.small
                 color: Colours.palette.m3onSurface
                 elide: Text.ElideRight
@@ -85,7 +90,8 @@ StyledRect {
 
             StyledText {
                 width: Math.min(implicitWidth, 120)
-                text: root.player?.trackTitle ?? ""
+                text: root.player?.trackArtist ?? ""
+                visible: text.length > 0
                 font: Tokens.font.label.small
                 color: Colours.palette.m3onSurfaceVariant
                 elide: Text.ElideRight
