@@ -28,6 +28,21 @@ PageBase {
         }
     ]
     readonly property list<string> positionValues: ["left", "right", "top", "bottom"]
+    readonly property list<MenuItem> cornerItems: [
+        MenuItem {
+            text: Tr.trCtx("Hug", "bar corner style")
+            icon: "rounded_corner"
+        },
+        MenuItem {
+            text: Tr.trCtx("Float", "bar corner style")
+            icon: "padding"
+        },
+        MenuItem {
+            text: Tr.trCtx("Plain", "bar corner style")
+            icon: "crop_square"
+        }
+    ]
+    readonly property list<string> cornerValues: ["hug", "float", "plain"]
 
     title: Tr.tr("Taskbar")
     isSubPage: true
@@ -51,6 +66,14 @@ PageBase {
             menuItems: root.positionItems
             active: root.positionItems[Math.max(0, root.positionValues.indexOf(GlobalConfig.bar.position))]
             onSelected: item => GlobalConfig.bar.position = root.positionValues[root.positionItems.indexOf(item)]
+        }
+
+        SelectRow {
+            label: Tr.tr("Corner style")
+            subtext: Tr.tr("Hug the screen frame, float as a pill, or square corners")
+            menuItems: root.cornerItems
+            active: root.cornerItems[Math.max(0, root.cornerValues.indexOf(GlobalConfig.bar.cornerStyle))]
+            onSelected: item => GlobalConfig.bar.cornerStyle = root.cornerValues[root.cornerItems.indexOf(item)]
         }
 
         ToggleRow {

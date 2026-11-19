@@ -107,6 +107,8 @@ class BarConfig : public settings::ObjectNode {
     CONFIG_NODE(BarConfig, settings::ObjectNode)
 
     CONFIG_PROPERTY(QString, position, u"left"_s) // "left", "right", "top" or "bottom"
+    // From end4: "hug" (bar is part of the screen frame), "float" (detached pill) or "plain" (square frame corners)
+    CONFIG_PROPERTY(QString, cornerStyle, u"hug"_s)
     CONFIG_PROPERTY(bool, persistent, true)
     CONFIG_PROPERTY(bool, showOnHover, true)
     CONFIG_PROPERTY(int, dragThreshold, 20)

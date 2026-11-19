@@ -41,6 +41,8 @@ StyledWindow {
     readonly property real borderThickness: contentItem.Config.border.thickness * (1 - fsTransitionProg)
     readonly property real borderRounding: (GameMode.enabled && GlobalConfig.utilities.gameMode.options["decoration:rounding"] === 0 ? 0 : contentItem.Config.border.rounding) * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
+    // With a floating bar the frame stays thin on the bar's side too
+    readonly property real barFrameThickness: bar.floating ? Math.min(bar.thickness, borderThickness) : bar.thickness
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : contentItem.Config.border.thickness
 
     property color surfaceColour: Colours.tPalette.m3surface
@@ -168,11 +170,25 @@ StyledWindow {
             anchors.fill: parent
             anchors.margins: -50 // Make border thicker to smooth out bulge from closed drawers
             group: blobGroup
+            radius: root.contentItem.Config.bar.cornerStyle === "plain" ? 0 : root.borderRounding
+            borderLeft: (bar.side === "left" ? root.barFrameThickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
+            borderRight: (bar.side === "right" ? root.barFrameThickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
+            borderTop: (bar.side === "top" ? root.barFrameThickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
+            borderBottom: (bar.side === "bottom" ? root.barFrameThickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
+        }
+
+        // Floating bar (end4 "float" corner style): its own pill, inset from the frame
+        BlobRect {
+            readonly property Item c: bar.barContent
+            readonly property real inset: root.borderThickness + bar.floatGap
+
+            group: blobGroup
+            visible: bar.floating && c.width > 0 && c.height > 0
+            x: bar.x + (bar.horizontal ? inset : c.x)
+            y: bar.y + (bar.horizontal ? c.y : inset)
+            implicitWidth: bar.horizontal ? bar.width - inset * 2 : c.width
+            implicitHeight: bar.horizontal ? c.height : bar.height - inset * 2
             radius: root.borderRounding
-            borderLeft: (bar.side === "left" ? bar.thickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
-            borderRight: (bar.side === "right" ? bar.thickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
-            borderTop: (bar.side === "top" ? bar.thickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
-            borderBottom: (bar.side === "bottom" ? bar.thickness : root.borderThickness) - anchors.margins - root.sdfBorderOffset
         }
 
         PanelBg {

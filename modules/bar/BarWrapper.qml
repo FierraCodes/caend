@@ -26,7 +26,12 @@ Item {
     readonly property int clampedThickness: Math.max(Config.border.minThickness, thickness)
     readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
     readonly property int contentWidth: Tokens.sizes.bar.innerWidth + padding * 2
-    readonly property int exclusiveZone: !disabled && (Config.bar.persistent || screenState.bar) ? contentWidth : Config.border.thickness
+    readonly property bool floating: Config.bar.cornerStyle === "float"
+    // A floating bar keeps clear of the frame by the blob smoothing distance, or the two would melt together
+    readonly property int floatGap: floating ? Config.border.smoothing : 0
+    readonly property int stripWidth: contentWidth + floatGap * 2
+    readonly property alias barContent: content
+    readonly property int exclusiveZone: !disabled && (Config.bar.persistent || screenState.bar) ? stripWidth : Config.border.thickness
     readonly property bool shouldBeVisible: !fullscreen && !disabled && (Config.bar.persistent || screenState.bar || isHovered)
     property bool isHovered
 
@@ -53,7 +58,7 @@ Item {
         when: root.shouldBeVisible
 
         PropertyChanges {
-            root.thickness: root.contentWidth
+            root.thickness: root.stripWidth
         }
     }
 
@@ -87,6 +92,10 @@ Item {
         anchors.bottom: root.side === "top" || !root.horizontal ? parent.bottom : undefined
         anchors.left: root.side === "right" || root.horizontal ? parent.left : undefined
         anchors.right: root.side === "left" || root.horizontal ? parent.right : undefined
+        anchors.topMargin: root.side === "bottom" ? root.floatGap : 0
+        anchors.bottomMargin: root.side === "top" ? root.floatGap : 0
+        anchors.leftMargin: root.side === "right" ? root.floatGap : 0
+        anchors.rightMargin: root.side === "left" ? root.floatGap : 0
 
         active: root.shouldBeVisible
 
