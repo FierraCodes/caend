@@ -15,7 +15,7 @@ Scope {
         property bool closing
         property bool clipboardOnly
         // What happens to the snip, from end4's region selector: copy, edit, ocr, qr or search
-        property string action: clipboardOnly ? "copy" : "edit"
+        property string action: "copy"
 
         Variants {
             model: Screens.screens
@@ -54,7 +54,7 @@ Scope {
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = false;
-            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.action = "copy";
             root.activeAsync = true;
         }
 
@@ -62,7 +62,7 @@ Scope {
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = false;
-            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.action = "copy";
             root.activeAsync = true;
         }
 
@@ -70,7 +70,7 @@ Scope {
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = true;
-            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.action = "copy";
             root.activeAsync = true;
         }
 
@@ -78,7 +78,7 @@ Scope {
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = true;
-            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.action = "copy";
             root.activeAsync = true;
         }
 
@@ -103,7 +103,7 @@ Scope {
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = false;
-            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.action = "copy";
             root.activeAsync = true;
         }
     }
@@ -117,7 +117,7 @@ Scope {
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = false;
-            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.action = "copy";
             root.activeAsync = true;
         }
     }
@@ -131,7 +131,7 @@ Scope {
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = true;
-            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.action = "copy";
             root.activeAsync = true;
         }
     }
@@ -145,7 +145,7 @@ Scope {
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = true;
-            root.action = root.clipboardOnly ? "copy" : "edit";
+            root.action = "copy";
             root.activeAsync = true;
         }
     }
