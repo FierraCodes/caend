@@ -27,7 +27,6 @@ CustomMouseArea {
     // Where edge panels meet their edge: the screen edge, or the bar when it is on that side
     readonly property real rightEdge: bar.side === "right" ? width - bar.thickness : width
     readonly property real topEdge: bar.side === "top" ? bar.thickness : 0
-    readonly property real leftEdge: bar.side === "left" ? bar.thickness : 0
     readonly property real bottomEdge: bar.side === "bottom" ? height - bar.thickness : height
 
     function inBarDepth(x: real, y: real, depth: real): bool {
@@ -89,14 +88,9 @@ CustomMouseArea {
         return y >= topEdge && y < topEdge + Math.max(Config.border.minThickness, Config.border.thickness + panelHeight) && withinPanelWidth(panel, x, y);
     }
 
-    function inLeftPanel(panel: Item, x: real, y: real): bool {
-        const panelWidth = panel.width * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
-        return x >= leftEdge && x < leftEdge + Math.max(Config.border.minThickness, Config.border.thickness + panelWidth) && withinPanelHeight(panel, x, y);
-    }
-
-    // The dashboard drops from the top, or slides from the left edge when the bar is on top
+    // The dashboard drops from the top, or rises from the bottom when the bar is on top
     function inDashboard(x: real, y: real): bool {
-        return panels.dashboard.fromLeft ? inLeftPanel(panels.dashboard, x, y) : inTopPanel(panels.dashboard, x, y);
+        return panels.dashboard.fromBottom ? inBottomPanel(panels.dashboard, x, y) : inTopPanel(panels.dashboard, x, y);
     }
 
     function inBottomPanel(panel: Item, x: real, y: real, isCorner = false): bool {
@@ -282,15 +276,13 @@ CustomMouseArea {
         }
 
         // Show/hide dashboard on drag (for touchscreen devices)
-        if (pressed && inDashboard(dragStart.x, dragStart.y)) {
-            const fromLeft = panels.dashboard.fromLeft;
-            const drag = fromLeft ? dragX : dragY;
-            if (fromLeft ? withinPanelHeight(panels.dashboard, x, y) : withinPanelWidth(panels.dashboard, x, y)) {
-                if (drag > Config.dashboard.dragThreshold)
-                    screenState.dashboard = true;
-                else if (drag < -Config.dashboard.dragThreshold)
-                    screenState.dashboard = false;
-            }
+        if (pressed && inDashboard(dragStart.x, dragStart.y) && withinPanelWidth(panels.dashboard, x, y)) {
+            // Dragging away from the dashboard's edge opens it
+            const drag = panels.dashboard.fromBottom ? -dragY : dragY;
+            if (drag > Config.dashboard.dragThreshold)
+                screenState.dashboard = true;
+            else if (drag < -Config.dashboard.dragThreshold)
+                screenState.dashboard = false;
         }
 
         // Show utilities on hover

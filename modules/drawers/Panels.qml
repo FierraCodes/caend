@@ -116,12 +116,11 @@ Item {
 
         screenState: root.screenState
 
-        // A top bar keeps its centre for the bar's own popouts, so the dashboard slides in from the left edge
-        fromLeft: root.bar.side === "top"
-        anchors.horizontalCenter: root.bar.side === "top" ? undefined : parent.horizontalCenter
-        anchors.left: root.bar.side === "top" ? parent.left : undefined
-        anchors.top: root.bar.side === "top" ? undefined : parent.top
-        anchors.verticalCenter: root.bar.side === "top" ? parent.verticalCenter : undefined
+        // A top bar owns the top edge, so the dashboard rises from the bottom (the left edge is kept for the AI sidebar)
+        fromBottom: root.bar.side === "top"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: fromBottom ? undefined : parent.top
+        anchors.bottom: fromBottom ? parent.bottom : undefined
     }
 
     BarPopouts.ClipWrapper {

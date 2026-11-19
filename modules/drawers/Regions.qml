@@ -26,14 +26,9 @@ Region {
     intersection: Intersection.Xor
 
     R {
-        readonly property bool fromLeft: root.panels.dashboard.fromLeft
-        readonly property real shown: 1 - root.panels.dashboard.offsetScale
-
         panel: root.panels.dashboard
-        x: fromLeft ? root.panels.x - root.borderThickness : panel.x + root.panels.x
-        y: fromLeft ? panel.y + root.panels.y : root.topEdge
-        width: fromLeft ? panel.width * shown + root.borderThickness : panel.width
-        height: fromLeft ? panel.height : panel.height * shown + root.borderThickness
+        y: root.panels.dashboard.fromBottom ? root.bottomEdge - height : root.topEdge
+        height: panel.height * (1 - root.panels.dashboard.offsetScale) + root.borderThickness
     }
 
     R {
