@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Caelestia.Config
 import Caelestia.I18n
+import qs.components.misc
 import qs.services
 import qs.utils
 
@@ -107,6 +108,35 @@ exit $code`
         target: "recorder"
     }
 
+    // Global shortcuts, e.g. hl.dsp.global("caelestia:recordRegion"); pressing again stops
+    Shortcut {
+        name: "record"
+        description: "Toggle fullscreen recording"
+        region: false
+        sound: false
+    }
+
+    Shortcut {
+        name: "recordSound"
+        description: "Toggle fullscreen recording with sound"
+        region: false
+        sound: true
+    }
+
+    Shortcut {
+        name: "recordRegion"
+        description: "Toggle region recording"
+        region: true
+        sound: false
+    }
+
+    Shortcut {
+        name: "recordRegionSound"
+        description: "Toggle region recording with sound"
+        region: true
+        sound: true
+    }
+
     Connections {
         function onSecondsChanged(): void {
             root.elapsed++;
@@ -114,5 +144,14 @@ exit $code`
 
         enabled: root.running
         target: Time
+    }
+
+    // qmllint disable unresolved-type
+    component Shortcut: CustomShortcut {
+        // qmllint enable unresolved-type
+        required property bool region
+        required property bool sound
+
+        onPressed: root.running ? root.stop() : root.start(region, sound)
     }
 }
