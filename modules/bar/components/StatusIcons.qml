@@ -39,7 +39,7 @@ StyledRect {
         if (entry.id === "lockStatus")
             return !Compositor.capsLock && !Compositor.numLock;
         if (entry.id === "inputMethod")
-            return !InputMethod.available;
+            return !Fcitx.available;
         return false;
     }
 
@@ -129,7 +129,7 @@ StyledRect {
                     delegate: EntryWrapper {
                         StyledText {
                             animate: true
-                            text: InputMethod.label
+                            text: Fcitx.label
                             color: root.colour
                             font: Tokens.font.mono.medium
                         }

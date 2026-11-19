@@ -129,7 +129,7 @@ Item {
             name: "inputmethod"
             sourceComponent: TrayMenu {
                 popouts: root.popouts
-                trayItem: InputMethod.item?.menu ?? null // qmllint disable incompatible-type
+                trayItem: Fcitx.item?.menu ?? null // qmllint disable incompatible-type
             }
         }
 
