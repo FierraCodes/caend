@@ -93,7 +93,9 @@ Singleton {
             rule = "keyword layerrule %1 %2, match:namespace ^caelestia-(drawers|polkit|lock-osd)$";
             trEnabled = transparency.enabled ? 1 : 0;
         }
-        Hypr.extras.batchMessage([rule.arg("blur").arg(trEnabled), rule.arg("ignore_alpha").arg(Math.max(0, transparency.base - 0.03))]);
+        // Fade (not slide) when shell layers like the polkit dialog map and unmap
+        const anim = Hypr.usingLua ? '"fade"' : "fade";
+        Hypr.extras.batchMessage([rule.arg("blur").arg(trEnabled), rule.arg("ignore_alpha").arg(Math.max(0, transparency.base - 0.03)), rule.arg("animation").arg(anim)]);
     }
 
     function requestReloadHyprRules(): void {
