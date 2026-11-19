@@ -113,7 +113,11 @@ private:
     std::atomic<quint32> m_generation = 0;
     QMetaObject::Connection m_windowConn;
     QMetaObject::Connection m_sinkConn;
-    QMediaPlayer m_player;
+    // Created on first video: constructing one starts the FFmpeg backend, which probes (and wakes) every GPU
+    QMediaPlayer* m_player = nullptr;
+
+    QMediaPlayer* ensurePlayer();
+    void connectSink();
 };
 
 } // namespace caelestia::shell::multimedia
