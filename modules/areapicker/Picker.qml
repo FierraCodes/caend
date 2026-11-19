@@ -113,7 +113,8 @@ rm -f "$1"`, Tr.tr("QR code copied"), Tr.tr("No QR code found"), Tr.tr("Needs zx
 rm -f "$1"`);
                 break;
             default:
-                Quickshell.execDetached(["swappy", "-f", path]);
+                sh(`command -v swappy >/dev/null && exec swappy -f "$1"
+notify-send -a caelestia "$2" "$3"`, Tr.tr("Can't open the editor"), Tr.tr("Needs swappy"));
             }
             closeAnim.start();
         });
