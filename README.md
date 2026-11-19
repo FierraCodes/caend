@@ -679,7 +679,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
         "maxShown": 7,
         "maxWallpapers": 9,
         "specialPrefix": "@",
-        "actionPrefix": ">",
+        "actionPrefix": "/",
         "enableDangerousActions": false,
         "dragThreshold": 50,
         "vimKeybinds": false,

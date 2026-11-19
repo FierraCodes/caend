@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import Caelestia
 import Caelestia.Config
 import qs.components
 import qs.components.containers
@@ -28,13 +29,6 @@ StyledListView {
 
     function stateForText(text: string): string {
         const conf = GlobalConfig.launcher;
-        if (conf.webPrefix && text.startsWith(conf.webPrefix))
-            return "web";
-        if (conf.shellPrefix && text.startsWith(conf.shellPrefix))
-            return "shell";
-        if (conf.clipboardPrefix && text.startsWith(conf.clipboardPrefix))
-            return "clipboard";
-
         const prefix = conf.actionPrefix;
         if (text.startsWith(prefix)) {
             for (const action of ["calc", "scheme", "variant"])
@@ -44,11 +38,19 @@ StyledListView {
             return "actions";
         }
 
-        // Nothing matched: offer web search and running it as a command, Spotlight style
-        return text.trim() && Apps.search(text).length === 0 ? "spotlight" : "apps";
+        for (const [state, p] of [["web", conf.webPrefix], ["shell", conf.shellPrefix], ["clipboard", conf.clipboardPrefix], ["emoji", conf.emojiPrefix], ["symbol", conf.symbolPrefix], ["keybind", conf.keybindPrefix], ["math", conf.mathPrefix], ["appsOnly", conf.appPrefix]])
+            if (p && text.startsWith(p))
+                return state;
+
+        return "search";
+    }
+
+    function strip(text: string, prefix: string): string {
+        return text.slice(prefix.length);
     }
 
     function resultsForText(text: string): var {
+        const conf = GlobalConfig.launcher;
         switch (stateForText(text)) {
         case "actions":
             return Actions.query(text);
@@ -59,16 +61,32 @@ StyledListView {
         case "variant":
             return M3Variants.query(text);
         case "web":
-            return [Spotlight.web(text.slice(GlobalConfig.launcher.webPrefix.length))];
+            return [Spotlight.web(strip(text, conf.webPrefix))];
         case "shell":
-            return Spotlight.shell(text.slice(GlobalConfig.launcher.shellPrefix.length));
+            return Spotlight.shell(strip(text, conf.shellPrefix));
         case "clipboard":
-            return Spotlight.clipboard(text.slice(GlobalConfig.launcher.clipboardPrefix.length));
-        case "spotlight":
-            return [Spotlight.web(text), ...Spotlight.shell(text)];
+            return Spotlight.clipboard(strip(text, conf.clipboardPrefix));
+        case "emoji":
+            return Spotlight.emoji(strip(text, conf.emojiPrefix));
+        case "symbol":
+            return Spotlight.symbol(strip(text, conf.symbolPrefix));
+        case "keybind":
+            return Spotlight.keybind(strip(text, conf.keybindPrefix));
+        case "math":
+            return [Spotlight.math(strip(text, conf.mathPrefix).trim())];
+        case "appsOnly":
+            return Apps.search(strip(text, conf.appPrefix)).map(Spotlight.app);
         default:
-            return Apps.search(text);
+            return Spotlight.mixed(text);
         }
+    }
+
+    // Math results come back asynchronously; the model binding picks them up through Qalculator.result
+    function mathExpr(text: string): string {
+        const state = stateForText(text);
+        if (state === "math")
+            return strip(text, GlobalConfig.launcher.mathPrefix).trim();
+        return state === "search" ? text.trim() : "";
     }
 
     model: ScriptModel {
@@ -106,16 +124,31 @@ StyledListView {
             Schemes.reload();
         else if (state === "clipboard")
             Spotlight.reloadClipboard();
+        else if (state === "keybind")
+            Spotlight.reloadKeybinds();
+    }
+
+    onDisplayTextChanged: {
+        const expr = mathExpr(displayText);
+        if (expr)
+            Qalculator.evalAsync(expr);
     }
 
     Component.onCompleted: displayText = search.text
 
     states: [
         State {
-            name: "apps"
+            name: "search"
 
             PropertyChanges {
-                root.delegate: appItem
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "appsOnly"
+
+            PropertyChanges {
+                root.delegate: actionItem
             }
         },
         State {
@@ -147,7 +180,28 @@ StyledListView {
             }
         },
         State {
-            name: "spotlight"
+            name: "emoji"
+
+            PropertyChanges {
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "symbol"
+
+            PropertyChanges {
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "keybind"
+
+            PropertyChanges {
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "math"
 
             PropertyChanges {
                 root.delegate: actionItem
@@ -291,14 +345,6 @@ StyledListView {
             type: Anim.DefaultEffects
             property: "opacity"
             to: 1
-        }
-    }
-
-    Component {
-        id: appItem
-
-        AppItem {
-            screenState: root.screenState
         }
     }
 

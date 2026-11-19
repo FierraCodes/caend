@@ -59,7 +59,7 @@ Item {
         topPadding: Math.round((Tokens.padding.medium + Tokens.padding.large) / 2)
         bottomPadding: Math.round((Tokens.padding.medium + Tokens.padding.large) / 2)
 
-        placeholderText: Tr.tr("Type \"%1\" for commands").arg(GlobalConfig.launcher.actionPrefix)
+        placeholderText: Tr.tr("Search, calculate or run (\"%1\" for actions)").arg(GlobalConfig.launcher.actionPrefix)
 
         onAccepted: {
             const currentItem = list.currentList?.currentItem;
@@ -69,16 +69,10 @@ Item {
                         Wallpapers.previewColourLock = true;
                     Wallpapers.setWallpaper(currentItem.modelData.path);
                     root.screenState.launcher = false;
-                } else if (text.startsWith(GlobalConfig.launcher.actionPrefix)) {
-                    if (text.startsWith(`${GlobalConfig.launcher.actionPrefix}calc `))
-                        currentItem.onClicked();
-                    else
-                        currentItem.modelData.onClicked(list.currentList);
-                } else if (typeof currentItem.modelData?.onClicked === "function") {
-                    currentItem.modelData.onClicked(list.currentList); // Spotlight results
+                } else if (text.startsWith(`${GlobalConfig.launcher.actionPrefix}calc `)) {
+                    currentItem.onClicked();
                 } else {
-                    Apps.launch(currentItem.modelData);
-                    root.screenState.launcher = false;
+                    currentItem.modelData?.onClicked(list.currentList);
                 }
             }
         }

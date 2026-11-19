@@ -45,11 +45,17 @@ class LauncherConfig : public settings::ObjectNode {
     CONFIG_PROPERTY(int, maxShown, 7)
     CONFIG_PROPERTY(int, maxWallpapers, 9)
     CONFIG_GLOBAL_PROPERTY(QString, specialPrefix, u"@"_s)
-    CONFIG_GLOBAL_PROPERTY(QString, actionPrefix, u">"_s)
-    // Spotlight-style search: these prefixes switch the launcher to web search, a shell command or clipboard history
+    CONFIG_GLOBAL_PROPERTY(QString, actionPrefix, u"/"_s)
+    // end4-style search prefixes. Without a prefix the results mix apps, math, actions, a command and a web search
+    CONFIG_GLOBAL_PROPERTY(QString, appPrefix, u">"_s)
+    CONFIG_GLOBAL_PROPERTY(QString, mathPrefix, u"="_s)
     CONFIG_GLOBAL_PROPERTY(QString, webPrefix, u"?"_s)
     CONFIG_GLOBAL_PROPERTY(QString, shellPrefix, u"$"_s)
     CONFIG_GLOBAL_PROPERTY(QString, clipboardPrefix, u";"_s)
+    CONFIG_GLOBAL_PROPERTY(QString, emojiPrefix, u":"_s)
+    CONFIG_GLOBAL_PROPERTY(QString, symbolPrefix, u"."_s)
+    CONFIG_GLOBAL_PROPERTY(QString, keybindPrefix, u"<"_s)
+    CONFIG_GLOBAL_PROPERTY(bool, showDefaultActionsWithoutPrefix, true)
     // %s is replaced with the query
     CONFIG_GLOBAL_PROPERTY(QString, webSearchUrl, u"https://duckduckgo.com/?q=%s"_s)
     CONFIG_GLOBAL_PROPERTY(bool, enableDangerousActions, false)
