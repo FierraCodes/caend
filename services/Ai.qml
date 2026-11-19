@@ -26,7 +26,8 @@ Singleton {
 
     // Every provider takes any of its model ids as "provider:model", e.g. "openrouter:openai/gpt-4o".
     // format "openai" means an OpenAI-compatible chat completions endpoint.
-    readonly property var providers: ({
+    readonly property var providers: {
+        const list = {
             gemini: {
                 name: "Gemini",
                 format: "gemini",
@@ -80,7 +81,20 @@ Singleton {
                 endpoint: `${GlobalConfig.ai.ollamaEndpoint.replace(/\/+$/, "")}/v1/chat/completions`,
                 keyless: true
             }
-        })
+        };
+        for (const p of GlobalConfig.ai.providers) {
+            const base = (p?.baseUrl ?? p?.endpoint ?? "").replace(/\/+$/, "");
+            if (!p?.id || !base)
+                continue;
+            list[p.id] = {
+                name: p.name ?? p.id,
+                format: "openai",
+                endpoint: base.endsWith("/chat/completions") ? base : `${base}/chat/completions`,
+                keyless: p.keyless ?? false
+            };
+        }
+        return list;
+    }
 
     // Shown by /model; any other "provider:model" id works too
     property list<var> ollamaModels: []

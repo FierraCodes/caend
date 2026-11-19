@@ -22,6 +22,9 @@ class AiConfig : public settings::ObjectNode {
         u"The focused window is {WINDOWCLASS}. Be concise and use Markdown."_s)
     // Local Ollama server; its installed models are listed automatically. Empty disables it.
     CONFIG_PROPERTY(QString, ollamaEndpoint, u"http://localhost:11434"_s)
+    // Custom OpenAI-compatible providers: [{ "id", "name", "baseUrl", "keyless" (optional) }]
+    // e.g. { "id": "together", "baseUrl": "https://api.together.xyz/v1" }, then /model together:<model-id>
+    CONFIG_PROPERTY(QVariantList, providers, {})
     // Extra OpenAI-compatible models: [{ "name", "model", "endpoint", "keyId" (optional) }]
     CONFIG_PROPERTY(QVariantList, extraModels, {})
 };
