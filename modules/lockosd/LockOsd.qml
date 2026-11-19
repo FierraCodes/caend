@@ -86,11 +86,15 @@ Scope {
                 scale: opacity > 0 ? 1 : 0.9
 
                 Behavior on opacity {
-                    Anim {}
+                    Anim {
+                        type: Anim.FastEffects
+                    }
                 }
 
                 Behavior on scale {
-                    Anim {}
+                    Anim {
+                        type: Anim.FastSpatial
+                    }
                 }
 
                 Row {
