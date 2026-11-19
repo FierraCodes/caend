@@ -9,9 +9,11 @@ Item {
     property alias osdPanel: content.osdPanel
     property alias sessionPanel: content.sessionPanel
     property alias utilitiesPanel: content.utilitiesPanel
+    property alias fromBottom: content.fromBottom
 
     visible: height > 0
-    anchors.topMargin: -5
+    anchors.topMargin: fromBottom ? 0 : -5
+    anchors.bottomMargin: fromBottom ? -5 : 0
     implicitWidth: Math.max(sidebarPanel.width, content.implicitWidth)
     implicitHeight: content.implicitHeight
 
@@ -19,6 +21,7 @@ Item {
         id: content
 
         anchors.topMargin: -root.anchors.topMargin
+        anchors.bottomMargin: -root.anchors.bottomMargin
         screenState: root.screenState
     }
 }

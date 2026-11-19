@@ -14,6 +14,7 @@ Item {
     required property ScreenState screenState
     required property Sidebar.Wrapper sidebar
     required property BarPopouts.Wrapper popouts
+    property bool fromTop // Drops from the top-right corner instead of rising from the bottom-right
     property real horizontalStretch
     property matrix4x4 deformMatrix
 
@@ -31,7 +32,8 @@ Item {
     property real sidebarLerp
 
     visible: offsetScale < 1
-    anchors.bottomMargin: (-implicitHeight - 5) * offsetScale
+    anchors.bottomMargin: fromTop ? 0 : (-implicitHeight - 5) * offsetScale
+    anchors.topMargin: fromTop ? (-implicitHeight - 5) * offsetScale : 0
     implicitHeight: content.implicitHeight + totalPadding
     implicitWidth: sidebar.width * (1 - sidebar.offsetScale) * horizontalStretch * sidebarLerp + Tokens.sizes.utilities.width * (1 - sidebarLerp)
     opacity: 1 - offsetScale
@@ -76,6 +78,7 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.margins: Tokens.padding.large
+        anchors.topMargin: root.fromTop ? CUtils.clamp(anchors.margins - Config.border.thickness, 0, anchors.margins) : anchors.margins
 
         asynchronous: true
         active: root.shouldBeActive || root.visible

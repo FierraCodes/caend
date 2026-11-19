@@ -93,6 +93,11 @@ CustomMouseArea {
         return panels.dashboard.fromBottom ? inBottomPanel(panels.dashboard, x, y) : inTopPanel(panels.dashboard, x, y);
     }
 
+    // Utilities sit in the bottom-right corner, or the top-right one when the bar is at the bottom
+    function inUtilities(x: real, y: real): bool {
+        return panels.rightFlipped ? inTopPanel(panels.utilities, x, y) || (y < topEdge + Config.border.rounding && withinPanelWidth(panels.utilities, x, y)) : inBottomPanel(panels.utilities, x, y, true);
+    }
+
     function inBottomPanel(panel: Item, x: real, y: real, isCorner = false): bool {
         const panelHeight = panel.height * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
         return y <= bottomEdge && y > bottomEdge - Math.max(Config.border.minThickness, Config.border.thickness + panelHeight) - (isCorner ? Config.border.rounding : 0) && withinPanelWidth(panel, x, y);
@@ -190,7 +195,9 @@ CustomMouseArea {
             // Show sidebar on hover (top-right corner, bounded by notification panel height)
             if (Config.sidebar.showOnHover && Config.sidebar.enabled) {
                 const sidebarTriggerY = Math.max(Config.sidebar.minHoverThreshold, panels.notifications.y + panels.notifications.height + borderThickness);
-                const showSidebarHover = x > Math.min(rightEdge - Config.border.minThickness, panels.x + panels.sidebar.x) && x <= rightEdge && y <= sidebarTriggerY;
+                // Flipped column: the sidebar trigger is the bottom-right stretch, up to the notification popups
+                const flippedTriggerY = Math.min(bottomEdge - Config.sidebar.minHoverThreshold, panels.notifications.y - borderThickness);
+                const showSidebarHover = x > Math.min(rightEdge - Config.border.minThickness, panels.x + panels.sidebar.x) && x <= rightEdge && (panels.rightFlipped ? y >= flippedTriggerY : y <= sidebarTriggerY);
                 if (showSidebarHover && !screenState.sidebar)
                     screenState.sidebar = true;
             }
@@ -235,7 +242,9 @@ CustomMouseArea {
             // Show/hide sidebar on hover
             if (Config.sidebar.showOnHover && Config.sidebar.enabled && !pressed) {
                 const sidebarTriggerY = Math.max(Config.sidebar.minHoverThreshold, panels.notifications.y + panels.notifications.height + borderThickness);
-                const showSidebarHover = x > Math.min(rightEdge - Config.border.minThickness, panels.x + panels.sidebar.x) && x <= rightEdge && y <= sidebarTriggerY;
+                // Flipped column: the sidebar trigger is the bottom-right stretch, up to the notification popups
+                const flippedTriggerY = Math.min(bottomEdge - Config.sidebar.minHoverThreshold, panels.notifications.y - borderThickness);
+                const showSidebarHover = x > Math.min(rightEdge - Config.border.minThickness, panels.x + panels.sidebar.x) && x <= rightEdge && (panels.rightFlipped ? y >= flippedTriggerY : y <= sidebarTriggerY);
                 if (showSidebarHover && !screenState.sidebar) {
                     screenState.sidebar = true;
                 } else if (!sidebarShortcutActive) {
@@ -302,7 +311,7 @@ CustomMouseArea {
         }
 
         // Show utilities on hover
-        const showUtilities = inBottomPanel(panels.utilities, x, y, true);
+        const showUtilities = inUtilities(x, y);
 
         // Always update visibility based on hover if not in shortcut mode
         if (!utilitiesShortcutActive) {
@@ -374,7 +383,7 @@ CustomMouseArea {
         function onUtilitiesChanged() {
             if (root.screenState.utilities) {
                 // Utilities became visible, immediately check if this should be shortcut mode
-                const inUtilitiesArea = root.inBottomPanel(root.panels.utilities, root.mouseX, root.mouseY);
+                const inUtilitiesArea = root.inUtilities(root.mouseX, root.mouseY);
                 if (!inUtilitiesArea) {
                     root.utilitiesShortcutActive = true;
                 }

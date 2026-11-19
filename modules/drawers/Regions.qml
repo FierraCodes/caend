@@ -67,13 +67,13 @@ Region {
 
     R {
         panel: root.panels.notifications
-        y: root.topEdge
+        y: root.panels.rightFlipped ? root.bottomEdge - height : root.topEdge
         height: panel.height + root.borderThickness
     }
 
     R {
         panel: root.panels.utilities
-        y: root.bottomEdge - height
+        y: root.panels.rightFlipped ? root.topEdge : root.bottomEdge - height
         height: panel.height * (1 - root.panels.utilities.offsetScale) + root.borderThickness
     }
 

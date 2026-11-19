@@ -22,6 +22,8 @@ Item {
     required property Bar.BarWrapper bar
     required property real borderThickness
 
+    // A bottom bar owns the bottom-right corner, so the right column flips: utilities top-right, notifications bottom-right
+    readonly property bool rightFlipped: bar.side === "bottom"
     readonly property alias osd: osd
     readonly property alias osdWrapper: osdWrapper
     readonly property alias notifications: notifications
@@ -76,7 +78,9 @@ Item {
         sessionPanel: sessionWrapper
         utilitiesPanel: utilities
 
-        anchors.top: parent.top
+        fromBottom: root.rightFlipped
+        anchors.top: root.rightFlipped ? undefined : parent.top
+        anchors.bottom: root.rightFlipped ? parent.bottom : undefined
         anchors.right: parent.right
     }
 
@@ -140,14 +144,17 @@ Item {
         sidebar: sidebar
         popouts: popoutsWrapper.content
 
-        anchors.bottom: parent.bottom
+        fromTop: root.rightFlipped
+        anchors.top: root.rightFlipped ? parent.top : undefined
+        anchors.bottom: root.rightFlipped ? undefined : parent.bottom
         anchors.right: parent.right
     }
 
     Toasts.Toasts {
         id: toasts
 
-        anchors.bottom: sidebar.visible ? parent.bottom : utilities.top
+        anchors.bottom: root.rightFlipped ? undefined : sidebar.visible ? parent.bottom : utilities.top
+        anchors.top: root.rightFlipped ? (sidebar.visible ? parent.top : utilities.bottom) : undefined
         anchors.right: sidebar.left
         anchors.margins: Tokens.padding.medium
     }
@@ -157,10 +164,12 @@ Item {
 
         screenState: root.screenState
 
-        anchors.top: notifications.bottom
-        anchors.bottom: utilities.top
+        flipped: root.rightFlipped
+        anchors.top: root.rightFlipped ? utilities.bottom : notifications.bottom
+        anchors.bottom: root.rightFlipped ? notifications.top : utilities.top
         anchors.right: parent.right
-        anchors.topMargin: -notifications.anchors.topMargin
+        anchors.topMargin: root.rightFlipped ? 0 : -notifications.anchors.topMargin
+        anchors.bottomMargin: root.rightFlipped ? -notifications.anchors.bottomMargin : 0
     }
 
     AiChat.Wrapper {

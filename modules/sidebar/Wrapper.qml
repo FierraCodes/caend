@@ -10,6 +10,7 @@ Item {
 
     required property ScreenState screenState
     readonly property Props props: Props {}
+    property bool flipped // Utilities sit above instead of below
 
     readonly property bool shouldBeActive: screenState.sidebar && Config.sidebar.enabled
     property real offsetScale: shouldBeActive ? 0 : 1
@@ -31,7 +32,8 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: Tokens.padding.large
         anchors.margins: CUtils.clamp(anchors.leftMargin - Config.border.thickness, 0, anchors.leftMargin)
-        anchors.bottomMargin: 0
+        anchors.bottomMargin: root.flipped ? anchors.margins : 0
+        anchors.topMargin: root.flipped ? 0 : anchors.margins
 
         active: root.shouldBeActive || root.visible
 

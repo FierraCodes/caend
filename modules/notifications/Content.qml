@@ -18,6 +18,7 @@ Item {
     required property Item osdPanel
     required property Item sessionPanel
     required property Item utilitiesPanel
+    property bool fromBottom // Edge padding goes on the bottom when popups sit in the bottom-right corner
     readonly property int padding: Tokens.padding.large
     readonly property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
 
@@ -59,7 +60,8 @@ Item {
     ClippingWrapperRectangle {
         anchors.fill: parent
         anchors.margins: root.padding
-        anchors.topMargin: root.clampedPadding
+        anchors.topMargin: root.fromBottom ? root.padding : root.clampedPadding
+        anchors.bottomMargin: root.fromBottom ? root.clampedPadding : root.padding
         anchors.rightMargin: root.clampedPadding
 
         color: "transparent"
