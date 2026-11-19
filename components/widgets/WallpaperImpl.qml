@@ -88,7 +88,8 @@ Item {
         anchors.fill: parent
         playing: PersistentState.wallpaperPlaying
         animate: false
-        layer.enabled: true
+        // Only a texture for the transition shader; an always-on layer keeps a spare screen-sized buffer per monitor
+        layer.enabled: root.transitionProgress < 1
 
         onReadyChanged: {
             if (ready && source === root.source)

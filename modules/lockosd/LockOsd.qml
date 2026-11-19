@@ -17,13 +17,16 @@ Scope {
     property string text
     property bool shown
     property bool ready // Ignores the initial lock states reported at startup
+    property bool loaded // Windows only exist while the pill is up or fading out
 
     function show(icon: string, text: string): void {
         if (!ready)
             return;
         root.icon = icon;
         root.text = text;
+        loaded = true;
         shown = true;
+        unloadTimer.stop();
         hideTimer.restart();
     }
 
@@ -51,70 +54,87 @@ Scope {
         id: hideTimer
 
         interval: GlobalConfig.osd.lockKeysHideDelay
-        onTriggered: root.shown = false
+        onTriggered: {
+            root.shown = false;
+            unloadTimer.restart();
+        }
     }
 
-    Variants {
-        model: Quickshell.screens
+    Timer {
+        id: unloadTimer
 
-        StyledWindow {
-            id: win
+        interval: 1000 // Outlasts the fade out
+        onTriggered: root.loaded = false
+    }
 
-            required property ShellScreen modelData
+    LazyLoader {
+        active: root.loaded
 
-            screen: modelData
-            name: "lock-osd"
-            visible: pill.opacity > 0
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            mask: Region {}
+        Variants {
+            model: Quickshell.screens
 
-            anchors.bottom: true
-            margins.bottom: Math.round(modelData.height * 0.18)
-            implicitWidth: pill.implicitWidth + 20
-            implicitHeight: pill.implicitHeight + 20
+            StyledWindow {
+                id: win
 
-            StyledRect {
-                id: pill
+                required property ShellScreen modelData
 
-                anchors.centerIn: parent
-                implicitWidth: row.implicitWidth + Tokens.padding.large * 2
-                implicitHeight: row.implicitHeight + Tokens.padding.medium * 2
-                radius: Tokens.rounding.full
-                color: Colours.tPalette.m3surfaceContainer
-                opacity: root.shown && Compositor.isFocusedScreen(win.modelData) ? 1 : 0
-                scale: opacity > 0 ? 1 : 0.9
+                screen: modelData
+                name: "lock-osd"
+                visible: pill.opacity > 0
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                mask: Region {}
 
-                Behavior on opacity {
-                    Anim {
-                        type: Anim.FastEffects
-                    }
-                }
+                anchors.bottom: true
+                margins.bottom: Math.round(modelData.height * 0.18)
+                implicitWidth: pill.implicitWidth + 20
+                implicitHeight: pill.implicitHeight + 20
 
-                Behavior on scale {
-                    Anim {
-                        type: Anim.FastSpatial
-                    }
-                }
+                StyledRect {
+                    id: pill
 
-                Row {
-                    id: row
+                    property bool appeared // Lets the first show fade in instead of popping
 
                     anchors.centerIn: parent
-                    spacing: Tokens.spacing.small
+                    implicitWidth: row.implicitWidth + Tokens.padding.large * 2
+                    implicitHeight: row.implicitHeight + Tokens.padding.medium * 2
+                    radius: Tokens.rounding.full
+                    color: Colours.tPalette.m3surfaceContainer
+                    opacity: appeared && root.shown && Compositor.isFocusedScreen(win.modelData) ? 1 : 0
+                    Component.onCompleted: Qt.callLater(() => appeared = true)
+                    scale: opacity > 0 ? 1 : 0.9
 
-                    MaterialIcon {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.icon
-                        color: Colours.palette.m3primary
-                        fontStyle: Tokens.font.icon.medium
-                        fill: 1
+                    Behavior on opacity {
+                        Anim {
+                            type: Anim.FastEffects
+                        }
                     }
 
-                    StyledText {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.text
-                        font: Tokens.font.body.medium
+                    Behavior on scale {
+                        Anim {
+                            type: Anim.FastSpatial
+                        }
+                    }
+
+                    Row {
+                        id: row
+
+                        anchors.centerIn: parent
+                        spacing: Tokens.spacing.small
+
+                        MaterialIcon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.icon
+                            color: Colours.palette.m3primary
+                            fontStyle: Tokens.font.icon.medium
+                            fill: 1
+                        }
+
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.text
+                            font: Tokens.font.body.medium
+                        }
                     }
                 }
             }
