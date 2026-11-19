@@ -22,6 +22,10 @@ Singleton {
     readonly property AccessPoint active: networks.find(n => n.active) ?? null
     property list<string> savedConnections: []
     property list<string> savedConnectionSsids: []
+    // 802.1X network awaiting an account from the network prompt, and what it typed (see addEnterprise)
+    property string enterpriseSsid
+    property var enterprisePending: null // { ssid, password } handed to the agent on the first request
+
     // Map of saved Wi-Fi SSID (lowercased) -> security type
     property var savedConnectionSecurity: ({})
 
@@ -515,6 +519,29 @@ Singleton {
                 if (callback)
                     callback();
             }
+        });
+    }
+
+    // 802.1X networks without a profile: the shell's network prompt asks for the account, this
+    // creates a PEAP/MSCHAPv2 profile holding only the username, and NetworkManager then asks the
+    // shell's secret agent for the password, so it never lands on a command line.
+    function addEnterprise(ssid: string, identity: string, password: string): void {
+        enterpriseSsid = "";
+        enterprisePending = {
+            ssid: ssid,
+            password: password
+        };
+        checkAndDeleteConnection(ssid, () => {
+            // shortcut: PEAP + MSCHAPv2 without a CA cert covers eduroam/campus networks; TLS/TTLS need nm-connection-editor
+            executeCommand([root.nmcliCommandConnection, "add", root.connectionParamType, root.deviceTypeWifi, root.connectionParamConName, ssid, root.connectionParamIfname, "*", root.connectionParamSsid, ssid, root.securityKeyMgmt, "wpa-eap", "802-1x.eap", "peap", "802-1x.phase2-auth", "mschapv2", "802-1x.identity", identity, "802-1x.password-flags", "0"], result => {
+                if (!result.success) {
+                    console.warn(lc, "Creating 802.1X profile failed:", result.error);
+                    enterprisePending = null;
+                    return;
+                }
+                loadSavedConnections(() => {});
+                activateConnection(ssid, () => enterprisePending = null);
+            });
         });
     }
 

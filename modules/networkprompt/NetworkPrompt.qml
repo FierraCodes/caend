@@ -13,9 +13,16 @@ import qs.components.controls
 import qs.components.effects
 import qs.services
 
-// NetworkManager asks the shell (as its secret agent) for Wi-Fi and 802.1X/RADIUS credentials
+// NetworkManager asks the shell (as its secret agent) for Wi-Fi and 802.1X/RADIUS credentials.
+// Also asks for the account when joining an 802.1X network that has no profile yet (see Nmcli.addEnterprise).
 Scope {
     id: root
+
+    readonly property bool creating: Nmcli.enterpriseSsid !== ""
+    // The first request for a profile just created from this prompt is answered with what was typed
+    readonly property bool autoAnswer: NetworkAgent.active && !NetworkAgent.retry && Nmcli.enterprisePending?.ssid === NetworkAgent.connectionName
+    readonly property list<string> fields: creating ? ["identity", "password"] : NetworkAgent.fields
+    readonly property bool enterprise: creating || NetworkAgent.settingName === "802-1x"
 
     readonly property var labels: ({
             psk: Tr.tr("Password"),
@@ -25,8 +32,29 @@ Scope {
             "private-key-password": Tr.tr("Private key password")
         })
 
+    function cancel(): void {
+        if (creating)
+            Nmcli.enterpriseSsid = "";
+        else
+            NetworkAgent.cancel();
+    }
+
+    Connections {
+        function onRequestChanged(): void {
+            if (!root.autoAnswer)
+                return;
+            const secrets = {};
+            for (const f of NetworkAgent.fields)
+                secrets[f] = f === "identity" ? NetworkAgent.prefill.identity ?? "" : Nmcli.enterprisePending.password;
+            Nmcli.enterprisePending = null;
+            NetworkAgent.submit(secrets);
+        }
+
+        target: NetworkAgent
+    }
+
     LazyLoader {
-        active: NetworkAgent.active
+        active: root.creating || (NetworkAgent.active && !root.autoAnswer)
 
         StyledWindow {
             id: win
@@ -35,9 +63,12 @@ Scope {
                 const secrets = {};
                 for (let i = 0; i < inputs.count; i++) {
                     const field = inputs.itemAt(i) as StyledTextField;
-                    secrets[NetworkAgent.fields[i]] = field.text;
+                    secrets[root.fields[i]] = field.text;
                 }
-                NetworkAgent.submit(secrets);
+                if (root.creating)
+                    Nmcli.addEnterprise(Nmcli.enterpriseSsid, secrets.identity, secrets.password);
+                else
+                    NetworkAgent.submit(secrets);
             }
 
             name: "network-prompt"
@@ -85,21 +116,21 @@ Scope {
 
                     MaterialIcon {
                         Layout.alignment: Qt.AlignHCenter
-                        text: NetworkAgent.settingName === "802-1x" ? "badge" : "wifi_password"
+                        text: root.enterprise ? "badge" : "wifi_password"
                         color: Colours.palette.m3secondary
                         fontStyle: Tokens.font.icon.large
                     }
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
-                        text: Tr.tr("Connect to %1").arg(NetworkAgent.connectionName)
+                        text: Tr.tr("Connect to %1").arg(root.creating ? Nmcli.enterpriseSsid : NetworkAgent.connectionName)
                         font: Tokens.font.body.large
                     }
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: NetworkAgent.retry ? Tr.tr("Those details didn't work, try again") : NetworkAgent.settingName === "802-1x" ? Tr.tr("This network needs your account (802.1X)") : Tr.tr("This network needs a password")
-                        color: NetworkAgent.retry ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                        text: !root.creating && NetworkAgent.retry ? Tr.tr("Those details didn't work, try again") : root.enterprise ? Tr.tr("This network needs your account (802.1X)") : Tr.tr("This network needs a password")
+                        color: !root.creating && NetworkAgent.retry ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                         wrapMode: Text.WordWrap
                     }
@@ -107,7 +138,7 @@ Scope {
                     Repeater {
                         id: inputs
 
-                        model: NetworkAgent.fields
+                        model: root.fields
 
                         StyledTextField {
                             required property string modelData
@@ -116,10 +147,10 @@ Scope {
                             Layout.fillWidth: true
                             focus: index === 0
                             placeholderText: root.labels[modelData] ?? modelData
-                            text: NetworkAgent.prefill[modelData] ?? ""
+                            text: root.creating ? "" : NetworkAgent.prefill[modelData] ?? ""
                             echoMode: modelData === "identity" ? TextInput.Normal : TextInput.Password
                             onAccepted: win.submit()
-                            Keys.onEscapePressed: NetworkAgent.cancel()
+                            Keys.onEscapePressed: root.cancel()
                             Component.onCompleted: if (index === 0)
                                 forceActiveFocus()
                         }
@@ -132,7 +163,7 @@ Scope {
                         TextButton {
                             text: Tr.trCtx("Cancel", "button")
                             type: TextButton.Text
-                            onClicked: NetworkAgent.cancel()
+                            onClicked: root.cancel()
                         }
 
                         TextButton {

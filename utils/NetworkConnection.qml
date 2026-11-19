@@ -69,7 +69,9 @@ QtObject {
         if (network.isSecure) {
             const hasSavedProfile = Nmcli.hasSavedProfile(network.ssid);
 
-            if (hasSavedProfile) {
+            if (!hasSavedProfile && (network.security ?? "").includes("802.1X")) {
+                Nmcli.enterpriseSsid = network.ssid;
+            } else if (hasSavedProfile) {
                 Nmcli.connectToNetwork(network.ssid, "", network.bssid, null);
             } else {
                 // Use password check with callback
