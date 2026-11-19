@@ -45,11 +45,52 @@ PageBase {
         }
 
         ToggleRow {
+            text: Tr.tr("Use wallpaper")
+            subtext: Tr.tr("Show the wallpaper instead of a blurred screenshot")
+            checked: Config.lock.useWallpaper
+            onToggled: GlobalConfig.lock.useWallpaper = checked
+        }
+
+        ToggleRow {
+            text: Tr.tr("Recolour logo")
+            subtext: Tr.tr("Tint the logo with the colour scheme")
+            checked: Config.lock.recolourLogo
+            onToggled: GlobalConfig.lock.recolourLogo = checked
+        }
+
+        ToggleRow {
             last: true
             text: Tr.tr("Session controls")
             subtext: Tr.tr("Show shutdown, reboot and logout on the lock screen")
             checked: GlobalConfig.lock.enableSessionControls
             onToggled: GlobalConfig.lock.enableSessionControls = checked
+        }
+
+        SectionHeader {
+            text: Tr.tr("Idle")
+        }
+
+        ToggleRow {
+            first: true
+            text: Tr.tr("Lock before sleep")
+            subtext: Tr.tr("Lock the screen before the system suspends")
+            checked: Config.general.idle.lockBeforeSleep
+            onToggled: GlobalConfig.general.idle.lockBeforeSleep = checked
+        }
+
+        ToggleRow {
+            text: Tr.tr("Stay awake while audio plays")
+            subtext: Tr.tr("Pause idle timeouts during playback")
+            checked: Config.general.idle.inhibitWhenAudio
+            onToggled: GlobalConfig.general.idle.inhibitWhenAudio = checked
+        }
+
+        ToggleRow {
+            last: true
+            text: Tr.tr("Stay awake while charging")
+            subtext: Tr.tr("Pause idle timeouts on AC power")
+            checked: Config.general.idle.inhibitWhenCharging
+            onToggled: GlobalConfig.general.idle.inhibitWhenCharging = checked
         }
 
         SectionHeader {

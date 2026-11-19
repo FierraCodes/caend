@@ -145,6 +145,21 @@ PageBase {
             onSelected: item => GlobalConfig.services.defaultPlayer = item.text
         }
 
+        // Weather
+        SectionHeader {
+            text: Tr.tr("Weather")
+        }
+
+        TextFieldRow {
+            first: true
+            last: true
+            label: Tr.tr("Location")
+            subtext: Tr.tr("City name or coordinates; empty uses your IP location")
+            value: GlobalConfig.services.weatherLocation
+            placeholderText: Tr.tr("Auto")
+            onEditingFinished: value => GlobalConfig.services.weatherLocation = value
+        }
+
         // Input increments
         SectionHeader {
             text: Tr.tr("Input increments")

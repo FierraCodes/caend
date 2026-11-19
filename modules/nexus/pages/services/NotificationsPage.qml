@@ -86,6 +86,24 @@ PageBase {
             onMoved: v => GlobalConfig.notifs.defaultExpireTimeout = Math.round(v)
         }
 
+        ToggleRow {
+            text: Tr.tr("Click runs action")
+            subtext: Tr.tr("Clicking a notification runs its default action")
+            checked: GlobalConfig.notifs.actionOnClick
+            onToggled: GlobalConfig.notifs.actionOnClick = checked
+        }
+
+        StepperRow {
+            label: Tr.tr("Fullscreen timeout")
+            // TRANSLATORS: ms is the millisecond unit, leave it untranslated
+            subtext: Tr.tr("Time before a notification dismisses over fullscreen apps (ms)")
+            value: GlobalConfig.notifs.fullscreenExpireTimeout
+            from: 500
+            to: 60000
+            stepSize: 500
+            onMoved: v => GlobalConfig.notifs.fullscreenExpireTimeout = Math.round(v)
+        }
+
         StepperRow {
             last: true
             label: Tr.tr("Group preview count")

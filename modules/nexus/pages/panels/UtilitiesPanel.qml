@@ -231,13 +231,44 @@ PageBase {
         }
 
         SectionHeader {
-            text: Tr.tr("Caps / Num lock")
+            text: Tr.tr("On-screen display")
+        }
+
+        ToggleRow {
+            first: true
+            text: Tr.tr("Enabled")
+            subtext: Tr.tr("Show the volume and brightness OSD")
+            checked: Config.osd.enabled
+            onToggled: GlobalConfig.osd.enabled = checked
+        }
+
+        ToggleRow {
+            text: Tr.tr("Brightness")
+            subtext: Tr.tr("Include a brightness slider")
+            checked: Config.osd.enableBrightness
+            onToggled: GlobalConfig.osd.enableBrightness = checked
+        }
+
+        ToggleRow {
+            text: Tr.tr("Microphone")
+            subtext: Tr.tr("Include a microphone slider")
+            checked: Config.osd.enableMicrophone
+            onToggled: GlobalConfig.osd.enableMicrophone = checked
         }
 
         StepperRow {
-            first: true
+            label: Tr.tr("OSD duration")
+            subtext: Tr.tr("Milliseconds the OSD stays after a change")
+            value: Config.osd.hideDelay
+            from: 250
+            to: 10000
+            stepSize: 250
+            onMoved: v => GlobalConfig.osd.hideDelay = v
+        }
+
+        StepperRow {
             last: true
-            label: Tr.tr("Indicator duration")
+            label: Tr.tr("Caps / Num lock duration")
             subtext: Tr.tr("Milliseconds the caps/num lock pill stays on screen")
             value: GlobalConfig.osd.lockKeysHideDelay
             from: 250

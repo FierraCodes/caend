@@ -9,6 +9,18 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
+    readonly property var entryNames: ({
+            logo: Tr.tr("Logo"),
+            workspaces: Tr.tr("Workspaces"),
+            spacer: Tr.tr("Spacer"),
+            activeWindow: Tr.tr("Active window"),
+            tray: Tr.tr("Tray"),
+            utilButtons: Tr.tr("Util buttons"),
+            clock: Tr.tr("Clock"),
+            statusIcons: Tr.tr("Status icons"),
+            power: Tr.tr("Power button")
+        })
+
     readonly property list<MenuItem> positionItems: [
         MenuItem {
             text: Tr.trCtx("Left", "bar position")
@@ -99,6 +111,47 @@ PageBase {
             to: 200
             stepSize: 5
             onMoved: v => GlobalConfig.bar.dragThreshold = v
+        }
+
+        // Layout
+        SectionHeader {
+            text: Tr.tr("Layout")
+        }
+
+        ListEditor {
+            function labelFor(item: var): string {
+                return root.entryNames[item.id] ?? item.id;
+            }
+
+            function toggledFor(item: var): bool {
+                return item.enabled;
+            }
+
+            z: 1
+            first: true
+            values: Config.bar.entries.values
+            onItemMoved: (from, to) => GlobalConfig.bar.entries.move(from, to)
+            onItemRemoved: index => GlobalConfig.bar.entries.remove(index)
+            onItemToggled: (index, checked) => GlobalConfig.bar.entries.at(index).enabled = checked
+        }
+
+        DialogSelectButton {
+            rootParent: root.flickable
+            icon: "add"
+            label: Tr.tr("Add entry")
+            header: Tr.tr("Add new entry")
+            acceptLabel: Tr.trCtx("Add", "button")
+            model: Object.keys(root.entryNames).map(k => ({
+                        id: k,
+                        label: root.entryNames[k]
+                    }))
+            onAccepted: {
+                if (selectedItem)
+                    GlobalConfig.bar.entries.insert({
+                        id: selectedItem,
+                        enabled: true
+                    });
+            }
         }
 
         // Components
