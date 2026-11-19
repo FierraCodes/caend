@@ -27,6 +27,9 @@ Scope {
     property string lockMessage
     property int state
     property string buffer
+    // Session command armed from the lock screen when lock.requirePasswordToPower is on; runs on unlock
+    property list<string> pendingPower
+    property string pendingPowerName
 
     signal flashMsg
 
@@ -188,6 +191,11 @@ Scope {
             fprint.abort();
             howdy.abort();
             passwd.abort();
+
+            if (root.pendingPower.length > 0 && !SessionManager.exec(root.pendingPower))
+                Quickshell.execDetached(root.pendingPower);
+            root.pendingPower = [];
+            root.pendingPowerName = "";
         }
 
         target: root.lock

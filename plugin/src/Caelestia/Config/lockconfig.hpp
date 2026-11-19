@@ -18,6 +18,8 @@ class LockConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(bool, triggerHowdyOnWake, true)
     CONFIG_PROPERTY(bool, hideNotifs, false)
     CONFIG_GLOBAL_PROPERTY(bool, enableSessionControls, false)
+    // end4: the lock screen's power buttons only arm an action, which runs after the password is accepted
+    CONFIG_GLOBAL_PROPERTY(bool, requirePasswordToPower, false)
     // From end4: unlock the GNOME login keyring with the password used to unlock the screen
     CONFIG_GLOBAL_PROPERTY(bool, unlockKeyring, true)
     CONFIG_GLOBAL_PROPERTY(bool, lockOnStartup, false)

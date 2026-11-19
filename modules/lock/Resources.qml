@@ -17,6 +17,8 @@ import qs.utils
 StyledRect {
     id: root
 
+    required property var lock
+
     readonly property bool sessionControlsShown: GlobalConfig.lock.enableSessionControls && hover.hovered
     readonly property real fontScale: {
         const diff = width / 391 - 1; // 391 is the width at 1080 height screen
@@ -166,18 +168,22 @@ StyledRect {
                 SessionButton {
                     icon: Config.session.icons.logout
                     command: Config.session.commands.logout
+                    actionName: Tr.tr("log out")
                 }
                 SessionButton {
                     icon: Config.session.icons.shutdown
                     command: Config.session.commands.shutdown
+                    actionName: Tr.tr("shut down")
                 }
                 SessionButton {
                     icon: Config.session.icons.hibernate
                     command: Config.session.commands.hibernate
+                    actionName: Tr.tr("hibernate")
                 }
                 SessionButton {
                     icon: Config.session.icons.reboot
                     command: Config.session.commands.reboot
+                    actionName: Tr.tr("restart")
                 }
             }
         }
@@ -187,8 +193,16 @@ StyledRect {
         id: button
 
         required property list<string> command
+        required property string actionName
+        readonly property bool armed: root.lock.pam.pendingPowerName === actionName
 
         function exec(): void {
+            if (GlobalConfig.lock.requirePasswordToPower) {
+                // Arm (or disarm) it; the password field then unlocks and runs it
+                root.lock.pam.pendingPower = armed ? [] : command;
+                root.lock.pam.pendingPowerName = armed ? "" : actionName;
+                return;
+            }
             if (!SessionManager.exec(command))
                 Quickshell.execDetached(command);
         }
@@ -196,8 +210,8 @@ StyledRect {
         Layout.fillWidth: true
         Layout.preferredHeight: width
 
-        inactiveColour: activeFocus ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
-        inactiveOnColour: activeFocus ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+        inactiveColour: armed ? Colours.palette.m3errorContainer : activeFocus ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
+        inactiveOnColour: armed ? Colours.palette.m3onErrorContainer : activeFocus ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
         radius: pressed ? Tokens.rounding.medium : activeFocus ? Tokens.rounding.extraLarge : Tokens.rounding.largeIncreased
         font: Tokens.font.icon.builders.large.scale(root.fontScale * 1.3).build()
         onClicked: exec()

@@ -38,6 +38,10 @@ Item {
                 return Tr.tr("Face not recognised (%1/%2). Please try again.").arg(pam.howdy.tries).arg(GlobalConfig.lock.maxHowdyTries);
         }
 
+        if (pam.pendingPowerName && pam.state === Pam.None)
+            // TRANSLATORS: %1 = a power action such as "shut down"
+            return Tr.tr("Enter your password to %1").arg(pam.pendingPowerName);
+
         if (pam.lockMessage) // Password max tries message
             return pam.lockMessage;
 

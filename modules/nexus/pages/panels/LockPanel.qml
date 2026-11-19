@@ -59,11 +59,19 @@ PageBase {
         }
 
         ToggleRow {
-            last: true
             text: Tr.tr("Session controls")
             subtext: Tr.tr("Show shutdown, reboot and logout on the lock screen")
             checked: GlobalConfig.lock.enableSessionControls
             onToggled: GlobalConfig.lock.enableSessionControls = checked
+        }
+
+        ToggleRow {
+            last: true
+            text: Tr.tr("Require password to power off")
+            subtext: Tr.tr("Lock screen power buttons only run after your password is accepted")
+            disabled: !GlobalConfig.lock.enableSessionControls
+            checked: GlobalConfig.lock.requirePasswordToPower
+            onToggled: GlobalConfig.lock.requirePasswordToPower = checked
         }
 
         SectionHeader {
