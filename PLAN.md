@@ -22,6 +22,33 @@ This is a read-only analysis of both repos at their current `main` (caelestia `e
 
 ---
 
+## 1b. v1 scope: Fierra's picks (2026-11-19)
+
+> "Basically Caelestia's bar with end4's customizability." This list **overrides §3** where they differ: anything not here is out of v1.
+
+**From end4-pC** (ported as caelestia-style rewrites, see the ground rule in §3):
+
+| Feature | end4 source | Port notes | Niri |
+|---|---|---|---|
+| Bar options (position, corner styles, auto-hide, widget choice...) | `Config.options.bar.*`, `modules/ii/bar`, `verticalBar` | Applied to **caelestia's bar**; needs orientation-aware drawers first (see Config parity) | yes |
+| Quick settings | `modules/ii/sidebarRight` (`quickToggles`, `QuickSliders`, wifi/bt/vpn, night light, volume mixer) | Becomes a caelestia drawer/popout; reuse caelestia services (Audio, Nmcli, VPN, Brightness) | yes (night light via wlsunset/gammastep) |
+| AI sidebar + rest of left sidebar | `modules/ii/sidebarLeft`, `services/Ai.qml`, `Translation`, `Booru` | Drawer left of the bar (decided earlier) | yes |
+| Spotlight search / start menu | `modules/ii/overview` `SearchWidget`/`SearchBar` + `services/LauncherSearch.qml` | Merge its search providers (math, web, emoji, clipboard, actions) into caelestia's launcher; keep the launcher's look | yes |
+| Anti-flashbang | `services/HyprlandAntiFlashbangShader.qml` (sets `decoration:screen_shader`) | Small Hyprland-only toggle service | **no** (Niri has no screen shaders), hide option |
+| Lockscreen | `modules/ii/lock`, `modules/common/panels/lock` | Replace caelestia's lock UI with end4's layout, keep caelestia's `Pam.qml` auth | yes (ext-session-lock) |
+| Polkit agent | `modules/ii/polkit`, `services/PolkitService.qml` | Caelestia has none, port as-is restyled | yes |
+| Screenshotter | `modules/ii/regionSelector` (rect/circle select, options toolbar, OCR/search/record actions) | Replaces caelestia `areapicker`; keep caelestia's freeze-mode + `CUtils.saveItem` | yes, window snapping Hyprland-only |
+
+**From caelestia** (keep as-is, make configurable):
+
+| Feature | Where | Work needed |
+|---|---|---|
+| Workspace window icons | `modules/bar/components/workspaces` (`showWindows`, `maxWindowIcons`) | Move to `Compositor.toplevels` for Niri |
+| Special workspaces (music, comms...) that launch their app | `Hypr.toggleSpecial`, `cycleSpecialWorkspace`; app launch currently lives in the dots' Hyprland config | New typed config list `specialWorkspaces: [{ name, icon, apps: [cmd...], keybind }]`. On toggle: if the workspace is empty, launch its apps. Editable from nexus. Niri has no special workspaces, so emulate with a named workspace + focus-back toggle |
+| Caps/Num lock OSD + indicators | `Hypr.capsLock/numLock`, lock `StateMessage`, bar status | Via `Compositor` keyboard API (Niri: read `/sys/class/leds`) |
+
+Everything else from §3 (dock, overview grid, OSK, translator, presets, football...) is **post-v1**.
+
 ## 2. Recommendation: Caelestia as the base, end4 features ported in
 
 **Base = caelestia-shell.** Reasons:
