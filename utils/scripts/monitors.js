@@ -25,11 +25,12 @@ function logicalSize(mon) {
 function fromHyprland(list) {
     return list.map(m => {
         const modes = [...new Set((m.availableModes ?? []).map(s => s.replace(/Hz$/, "")))];
-        const mode = `${m.width}x${m.height}@${(+m.refreshRate).toFixed(2)}`;
+        // A disabled output reports 0x0, so turning it back on uses its best mode instead
+        const mode = m.width > 0 ? `${m.width}x${m.height}@${(+m.refreshRate).toFixed(2)}` : modes[0] ?? "preferred";
         return {
             name: m.name,
             description: m.description ?? "",
-            modes: modes.includes(mode) ? modes : [mode, ...modes],
+            modes: modes.includes(mode) || !parseMode(mode) ? modes : [mode, ...modes],
             mode,
             x: m.x,
             y: m.y,
@@ -54,7 +55,7 @@ function fromNiri(outputs) {
             name: o.name,
             description: [o.make, o.model].filter(s => s && s !== "Unknown").join(" "),
             modes: [...new Set((o.modes ?? []).map(fmt))],
-            mode: current ? fmt(current) : "",
+            mode: current ? fmt(current) : o.modes?.[0] ? fmt(o.modes[0]) : "",
             x: o.logical?.x ?? 0,
             y: o.logical?.y ?? 0,
             scale: o.logical?.scale ?? 1,
@@ -82,7 +83,7 @@ function hyprLuaLine(m) {
     const q = s => `"${String(s).replace(/["\\]/g, "\\$&")}"`;
     if (m.disabled)
         return `hl.monitor({ output = ${q(m.name)}, disabled = true })`;
-    let line = `hl.monitor({ output = ${q(m.name)}, mode = ${q(m.mode)}, position = "${m.x}x${m.y}", scale = ${m.scale}, transform = ${m.transform}, vrr = ${m.vrr ? 1 : 0}`;
+    let line = `hl.monitor({ output = ${q(m.name)}, mode = ${q(m.mode)}, position = "${m.x}x${m.y}", scale = ${m.scale}, disabled = false, transform = ${m.transform}, vrr = ${m.vrr ? 1 : 0}`;
     if (m.bitdepth === 10)
         line += ", bitdepth = 10";
     if (m.cm && m.cm !== "auto")

@@ -11,7 +11,7 @@ const b = { name: "HDMI-A-1", mode: "1920x1080@60.00", x: 2560, y: 0, scale: 1.5
 assert.deepEqual(M.logicalSize(b), { w: 720, h: 1280 });
 assert.equal(M.hyprConfLine(a), "monitor = DP-1, 2560x1440@165.00, 0x0, 1, transform, 0, vrr, 1, bitdepth, 10, cm, hdr");
 assert.equal(M.hyprConfLine({ ...b, disabled: true }), "monitor = HDMI-A-1, disable");
-assert.equal(M.hyprLuaLine(b), 'hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60.00", position = "2560x0", scale = 1.5, transform = 1, vrr = 0 })');
+assert.equal(M.hyprLuaLine(b), 'hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60.00", position = "2560x0", scale = 1.5, disabled = false, transform = 1, vrr = 0 })');
 assert.match(M.niriKdl(b), /transform "90"\n    position x=2560 y=0\n}/);
 
 // Drop b slightly left of a's right edge: snaps flush, no overlap
@@ -29,5 +29,10 @@ assert.equal(niri[0].description, "Dell U27");
 const hypr = M.fromHyprland([{ name: "eDP-1", width: 1920, height: 1200, refreshRate: 60.002, x: 0, y: 0, scale: 1, transform: 0, disabled: false, vrr: false, availableModes: ["1920x1200@60.00Hz", "1920x1200@48.00Hz"], currentFormat: "XRGB8888" }]);
 assert.equal(hypr[0].mode, "1920x1200@60.00");
 assert.deepEqual(hypr[0].modes, ["1920x1200@60.00", "1920x1200@48.00"]);
+
+// Re-enabling a disabled Hyprland output must not send its reported 0x0 mode
+const off = M.fromHyprland([{ name: "HDMI-A-1", width: 0, height: 0, refreshRate: 0, x: 0, y: 0, scale: 1, disabled: true, availableModes: ["1920x1080@60.00Hz", "1920x1080@144.00Hz"] }]);
+assert.equal(off[0].mode, "1920x1080@60.00");
+assert.match(M.hyprLuaLine({ ...off[0], disabled: false }), /mode = "1920x1080@60.00".*disabled = false/);
 
 console.log("monitors tests passed");
