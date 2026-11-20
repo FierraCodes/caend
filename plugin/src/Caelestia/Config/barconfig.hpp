@@ -92,6 +92,8 @@ class BarTray : public settings::ObjectNode {
     CONFIG_PROPERTY(bool, compact, false)
     CONFIG_GLOBAL_LIST(BarTrayIconSubList, iconSubs, {})
     CONFIG_GLOBAL_PROPERTY(QStringList, hiddenIcons, {})
+    // Stay visible while a compact tray is collapsed
+    CONFIG_GLOBAL_PROPERTY(QStringList, pinnedIcons, {})
 };
 
 class BarClock : public settings::ObjectNode {

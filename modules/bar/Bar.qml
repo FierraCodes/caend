@@ -73,9 +73,9 @@ GridLayout {
         } else if (id === "tray" && Config.bar.popouts.tray) {
             const tray = ch.item as Tray;
             const probe = horizontal ? mapToItem(tray.expandIcon, pos, tray.implicitHeight / 2) : mapToItem(tray.expandIcon, tray.implicitWidth / 2, pos);
-            if (!Config.bar.tray.compact || (tray.expanded && !tray.expandIcon.contains(probe))) {
-                const layoutLength = horizontal ? tray.layout.implicitWidth : tray.layout.implicitHeight;
-                const index = Math.floor(((pos - start - tray.padding * 2 + tray.spacing) / layoutLength) * tray.items.count);
+            const layoutLength = horizontal ? tray.layout.implicitWidth : tray.layout.implicitHeight;
+            const index = Math.floor(((pos - start - tray.padding * 2 + tray.spacing) / layoutLength) * tray.items.count);
+            if (!Config.bar.tray.compact || (!tray.expandIcon.contains(probe) && (tray.expanded || index < tray.pinnedCount))) {
                 const trayItem = tray.items.itemAt(index);
                 if (trayItem) {
                     popouts.currentName = `traymenu${index}`;

@@ -1,6 +1,8 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
 import QtQuick.Layouts
+import Quickshell.Services.SystemTray
 import Caelestia.Config
 import Caelestia.I18n
 import qs.modules.nexus.common
@@ -43,6 +45,31 @@ PageBase {
             subtext: Tr.tr("Show the tray menu popout when hovering")
             checked: Config.bar.popouts.tray
             onToggled: GlobalConfig.bar.popouts.tray = checked
+        }
+
+        SectionHeader {
+            text: Tr.tr("Pinned icons")
+        }
+
+        Repeater {
+            id: trayItems
+
+            model: SystemTray.items.values.filter(i => i.status !== Status.Passive)
+
+            ToggleRow {
+                required property SystemTrayItem modelData
+                required property int index
+
+                first: index === 0
+                last: index === trayItems.count - 1
+                text: modelData.title || modelData.id
+                subtext: Tr.tr("Keep visible while the compact tray is collapsed")
+                checked: Config.bar.tray.pinnedIcons.includes(modelData.id)
+                onToggled: {
+                    const others = GlobalConfig.bar.tray.pinnedIcons.filter(id => id !== modelData.id);
+                    GlobalConfig.bar.tray.pinnedIcons = checked ? [...others, modelData.id] : others;
+                }
+            }
         }
     }
 }

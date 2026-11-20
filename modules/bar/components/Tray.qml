@@ -20,6 +20,11 @@ StyledRect {
     readonly property bool horizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
 
     property bool expanded
+    // Pinned icons sort first, so a collapsed compact tray shows them by clipping the rest
+    readonly property int pinnedCount: Config.bar.tray.compact ? items.model.values.filter(i => GlobalConfig.bar.tray.pinnedIcons.includes(i.id)).length : 0
+
+    // Items share one size, so the pinned run is a fraction of the layout
+    readonly property real pinnedLength: items.count > 0 ? (horizontal ? layout.implicitWidth : layout.implicitHeight) * pinnedCount / items.count : 0
 
     // Target size along the bar, ignoring the running animation
     readonly property real nonAnimLength: {
@@ -30,6 +35,8 @@ StyledRect {
         const iconLength = horizontal ? expandIcon.implicitWidth : expandIcon.implicitHeight;
         if (expanded)
             return iconLength + layoutLength + spacing + pad;
+        if (pinnedCount > 0)
+            return iconLength + pinnedLength + spacing * 2 + pad;
         return Math.max(Config.bar.tray.background ? Tokens.sizes.bar.innerWidth : 0, iconLength + pad);
     }
 
@@ -53,8 +60,6 @@ StyledRect {
         anchors.leftMargin: root.padding
         columns: root.horizontal ? Math.max(1, items.count) : 1
         spacing: Tokens.spacing.small
-
-        opacity: root.expanded || !Config.bar.tray.compact ? 1 : 0
 
         add: Transition {
             Anim {
@@ -80,15 +85,19 @@ StyledRect {
             id: items
 
             model: ScriptModel {
-                values: SystemTray.items.values.filter(i => i.status !== Status.Passive && !GlobalConfig.bar.tray.hiddenIcons.includes(i.id))
+                values: SystemTray.items.values.filter(i => i.status !== Status.Passive && !GlobalConfig.bar.tray.hiddenIcons.includes(i.id)).sort((a, b) => GlobalConfig.bar.tray.pinnedIcons.includes(b.id) - GlobalConfig.bar.tray.pinnedIcons.includes(a.id))
             }
 
-            TrayItem {}
-        }
+            TrayItem {
+                required property int index
 
-        Behavior on opacity {
-            Anim {
-                type: Anim.DefaultEffects
+                opacity: root.expanded || !Config.bar.tray.compact || index < root.pinnedCount ? 1 : 0
+
+                Behavior on opacity {
+                    Anim {
+                        type: Anim.DefaultEffects
+                    }
+                }
             }
         }
     }
