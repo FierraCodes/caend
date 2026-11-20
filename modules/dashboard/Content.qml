@@ -59,12 +59,10 @@ Item {
 
         readonly property real edgeMargin: CUtils.clamp(anchors.margins - Config.border.thickness, 0, anchors.margins)
 
-        anchors.top: root.tabsAtBottom ? undefined : parent.top
-        anchors.bottom: root.tabsAtBottom ? parent.bottom : undefined
+        // A y binding, not swapped top/bottom anchors: a live swap can set both and keep the stretched height
+        y: root.tabsAtBottom ? parent.height - height - edgeMargin : edgeMargin
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: edgeMargin
-        anchors.bottomMargin: edgeMargin
         anchors.margins: Tokens.padding.large
 
         flipped: root.tabsAtBottom
