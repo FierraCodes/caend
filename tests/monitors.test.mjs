@@ -18,8 +18,10 @@ assert.match(M.niriKdl(b), /transform "90"\n    position x=2560 y=0\n}/);
 assert.deepEqual(M.arrange([a, b], "HDMI-A-1", 2540, 10, 50), { "HDMI-A-1": { x: 2560, y: 0 }, "DP-1": { x: 0, y: 0 } });
 // Drop b to the left of a: layout is shifted so it starts at 0
 assert.deepEqual(M.arrange([a, b], "HDMI-A-1", -700, 0, 50), { "HDMI-A-1": { x: 0, y: 0 }, "DP-1": { x: 720, y: 0 } });
-// Drop b on top of a: rejected
-assert.equal(M.arrange([a, b], "HDMI-A-1", 500, 200, 10), null);
+// Drop b on top of a, nearer a's bottom: pushed flush below a, sliding along its face
+assert.deepEqual(M.arrange([a, b], "HDMI-A-1", 500, 1300, 10), { "HDMI-A-1": { x: 500, y: 1440 }, "DP-1": { x: 0, y: 0 } });
+// Drop b far away to the right with a gap: still lands flush on a's right face
+assert.deepEqual(M.arrange([a, b], "HDMI-A-1", 4000, 5, 10), { "HDMI-A-1": { x: 2560, y: 0 }, "DP-1": { x: 0, y: 0 } });
 
 const niri = M.fromNiri({ "DP-2": { name: "DP-2", make: "Dell", model: "U27", modes: [{ width: 2560, height: 1440, refresh_rate: 59951, is_preferred: true }], current_mode: 0, vrr_enabled: false, logical: { x: 10, y: 0, scale: 1.25, transform: "Flipped90" } } });
 assert.equal(niri[0].mode, "2560x1440@59.951");
