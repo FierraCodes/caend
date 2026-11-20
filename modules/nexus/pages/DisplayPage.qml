@@ -198,11 +198,12 @@ PageBase {
                         h: Math.max(...rects.map(r => r.y + r.h)) - y
                     };
                 }
-                readonly property real k: Math.min((width - pad * 2) / bounds.w, (height - pad * 2) / bounds.h)
+                // Half size, so there's empty room around the layout to drag outputs into
+                readonly property real k: Math.min((width - pad * 2) / bounds.w, (height - pad * 2) / bounds.h) * 0.5
 
                 Layout.fillWidth: true
                 visible: Monitors.monitors.length > 0
-                implicitHeight: 240
+                implicitHeight: 280
                 first: true
                 last: true
 
