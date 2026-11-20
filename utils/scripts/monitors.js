@@ -114,8 +114,8 @@ function arrange(mons, name, px, py, threshold) {
     const size = logicalSize(me);
     const snap = (pos, cands) => cands.reduce((best, c) => Math.abs(c - pos) < Math.abs(best - pos) ? c : best, Infinity);
 
-    const xs = others.flatMap(o => { const s = logicalSize(o); return [o.x - size.w, o.x + s.w, o.x, o.x + s.w - size.w]; });
-    const ys = others.flatMap(o => { const s = logicalSize(o); return [o.y - size.h, o.y + s.h, o.y, o.y + s.h - size.h]; });
+    const xs = [].concat(...others.map(o => { const s = logicalSize(o); return [o.x - size.w, o.x + s.w, o.x, o.x + s.w - size.w]; }));
+    const ys = [].concat(...others.map(o => { const s = logicalSize(o); return [o.y - size.h, o.y + s.h, o.y, o.y + s.h - size.h]; }));
     const sx = snap(px, xs), sy = snap(py, ys);
     const moved = Object.assign({}, me, {
         x: Math.round(Math.abs(sx - px) <= threshold ? sx : px),
