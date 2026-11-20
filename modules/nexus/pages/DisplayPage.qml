@@ -270,10 +270,12 @@ PageBase {
                                 outputRect.dy = p.y - start.y;
                             }
                             onReleased: {
-                                if (Math.hypot(outputRect.dx, outputRect.dy) > 3)
-                                    Monitors.arrange(outputRect.modelData.name, outputRect.modelData.x + outputRect.dx / canvas.k, outputRect.modelData.y + outputRect.dy / canvas.k, 24 / canvas.k);
-                                outputRect.dx = outputRect.dy = 0;
+                                const dx = outputRect.dx, dy = outputRect.dy;
+                                outputRect.dx = outputRect.dy = 0; // reset first so a failed drop never leaves the tile stranded
+                                if (Math.hypot(dx, dy) > 3)
+                                    Monitors.arrange(outputRect.modelData.name, outputRect.modelData.x + dx / canvas.k, outputRect.modelData.y + dy / canvas.k, 24 / canvas.k);
                             }
+                            onCanceled: outputRect.dx = outputRect.dy = 0
                         }
                     }
                 }

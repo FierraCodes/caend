@@ -13,7 +13,7 @@ Singleton {
     id: root
 
     readonly property bool supported: Compositor.isHyprland || Compositor.isNiri
-    property var monitors: [] // plain JS array: list<var> lacks flatMap and friends
+    property var monitors: [] // plain JS array, not list<var> (a sequence wrapper)
 
     readonly property int confirmSeconds: 15
     property var snapshot: null // monitors before an unconfirmed change; null when nothing is pending
@@ -92,7 +92,7 @@ Singleton {
             refetch.restart();
         } else if (Compositor.isNiri) {
             // One process for all outputs; values go in as arguments, never into the script text
-            const args = list.flatMap(m => [m.name, m.disabled ? "off" : "on", m.mode, String(m.scale), Mon.TRANSFORMS[m.transform] ?? "normal", String(m.x), String(m.y), m.vrr ? "on" : "off"]);
+            const args = [].concat(...list.map(m => [m.name, m.disabled ? "off" : "on", m.mode, String(m.scale), Mon.TRANSFORMS[m.transform] ?? "normal", String(m.x), String(m.y), m.vrr ? "on" : "off"]));
             niriApply.command = ["sh", "-c", `
                 while [ $# -ge 8 ]; do
                     if [ "$2" = off ]; then niri msg output "$1" off
