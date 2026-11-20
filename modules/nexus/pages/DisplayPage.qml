@@ -101,7 +101,9 @@ PageBase {
                     const seen = new Set();
                     return (root.modesBySize[root.currentSize] ?? []).filter(mode => {
                         const hz = Math.round(Monitors.parseMode(mode).refresh);
-                        return mode === root.mon?.mode || (!seen.has(hz) && seen.add(hz));
+                        const keep = mode === root.mon?.mode || !seen.has(hz);
+                        seen.add(hz);
+                        return keep;
                     });
                 }
 
