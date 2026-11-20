@@ -46,6 +46,10 @@ PageBase {
             icon: "north_west"
         },
         MenuItem {
+            text: Tr.trCtx("Top centre", "notification position")
+            icon: "north"
+        },
+        MenuItem {
             text: Tr.trCtx("Top right", "notification position")
             icon: "north_east"
         },
@@ -54,11 +58,15 @@ PageBase {
             icon: "south_west"
         },
         MenuItem {
+            text: Tr.trCtx("Bottom centre", "notification position")
+            icon: "south"
+        },
+        MenuItem {
             text: Tr.trCtx("Bottom right", "notification position")
             icon: "south_east"
         }
     ]
-    readonly property list<string> notifPositionValues: ["auto", "topLeft", "topRight", "bottomLeft", "bottomRight"]
+    readonly property list<string> notifPositionValues: ["auto", "topLeft", "topCenter", "topRight", "bottomLeft", "bottomCenter", "bottomRight"]
 
     title: Tr.tr("Notifications")
     isSubPage: true

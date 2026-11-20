@@ -23,11 +23,12 @@ Item {
     required property real borderThickness
 
     // A bottom bar owns the bottom-right corner, so the right column flips: utilities top-right, notifications bottom-right
-    readonly property string notifPos: ["topLeft", "topRight", "bottomLeft", "bottomRight"].includes(GlobalConfig.notifs.position) ? GlobalConfig.notifs.position : "auto"
+    readonly property string notifPos: ["topLeft", "topCenter", "topRight", "bottomLeft", "bottomCenter", "bottomRight"].includes(GlobalConfig.notifs.position) ? GlobalConfig.notifs.position : "auto"
     readonly property bool notifsLeft: notifPos.endsWith("Left")
+    readonly property bool notifsCentre: notifPos.endsWith("Center")
     readonly property bool notifsBottom: notifPos === "auto" ? bar.side === "bottom" : notifPos.startsWith("bottom")
     // Notifications head the right column (sidebar hangs off them) unless moved left or floating
-    readonly property bool notifsInColumn: !notifsLeft && !GlobalConfig.notifs.floating
+    readonly property bool notifsInColumn: !notifsLeft && !notifsCentre && !GlobalConfig.notifs.floating
     // A floating popup keeps clear of the frame by the blob smoothing distance, or the two would melt together
     readonly property real notifsGap: GlobalConfig.notifs.floating ? Config.border.smoothing + Tokens.padding.medium : 0
     readonly property bool rightFlipped: notifsInColumn ? notifsBottom : bar.side === "bottom"
@@ -89,11 +90,12 @@ Item {
 
         inColumn: root.notifsInColumn
         onLeft: root.notifsLeft
+        centred: root.notifsCentre
         floating: GlobalConfig.notifs.floating
         fromBottom: root.notifsBottom
         // Swapping anchors live can leave both set for a moment, stretching the panel and keeping that
         // size; x/y bindings can flip sides safely
-        x: root.notifsLeft ? root.notifsGap : parent.width - width - root.notifsGap
+        x: root.notifsCentre ? (parent.width - width) / 2 : root.notifsLeft ? root.notifsGap : parent.width - width - root.notifsGap
         y: root.notifsBottom ? parent.height - height - anchors.bottomMargin - root.notifsGap : anchors.topMargin + root.notifsGap
     }
 

@@ -20,6 +20,8 @@ Item {
     required property Item utilitiesPanel
     property bool fromBottom // Edge padding goes on the bottom when popups sit in a bottom corner
     property bool onLeft
+    property bool centred
+    readonly property bool onRight: !onLeft && !centred
     property bool floating // Free-standing, so no side is flush with the frame
     readonly property int padding: Tokens.padding.large
     readonly property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
@@ -39,19 +41,19 @@ Item {
             height += (list.itemAtIndex(i) as NotifWrapper)?.nonAnimHeight ?? 0;
 
         // The OSD, session menu and utilities share the right edge only
-        if (!onLeft && screenState.osd) {
+        if (onRight && screenState.osd) {
             const h = osdPanel.y - clampedPadding;
             if (height > h)
                 height = h;
         }
 
-        if (!onLeft && screenState.session) {
+        if (onRight && screenState.session) {
             const h = sessionPanel.y - clampedPadding;
             if (height > h)
                 height = h;
         }
 
-        if (!onLeft && screenState.utilities) {
+        if (onRight && screenState.utilities) {
             const h = ((QsWindow.window as QsWindow)?.screen.height ?? 0) - (utilitiesPanel as Utilities.Wrapper).nonAnimHeight - Config.border.thickness * 2 - padding * 2 - Tokens.spacing.extraLarge;
             if (height > h)
                 height = h;
@@ -66,7 +68,7 @@ Item {
         anchors.topMargin: root.fromBottom || root.floating ? root.padding : root.clampedPadding
         anchors.bottomMargin: root.fromBottom && !root.floating ? root.clampedPadding : root.padding
         anchors.leftMargin: root.onLeft && !root.floating ? root.clampedPadding : root.padding
-        anchors.rightMargin: root.onLeft || root.floating ? root.padding : root.clampedPadding
+        anchors.rightMargin: root.onRight && !root.floating ? root.clampedPadding : root.padding
 
         color: "transparent"
         radius: Tokens.rounding.large

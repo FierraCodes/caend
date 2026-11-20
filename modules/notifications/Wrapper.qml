@@ -11,6 +11,7 @@ Item {
     property alias utilitiesPanel: content.utilitiesPanel
     property alias fromBottom: content.fromBottom
     property alias onLeft: content.onLeft
+    property alias centred: content.centred
     property alias floating: content.floating
     // Heading the right column, it is as wide as the sidebar hanging below it
     property bool inColumn: true

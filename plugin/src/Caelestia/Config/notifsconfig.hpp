@@ -20,7 +20,7 @@ class NotifsConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(bool, actionOnClick, false)
     CONFIG_PROPERTY(int, groupPreviewNum, 3)
     CONFIG_PROPERTY(bool, openExpanded, false)
-    // "auto" (top right, bottom right with a bottom bar) or a corner: topLeft, topRight, bottomLeft, bottomRight
+    // "auto" (top right, bottom right with a bottom bar) or topLeft, topCenter, topRight, bottomLeft, bottomCenter, bottomRight
     CONFIG_GLOBAL_PROPERTY(QString, position, u"auto"_s)
     // Detached from the frame as a free-standing popup instead of growing out of the screen edge
     CONFIG_GLOBAL_PROPERTY(bool, floating, false)
