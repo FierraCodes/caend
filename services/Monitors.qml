@@ -169,7 +169,10 @@ Singleton {
                     return; // don't clobber the preview while a change waits for confirmation
                 try {
                     const data = JSON.parse(text);
-                    root.monitors = (Compositor.isNiri ? Mon.fromNiri(data) : Mon.fromHyprland(data)).sort((a, b) => a.x - b.x || a.y - b.y);
+                    const next = (Compositor.isNiri ? Mon.fromNiri(data) : Mon.fromHyprland(data)).sort((a, b) => a.x - b.x || a.y - b.y);
+                    // Unchanged reads must not rebuild the page's menus (that would close an open dropdown)
+                    if (JSON.stringify(next) !== JSON.stringify(root.monitors))
+                        root.monitors = next;
                 } catch (e) {
                     console.warn("[Monitors] could not read outputs:", e);
                 }
