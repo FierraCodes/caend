@@ -52,29 +52,8 @@ StyledRect {
         visible: root.horizontal
         spacing: Tokens.spacing.small
 
-        ClipRect {
+        Art {
             anchors.verticalCenter: parent.verticalCenter
-            implicitWidth: root.size
-            implicitHeight: root.size
-            radius: Tokens.rounding.full
-            color: Colours.palette.m3secondaryContainer
-
-            MaterialIcon {
-                anchors.centerIn: parent
-                text: "music_note"
-                color: Colours.palette.m3onSecondaryContainer
-                visible: art.status !== Image.Ready
-            }
-
-            FadeImage {
-                id: art
-
-                anchors.fill: parent
-                source: Players.getArtUrl(root.player)
-                asynchronous: true
-                fillMode: Image.PreserveAspectCrop
-                sourceSize: Qt.size(root.size * 2, root.size * 2)
-            }
         }
 
         Column {
@@ -120,6 +99,8 @@ StyledRect {
         visible: !root.horizontal
         spacing: Tokens.spacing.extraSmall
 
+        Art {}
+
         Button {
             icon: root.playing ? "pause" : "play_arrow"
             active: root.playing
@@ -130,6 +111,30 @@ StyledRect {
             icon: "skip_next"
             onClicked: root.player?.next()
             onRightClicked: root.player?.previous()
+        }
+    }
+
+    component Art: ClipRect {
+        implicitWidth: root.size
+        implicitHeight: root.size
+        radius: Tokens.rounding.full
+        color: Colours.palette.m3secondaryContainer
+
+        MaterialIcon {
+            anchors.centerIn: parent
+            text: "music_note"
+            color: Colours.palette.m3onSecondaryContainer
+            visible: art.status !== Image.Ready
+        }
+
+        FadeImage {
+            id: art
+
+            anchors.fill: parent
+            source: Players.getArtUrl(root.player)
+            asynchronous: true
+            fillMode: Image.PreserveAspectCrop
+            sourceSize: Qt.size(root.size * 2, root.size * 2)
         }
     }
 
