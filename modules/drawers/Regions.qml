@@ -67,8 +67,9 @@ Region {
 
     R {
         panel: root.panels.notifications
-        y: root.panels.rightFlipped ? root.bottomEdge - height : root.topEdge
-        height: panel.height + root.borderThickness
+        // Attached popups reach to their edge; floating ones are just their own rect
+        y: GlobalConfig.notifs.floating ? panel.y + root.panels.y : root.panels.notifsBottom ? root.bottomEdge - height : root.topEdge
+        height: panel.height + (GlobalConfig.notifs.floating ? 0 : root.borderThickness)
     }
 
     R {

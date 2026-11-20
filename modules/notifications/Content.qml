@@ -18,7 +18,9 @@ Item {
     required property Item osdPanel
     required property Item sessionPanel
     required property Item utilitiesPanel
-    property bool fromBottom // Edge padding goes on the bottom when popups sit in the bottom-right corner
+    property bool fromBottom // Edge padding goes on the bottom when popups sit in a bottom corner
+    property bool onLeft
+    property bool floating // Free-standing, so no side is flush with the frame
     readonly property int padding: Tokens.padding.large
     readonly property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
 
@@ -36,19 +38,20 @@ Item {
         for (let i = 0; i < count; i++)
             height += (list.itemAtIndex(i) as NotifWrapper)?.nonAnimHeight ?? 0;
 
-        if (screenState.osd) {
+        // The OSD, session menu and utilities share the right edge only
+        if (!onLeft && screenState.osd) {
             const h = osdPanel.y - clampedPadding;
             if (height > h)
                 height = h;
         }
 
-        if (screenState.session) {
+        if (!onLeft && screenState.session) {
             const h = sessionPanel.y - clampedPadding;
             if (height > h)
                 height = h;
         }
 
-        if (screenState.utilities) {
+        if (!onLeft && screenState.utilities) {
             const h = ((QsWindow.window as QsWindow)?.screen.height ?? 0) - (utilitiesPanel as Utilities.Wrapper).nonAnimHeight - Config.border.thickness * 2 - padding * 2 - Tokens.spacing.extraLarge;
             if (height > h)
                 height = h;
@@ -60,9 +63,10 @@ Item {
     ClippingWrapperRectangle {
         anchors.fill: parent
         anchors.margins: root.padding
-        anchors.topMargin: root.fromBottom ? root.padding : root.clampedPadding
-        anchors.bottomMargin: root.fromBottom ? root.clampedPadding : root.padding
-        anchors.rightMargin: root.clampedPadding
+        anchors.topMargin: root.fromBottom || root.floating ? root.padding : root.clampedPadding
+        anchors.bottomMargin: root.fromBottom && !root.floating ? root.clampedPadding : root.padding
+        anchors.leftMargin: root.onLeft && !root.floating ? root.clampedPadding : root.padding
+        anchors.rightMargin: root.onLeft || root.floating ? root.padding : root.clampedPadding
 
         color: "transparent"
         radius: Tokens.rounding.large

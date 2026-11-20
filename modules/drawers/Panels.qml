@@ -23,7 +23,14 @@ Item {
     required property real borderThickness
 
     // A bottom bar owns the bottom-right corner, so the right column flips: utilities top-right, notifications bottom-right
-    readonly property bool rightFlipped: bar.side === "bottom"
+    readonly property string notifPos: ["topLeft", "topRight", "bottomLeft", "bottomRight"].includes(GlobalConfig.notifs.position) ? GlobalConfig.notifs.position : "auto"
+    readonly property bool notifsLeft: notifPos.endsWith("Left")
+    readonly property bool notifsBottom: notifPos === "auto" ? bar.side === "bottom" : notifPos.startsWith("bottom")
+    // Notifications head the right column (sidebar hangs off them) unless moved left or floating
+    readonly property bool notifsInColumn: !notifsLeft && !GlobalConfig.notifs.floating
+    // A floating popup keeps clear of the frame by the blob smoothing distance, or the two would melt together
+    readonly property real notifsGap: GlobalConfig.notifs.floating ? Config.border.smoothing + Tokens.padding.medium : 0
+    readonly property bool rightFlipped: notifsInColumn ? notifsBottom : bar.side === "bottom"
     readonly property alias osd: osd
     readonly property alias osdWrapper: osdWrapper
     readonly property alias notifications: notifications
@@ -80,11 +87,14 @@ Item {
         sessionPanel: sessionWrapper
         utilitiesPanel: utilities
 
-        fromBottom: root.rightFlipped
-        // Swapping top/bottom anchors live can leave both set for a moment, stretching the panel to the
-        // screen height and keeping it that size; a y binding can flip sides safely
-        y: root.rightFlipped ? parent.height - height - anchors.bottomMargin : anchors.topMargin
-        anchors.right: parent.right
+        inColumn: root.notifsInColumn
+        onLeft: root.notifsLeft
+        floating: GlobalConfig.notifs.floating
+        fromBottom: root.notifsBottom
+        // Swapping anchors live can leave both set for a moment, stretching the panel and keeping that
+        // size; x/y bindings can flip sides safely
+        x: root.notifsLeft ? root.notifsGap : parent.width - width - root.notifsGap
+        y: root.notifsBottom ? parent.height - height - anchors.bottomMargin - root.notifsGap : anchors.topMargin + root.notifsGap
     }
 
     Item {
@@ -170,11 +180,11 @@ Item {
         screenState: root.screenState
 
         flipped: root.rightFlipped
-        anchors.top: root.rightFlipped ? utilities.bottom : notifications.bottom
-        anchors.bottom: root.rightFlipped ? notifications.top : utilities.top
+        anchors.top: root.rightFlipped ? utilities.bottom : root.notifsInColumn ? notifications.bottom : parent.top
+        anchors.bottom: !root.rightFlipped ? utilities.top : root.notifsInColumn ? notifications.top : parent.bottom
         anchors.right: parent.right
-        anchors.topMargin: root.rightFlipped ? 0 : -notifications.anchors.topMargin
-        anchors.bottomMargin: root.rightFlipped ? -notifications.anchors.bottomMargin : 0
+        anchors.topMargin: root.rightFlipped || !root.notifsInColumn ? 0 : -notifications.anchors.topMargin
+        anchors.bottomMargin: root.rightFlipped && root.notifsInColumn ? -notifications.anchors.bottomMargin : 0
     }
 
     AiChat.Wrapper {

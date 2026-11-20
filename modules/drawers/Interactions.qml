@@ -194,9 +194,9 @@ CustomMouseArea {
 
             // Show sidebar on hover (top-right corner, bounded by notification panel height)
             if (Config.sidebar.showOnHover && Config.sidebar.enabled) {
-                const sidebarTriggerY = Math.max(Config.sidebar.minHoverThreshold, panels.notifications.y + panels.notifications.height + borderThickness);
+                const sidebarTriggerY = panels.notifsInColumn ? Math.max(Config.sidebar.minHoverThreshold, panels.notifications.y + panels.notifications.height + borderThickness) : Config.sidebar.minHoverThreshold;
                 // Flipped column: the sidebar trigger is the bottom-right stretch, up to the notification popups
-                const flippedTriggerY = Math.min(bottomEdge - Config.sidebar.minHoverThreshold, panels.notifications.y - borderThickness);
+                const flippedTriggerY = panels.notifsInColumn ? Math.min(bottomEdge - Config.sidebar.minHoverThreshold, panels.notifications.y - borderThickness) : bottomEdge - Config.sidebar.minHoverThreshold;
                 const showSidebarHover = x > Math.min(rightEdge - Config.border.minThickness, panels.x + panels.sidebar.x) && x <= rightEdge && (panels.rightFlipped ? y >= flippedTriggerY : y <= sidebarTriggerY);
                 if (showSidebarHover && !screenState.sidebar)
                     screenState.sidebar = true;
@@ -241,9 +241,9 @@ CustomMouseArea {
 
             // Show/hide sidebar on hover
             if (Config.sidebar.showOnHover && Config.sidebar.enabled && !pressed) {
-                const sidebarTriggerY = Math.max(Config.sidebar.minHoverThreshold, panels.notifications.y + panels.notifications.height + borderThickness);
+                const sidebarTriggerY = panels.notifsInColumn ? Math.max(Config.sidebar.minHoverThreshold, panels.notifications.y + panels.notifications.height + borderThickness) : Config.sidebar.minHoverThreshold;
                 // Flipped column: the sidebar trigger is the bottom-right stretch, up to the notification popups
-                const flippedTriggerY = Math.min(bottomEdge - Config.sidebar.minHoverThreshold, panels.notifications.y - borderThickness);
+                const flippedTriggerY = panels.notifsInColumn ? Math.min(bottomEdge - Config.sidebar.minHoverThreshold, panels.notifications.y - borderThickness) : bottomEdge - Config.sidebar.minHoverThreshold;
                 const showSidebarHover = x > Math.min(rightEdge - Config.border.minThickness, panels.x + panels.sidebar.x) && x <= rightEdge && (panels.rightFlipped ? y >= flippedTriggerY : y <= sidebarTriggerY);
                 if (showSidebarHover && !screenState.sidebar) {
                     screenState.sidebar = true;

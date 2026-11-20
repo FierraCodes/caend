@@ -36,6 +36,29 @@ PageBase {
         }
     ]
     readonly property list<string> toastFullscreenValues: ["off", "important", "all"]
+    readonly property list<MenuItem> notifPositionItems: [
+        MenuItem {
+            text: Tr.trCtx("Auto", "notification position: top right, or bottom right with a bottom bar")
+            icon: "auto_mode"
+        },
+        MenuItem {
+            text: Tr.trCtx("Top left", "notification position")
+            icon: "north_west"
+        },
+        MenuItem {
+            text: Tr.trCtx("Top right", "notification position")
+            icon: "north_east"
+        },
+        MenuItem {
+            text: Tr.trCtx("Bottom left", "notification position")
+            icon: "south_west"
+        },
+        MenuItem {
+            text: Tr.trCtx("Bottom right", "notification position")
+            icon: "south_east"
+        }
+    ]
+    readonly property list<string> notifPositionValues: ["auto", "topLeft", "topRight", "bottomLeft", "bottomRight"]
 
     title: Tr.tr("Notifications")
     isSubPage: true
@@ -54,6 +77,21 @@ PageBase {
 
         SelectRow {
             first: true
+            label: Tr.tr("Position")
+            subtext: Tr.tr("Which screen corner popups appear in")
+            menuItems: root.notifPositionItems
+            active: root.notifPositionItems[Math.max(0, root.notifPositionValues.indexOf(GlobalConfig.notifs.position))]
+            onSelected: item => GlobalConfig.notifs.position = root.notifPositionValues[root.notifPositionItems.indexOf(item)]
+        }
+
+        ToggleRow {
+            text: Tr.tr("Floating")
+            subtext: Tr.tr("Pop up detached from the screen frame instead of growing out of it")
+            checked: GlobalConfig.notifs.floating
+            onToggled: GlobalConfig.notifs.floating = checked
+        }
+
+        SelectRow {
             label: Tr.tr("Show in fullscreen")
             subtext: Tr.tr("Whether notifications appear over fullscreen apps")
             menuItems: root.notifFullscreenItems
