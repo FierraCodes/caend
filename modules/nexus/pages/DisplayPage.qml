@@ -76,10 +76,14 @@ PageBase {
             Variants {
                 id: sizeItems
 
-                model: Object.keys(root.modesBySize).sort((a, b) => {
-                    const [aw, ah] = a.split("x"), [bw, bh] = b.split("x");
-                    return bw * bh - aw * ah || bw - aw;
-                })
+                // shortcut: menus don't scroll, so only the 8 largest sizes (plus the current one) fit; add scrolling to Menu if people need tiny modes
+                model: {
+                    const sizes = Object.keys(root.modesBySize).sort((a, b) => {
+                        const [aw, ah] = a.split("x"), [bw, bh] = b.split("x");
+                        return bw * bh - aw * ah || bw - aw;
+                    }).slice(0, 8);
+                    return sizes.includes(root.currentSize) || !root.currentSize ? sizes : [...sizes, root.currentSize];
+                }
 
                 MenuItem {
                     required property string modelData
@@ -92,7 +96,14 @@ PageBase {
             Variants {
                 id: refreshItems
 
-                model: root.modesBySize[root.currentSize] ?? []
+                // One entry per whole Hz (144 and 143.97 look the same), highest first, so the menu fits on screen
+                model: {
+                    const seen = new Set();
+                    return (root.modesBySize[root.currentSize] ?? []).filter(mode => {
+                        const hz = Math.round(Monitors.parseMode(mode).refresh);
+                        return mode === root.mon?.mode || (!seen.has(hz) && seen.add(hz));
+                    });
+                }
 
                 MenuItem {
                     required property string modelData
