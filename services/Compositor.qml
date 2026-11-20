@@ -61,6 +61,8 @@ Singleton {
     // Full xkb layout description -> short code, e.g. "English (US)" -> "us"
     readonly property var kbMap: new Map()
 
+    signal niriConfigLoaded
+
     function anyFullscreen(): bool {
         if (!isHyprland)
             return false;
@@ -187,6 +189,8 @@ Singleton {
                 kbIdx = ev.KeyboardLayoutsChanged.keyboard_layouts.current_idx;
             } else if (ev.KeyboardLayoutSwitched) {
                 kbIdx = ev.KeyboardLayoutSwitched.idx;
+            } else if (ev.ConfigLoaded) {
+                root.niriConfigLoaded();
             }
         }
     }
