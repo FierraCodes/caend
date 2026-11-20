@@ -17,6 +17,9 @@ binds {
     Mod+Shift+S  { spawn "qs" "-c" "caelestia" "ipc" "call" "picker" "openFreeze"; }
 }
 
+// Display settings (Settings > Display) are saved here
+include "caend-outputs.kdl"
+
 // The shell draws its drawers on this layer namespace
 layer-rule {
     match namespace="^caelestia-(drawers|polkit|lock-osd|network-prompt)$"
