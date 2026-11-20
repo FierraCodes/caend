@@ -13,7 +13,7 @@ Singleton {
     id: root
 
     readonly property bool supported: Compositor.isHyprland || Compositor.isNiri
-    property list<var> monitors: []
+    property var monitors: [] // plain JS array: list<var> lacks flatMap and friends
 
     readonly property int confirmSeconds: 15
     property var snapshot: null // monitors before an unconfirmed change; null when nothing is pending
