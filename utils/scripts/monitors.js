@@ -106,22 +106,46 @@ function overlaps(a, b) {
     return a.x < b.x + sb.w && a.x + sa.w > b.x && a.y < b.y + sb.h && a.y + sa.h > b.y;
 }
 
-// Where `name` lands when dropped at (px, py): snapped to the nearest edge of another output within
-// `threshold`, then everything shifted so the layout starts at 0,0. Returns { name: {x, y} } or null on overlap.
+// Where `name` lands when dropped at (px, py): flush against the nearest face of another output (sliding
+// along that face, with its ends snapping into line within `threshold`), then everything shifted so the layout
+// starts at 0,0. Returns { name: {x, y} }, or null when no face has room.
 function arrange(mons, name, px, py, threshold) {
     const me = mons.find(m => m.name === name);
     const others = mons.filter(m => m.name !== name && !m.disabled);
     const size = logicalSize(me);
-    const snap = (pos, cands) => cands.reduce((best, c) => Math.abs(c - pos) < Math.abs(best - pos) ? c : best, Infinity);
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    // Slide along a face, but line up with the face's ends when close
+    const along = (pos, start, len, myLen) => {
+        const v = clamp(pos, start - myLen + 1, start + len - 1);
+        if (Math.abs(v - start) <= threshold)
+            return start;
+        if (Math.abs(v + myLen - start - len) <= threshold)
+            return start + len - myLen;
+        return v;
+    };
 
-    const xs = [].concat(...others.map(o => { const s = logicalSize(o); return [o.x - size.w, o.x + s.w, o.x, o.x + s.w - size.w]; }));
-    const ys = [].concat(...others.map(o => { const s = logicalSize(o); return [o.y - size.h, o.y + s.h, o.y, o.y + s.h - size.h]; }));
-    const sx = snap(px, xs), sy = snap(py, ys);
-    const moved = Object.assign({}, me, {
-        x: Math.round(Math.abs(sx - px) <= threshold ? sx : px),
-        y: Math.round(Math.abs(sy - py) <= threshold ? sy : py)
-    });
-    if (others.some(o => overlaps(moved, o)))
+    let moved = null, best = Infinity;
+    for (const o of others) {
+        const s = logicalSize(o);
+        const ay = along(py, o.y, s.h, size.h), ax = along(px, o.x, s.w, size.w);
+        const cands = [
+            { x: o.x - size.w, y: ay }, // left
+            { x: o.x + s.w, y: ay }, // right
+            { x: ax, y: o.y - size.h }, // above
+            { x: ax, y: o.y + s.h } // below
+        ];
+        for (const c of cands) {
+            const cand = Object.assign({}, me, { x: Math.round(c.x), y: Math.round(c.y) });
+            const d = Math.hypot(cand.x - px, cand.y - py);
+            if (d < best && !others.some(other => overlaps(cand, other))) {
+                best = d;
+                moved = cand;
+            }
+        }
+    }
+    if (!others.length)
+        moved = Object.assign({}, me, { x: 0, y: 0 });
+    if (!moved)
         return null;
 
     const all = [moved, ...others];
