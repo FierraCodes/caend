@@ -88,6 +88,11 @@ GridLayout {
                 popouts.hasCurrent = false;
                 tray.expanded = true;
             }
+        } else if (id === "media" && !horizontal && Players.active) {
+            // A side bar's media pill has no room for text, so the details live in a popout
+            popouts.currentName = id;
+            popouts.currentCenter = Qt.binding(() => centerOf(ch.item as Item));
+            popouts.hasCurrent = true;
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             popouts.currentName = id.toLowerCase();
             popouts.currentCenter = centerOf(ch.item as Item);

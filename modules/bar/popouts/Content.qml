@@ -103,6 +103,11 @@ Item {
         }
 
         Popout {
+            name: "media"
+            sourceComponent: Media {}
+        }
+
+        Popout {
             name: "battery"
             sourceComponent: Battery {}
         }
