@@ -157,12 +157,14 @@ Singleton {
     }
 
     function addMessage(content: string, role: string): void {
-        messages = [...messages, {
+        messages = [...messages,
+            {
                 role,
                 content,
                 model: "",
                 done: true
-            }];
+            }
+        ];
     }
 
     function clear(): void {
@@ -289,8 +291,7 @@ Singleton {
                     ...history.map(m => ({
                                 role: m.role,
                                 content: m.content
-                            }))
-                ]
+                            }))]
             };
             headers = key ? {
                 Authorization: `Bearer ${key}`
@@ -304,12 +305,14 @@ Singleton {
         headers = Object.assign({}, model.headers ?? {}, headers);
 
         const index = messages.length;
-        messages = [...messages, {
+        messages = [...messages,
+            {
                 role: "assistant",
                 content: "",
                 model: model.name,
                 done: false
-            }];
+            }
+        ];
 
         let raw = ""; // Non-SSE output, i.e. an error body
         reply = Requests.stream(model.endpoint, JSON.stringify(body), line => {

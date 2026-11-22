@@ -37,10 +37,15 @@ public:
     explicit NetworkAgent(QObject* parent = nullptr);
 
     [[nodiscard]] bool active() const { return m_active; }
+
     [[nodiscard]] QString connectionName() const { return m_connectionName; }
+
     [[nodiscard]] QString settingName() const { return m_settingName; }
+
     [[nodiscard]] QStringList fields() const { return m_fields; }
+
     [[nodiscard]] QVariantMap prefill() const { return m_prefill; }
+
     [[nodiscard]] bool retry() const { return m_retry; }
 
     Q_INVOKABLE void submit(const QVariantMap& secrets);

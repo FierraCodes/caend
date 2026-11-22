@@ -90,7 +90,7 @@ NMVariantMapMap NetworkAgent::GetSecrets(const NMVariantMapMap& connection, cons
     QVariantMap prefill;
     const auto fields = fieldsFor(settingName, connection, prefill);
     if (!(flags & k_allowInteraction) || fields.isEmpty()) {
-        QDBusConnection::systemBus().send(message.createErrorReply( k_errorNoSecrets, u"No secrets available"_s));
+        QDBusConnection::systemBus().send(message.createErrorReply(k_errorNoSecrets, u"No secrets available"_s));
         return {};
     }
 
