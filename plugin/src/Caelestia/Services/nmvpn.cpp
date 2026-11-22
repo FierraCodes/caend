@@ -9,6 +9,9 @@
 #include <qdbusservicewatcher.h>
 #include <qloggingcategory.h>
 
+#include <algorithm>
+#include <functional>
+
 namespace {
 
 Q_LOGGING_CATEGORY(lcNmVpn, "caelestia.services.nmvpn", QtInfoMsg)
@@ -59,11 +62,20 @@ QList<QDBusObjectPath> toPathList(const QVariant& v) {
     return v.value<QList<QDBusObjectPath>>();
 }
 
-QDBusMessage call(const QString& path, const QString& iface, const QString& method, const QVariantList& args = {}) {
+// Async call on NetworkManager; onReply runs with the finished call, then the watcher deletes itself
+void callAsync(QObject* ctx, const QString& path, const QString& iface, const QString& method, const QVariantList& args,
+    const std::function<void(const QDBusPendingCall&)>& onReply) {
     auto msg = QDBusMessage::createMethodCall(k_service, path, iface, method);
     msg.setArguments(args);
-    return msg;
+    // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks) watcher is parented and self-deletes
+    const auto* watcher = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(msg), ctx);
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished, ctx, [onReply](QDBusPendingCallWatcher* self) {
+        onReply(*self);
+        self->deleteLater();
+    });
 }
+
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 } // namespace
 
@@ -116,7 +128,7 @@ QVariantList NmVpn::connections() const {
 }
 
 void NmVpn::activate(const QString& uuid) {
-    const auto it = std::find_if(m_profiles.cbegin(), m_profiles.cend(), [&](const Profile& p) {
+    const auto it = std::ranges::find_if(m_profiles, [&](const Profile& p) {
         return p.uuid == uuid;
     });
     if (it == m_profiles.cend()) {
@@ -125,18 +137,15 @@ void NmVpn::activate(const QString& uuid) {
     }
 
     const QDBusObjectPath none(u"/"_s);
-    auto* w = new QDBusPendingCallWatcher(
-        QDBusConnection::systemBus().asyncCall(call(k_managerPath, k_managerIface, u"ActivateConnection"_s,
-            { QVariant::fromValue(QDBusObjectPath(it->path)), QVariant::fromValue(none), QVariant::fromValue(none) })),
-        this);
-    connect(w, &QDBusPendingCallWatcher::finished, this, [this, uuid](QDBusPendingCallWatcher* self) {
-        const QDBusPendingReply<QDBusObjectPath> reply = *self;
-        if (reply.isError()) {
-            qCWarning(lcNmVpn) << "Failed to activate" << uuid << reply.error().message();
-            emit activationFailed(uuid, reply.error().message());
-        }
-        self->deleteLater();
-    });
+    callAsync(this, k_managerPath, k_managerIface, u"ActivateConnection"_s,
+        { QVariant::fromValue(QDBusObjectPath(it->path)), QVariant::fromValue(none), QVariant::fromValue(none) },
+        [this, uuid](const QDBusPendingCall& pending) {
+            const QDBusPendingReply<QDBusObjectPath> reply = pending;
+            if (reply.isError()) {
+                qCWarning(lcNmVpn) << "Failed to activate" << uuid << reply.error().message();
+                emit activationFailed(uuid, reply.error().message());
+            }
+        });
 }
 
 void NmVpn::deactivate(const QString& uuid) {
@@ -144,16 +153,12 @@ void NmVpn::deactivate(const QString& uuid) {
         if (it->uuid != uuid)
             continue;
         it->reachedActivated = true; // a cancelled connect is not a failure
-        auto* w = new QDBusPendingCallWatcher(
-            QDBusConnection::systemBus().asyncCall(call(k_managerPath, k_managerIface, u"DeactivateConnection"_s,
-                { QVariant::fromValue(QDBusObjectPath(it.key())) })),
-            this);
-        connect(w, &QDBusPendingCallWatcher::finished, this, [uuid](QDBusPendingCallWatcher* self) {
-            const QDBusPendingReply<> reply = *self;
-            if (reply.isError())
-                qCWarning(lcNmVpn) << "Failed to deactivate" << uuid << reply.error().message();
-            self->deleteLater();
-        });
+        callAsync(this, k_managerPath, k_managerIface, u"DeactivateConnection"_s,
+            { QVariant::fromValue(QDBusObjectPath(it.key())) }, [uuid](const QDBusPendingCall& pending) {
+                const QDBusPendingReply<> reply = pending;
+                if (reply.isError())
+                    qCWarning(lcNmVpn) << "Failed to deactivate" << uuid << reply.error().message();
+            });
     }
 }
 
@@ -161,11 +166,8 @@ void NmVpn::reload() {
     // Startup calls (list, settings, active connections) tracked so `loaded` means the whole picture is in
     m_loading = true;
     m_pending = 2;
-    auto* w = new QDBusPendingCallWatcher(
-        QDBusConnection::systemBus().asyncCall(call(k_settingsPath, k_settingsIface, u"ListConnections"_s)), this);
-    connect(w, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* self) {
-        const QDBusPendingReply<QList<QDBusObjectPath>> reply = *self;
-        self->deleteLater();
+    callAsync(this, k_settingsPath, k_settingsIface, u"ListConnections"_s, {}, [this](const QDBusPendingCall& pending) {
+        const QDBusPendingReply<QList<QDBusObjectPath>> reply = pending;
         if (reply.isError()) {
             qCWarning(lcNmVpn) << "Failed to list connections:" << reply.error().message();
         } else {
@@ -189,13 +191,9 @@ void NmVpn::clear() {
 void NmVpn::loadProfile(const QString& path) {
     if (m_loading)
         m_pending++;
-    auto* w = new QDBusPendingCallWatcher(
-        QDBusConnection::systemBus().asyncCall(call(path, k_connectionIface, u"GetSettings"_s)), this);
-    connect(w, &QDBusPendingCallWatcher::finished, this, [this, path](QDBusPendingCallWatcher* self) {
-        const QDBusPendingReply<NMVariantMapMap> reply = *self;
-        self->deleteLater();
-
-        const auto existing = std::find_if(m_profiles.begin(), m_profiles.end(), [&](const Profile& p) {
+    callAsync(this, path, k_connectionIface, u"GetSettings"_s, {}, [this, path](const QDBusPendingCall& pending) {
+        const QDBusPendingReply<NMVariantMapMap> reply = pending;
+        const auto existing = std::ranges::find_if(m_profiles, [&](const Profile& p) {
             return p.path == path;
         });
 
@@ -208,12 +206,17 @@ void NmVpn::loadProfile(const QString& path) {
                 const auto kind = type == u"vpn"_s
                                       ? settings.value(u"vpn"_s).value(u"service-type"_s).toString().section(u'.', -1)
                                       : type;
-                Profile p{ path, con.value(u"uuid"_s).toString(), con.value(u"id"_s).toString(), kind,
-                    con.value(u"interface-name"_s).toString() };
+                Profile p{
+                    .path = path,
+                    .uuid = con.value(u"uuid"_s).toString(),
+                    .name = con.value(u"id"_s).toString(),
+                    .kind = kind,
+                    .iface = con.value(u"interface-name"_s).toString(),
+                };
                 if (existing != m_profiles.end())
-                    *existing = p;
+                    *existing = std::move(p);
                 else
-                    m_profiles << p;
+                    m_profiles << std::move(p);
                 emit connectionsChanged();
             } else if (existing != m_profiles.end()) {
                 m_profiles.erase(existing);
@@ -226,16 +229,13 @@ void NmVpn::loadProfile(const QString& path) {
 }
 
 void NmVpn::fetchActiveConnections() {
-    auto* w = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(call(k_managerPath, k_propsIface,
-                                              u"Get"_s, { k_managerIface, u"ActiveConnections"_s })),
-        this);
-    connect(w, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* self) {
-        const QDBusPendingReply<QDBusVariant> reply = *self;
-        self->deleteLater();
-        if (!reply.isError())
-            setActiveConnections(toPathList(reply.value().variant()));
-        stepDone();
-    });
+    callAsync(this, k_managerPath, k_propsIface, u"Get"_s, { k_managerIface, u"ActiveConnections"_s },
+        [this](const QDBusPendingCall& pending) {
+            const QDBusPendingReply<QDBusVariant> reply = pending;
+            if (!reply.isError())
+                setActiveConnections(toPathList(reply.value().variant()));
+            stepDone();
+        });
 }
 
 void NmVpn::setActiveConnections(const QList<QDBusObjectPath>& paths) {
@@ -260,19 +260,21 @@ void NmVpn::setActiveConnections(const QList<QDBusObjectPath>& paths) {
             continue;
         if (m_loading)
             m_pending++;
-        auto* w = new QDBusPendingCallWatcher(
-            QDBusConnection::systemBus().asyncCall(call(path, k_propsIface, u"GetAll"_s, { k_activeIface })), this);
-        connect(w, &QDBusPendingCallWatcher::finished, this, [this, path](QDBusPendingCallWatcher* self) {
-            const QDBusPendingReply<QVariantMap> reply = *self;
-            self->deleteLater();
-            const auto props = reply.isError() ? QVariantMap() : reply.value();
-            const auto state = props.value(u"State"_s).toUInt();
-            if (isVpnType(props.value(u"Type"_s).toString()) && state != k_deactivated) {
-                m_active.insert(path, { props.value(u"Uuid"_s).toString(), state, state == k_activated });
-                emit connectionsChanged();
-            }
-            stepDone();
-        });
+        callAsync(
+            this, path, k_propsIface, u"GetAll"_s, { k_activeIface }, [this, path](const QDBusPendingCall& pending) {
+                const QDBusPendingReply<QVariantMap> reply = pending;
+                const auto props = reply.isError() ? QVariantMap() : reply.value();
+                const auto state = props.value(u"State"_s).toUInt();
+                if (isVpnType(props.value(u"Type"_s).toString()) && state != k_deactivated) {
+                    m_active.insert(path, {
+                                              .uuid = props.value(u"Uuid"_s).toString(),
+                                              .state = state,
+                                              .reachedActivated = state == k_activated,
+                                          });
+                    emit connectionsChanged();
+                }
+                stepDone();
+            });
     }
 }
 
