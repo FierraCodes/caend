@@ -76,7 +76,8 @@ Item {
                     values: Ai.messages
                 }
                 onCountChanged: positionViewAtEnd()
-                onContentHeightChanged: if (atYEnd || Ai.busy) positionViewAtEnd()
+                onContentHeightChanged: if (atYEnd || Ai.busy)
+                    positionViewAtEnd()
 
                 delegate: Message {}
             }
