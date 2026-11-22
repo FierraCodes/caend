@@ -409,7 +409,7 @@ PageBase {
                 visible: Monitors.supported
                 icon: "save"
                 label: Tr.tr("Kept settings are written to %1").arg(Monitors.configPath.replace(Quickshell.env("HOME"), "~"))
-                subtext: Tr.tr("Add this line to your compositor config once: %1").arg(Monitors.includeLine)
+                subtext: Tr.tr("Added to %1: %2").arg(Monitors.mainConfig.replace(Quickshell.env("HOME"), "~")).arg(Monitors.includeLine)
             }
         }
 

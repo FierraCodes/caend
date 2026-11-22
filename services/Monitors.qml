@@ -8,7 +8,7 @@ import "../utils/scripts/monitors.js" as Mon
 
 // Output configuration for Hyprland and Niri. State is read once and again only when the
 // compositor reports a change (no polling). Changes apply live, then get written to a file the
-// compositor config includes (`includeLine`). Risky changes revert after `confirmSeconds` unless kept.
+// compositor config includes (`includeLine`, appended to `mainConfig` automatically). Risky changes revert after `confirmSeconds` unless kept.
 Singleton {
     id: root
 
@@ -28,6 +28,8 @@ Singleton {
             return 'include "caend-outputs.kdl"';
         return Hypr.usingLua ? 'require("caend-monitors")' : "source = ~/.config/hypr/caend-monitors.conf";
     }
+
+    readonly property string mainConfig: Compositor.isNiri ? `${configDir}/niri/config.kdl` : `${configDir}/hypr/hyprland.${Hypr.usingLua ? "lua" : "conf"}`
 
     function refresh(): void {
         if (supported)
@@ -182,6 +184,14 @@ Singleton {
         id: configFile
 
         path: root.supported ? root.configPath : ""
+        // Once our file exists, make sure the main config loads it (appended last so it wins). Only touches a config that exists.
+        onSaved: includer.running = true
+    }
+
+    Process {
+        id: includer
+
+        command: ["sh", "-c", '[ -f "$1" ] && ! grep -qF "$2" "$1" && printf "\\n%s\\n" "$2" >> "$1"; true', "sh", root.mainConfig, root.includeLine]
     }
 
     Process {
