@@ -18,6 +18,8 @@ Singleton {
     readonly property int confirmSeconds: 15
     property var snapshot: null // monitors before an unconfirmed change; null when nothing is pending
     property int secondsLeft: 0
+    property var restored: ({}) // output name -> true once its saved layout was put back
+    property bool rulesLoaded: false
 
     readonly property string configDir: Quickshell.env("XDG_CONFIG_HOME") || `${Quickshell.env("HOME")}/.config`
     readonly property string configPath: Compositor.isNiri ? `${configDir}/niri/caend-outputs.kdl` : `${configDir}/hypr/caend-monitors.${Hypr.usingLua ? "lua" : "conf"}`
@@ -128,6 +130,26 @@ Singleton {
         configFile.setText(text);
     }
 
+    // The shell puts saved layouts back itself, so they stick even if the include line was never added.
+    // Each output is restored once per plug-in, so live changes on the page aren't fought.
+    function restore(next: var): void {
+        const list = [];
+        for (const m of next) {
+            const saved = store.rules[m.name];
+            if (!saved || restored[m.name])
+                continue;
+            restored[m.name] = true;
+            const want = Object.assign({}, m, Mon.layoutOf(saved));
+            if (JSON.stringify(Mon.layoutOf(want)) !== JSON.stringify(Mon.layoutOf(m)))
+                list.push(want);
+        }
+        for (const name in restored)
+            if (!next.some(m => m.name === name))
+                delete restored[name]; // unplugged: restore again next time it shows up
+        if (list.length && !next.every(m => (list.find(l => l.name === m.name) ?? m).disabled))
+            apply(list);
+    }
+
     function refetchLater(): void {
         refetch.restart();
     }
@@ -150,7 +172,10 @@ Singleton {
             } catch (e) {
                 console.warn("[Monitors] bad saved rules:", e);
             }
+            root.rulesLoaded = true;
+            root.refresh();
         }
+        onLoadFailed: root.rulesLoaded = true // nothing saved yet
     }
 
     FileView {
@@ -170,6 +195,8 @@ Singleton {
                 try {
                     const data = JSON.parse(text);
                     const next = (Compositor.isNiri ? Mon.fromNiri(data) : Mon.fromHyprland(data)).sort((a, b) => a.x - b.x || a.y - b.y);
+                    if (root.rulesLoaded)
+                        root.restore(next);
                     // Unchanged reads must not rebuild the page's menus (that would close an open dropdown)
                     if (JSON.stringify(next) !== JSON.stringify(root.monitors))
                         root.monitors = next;

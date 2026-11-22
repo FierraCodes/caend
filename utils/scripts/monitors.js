@@ -68,6 +68,11 @@ function fromNiri(outputs) {
     });
 }
 
+// The settings a saved rule puts back (not modes/description, which come from the hardware)
+function layoutOf(m) {
+    return { mode: m.mode, x: m.x, y: m.y, scale: m.scale, transform: m.transform, disabled: m.disabled, vrr: m.vrr, bitdepth: m.bitdepth, cm: m.cm };
+}
+
 function hyprConfLine(m) {
     if (m.disabled)
         return `monitor = ${m.name}, disable`;
