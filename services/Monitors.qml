@@ -8,7 +8,7 @@ import "../utils/scripts/monitors.js" as Mon
 
 // Output configuration for Hyprland and Niri. State is read once and again only when the
 // compositor reports a change (no polling). Changes apply live, then get written to a file the
-// compositor config includes (`includeLine`, appended to `mainConfig` automatically). Risky changes revert after `confirmSeconds` unless kept.
+// compositor config includes (`includeLine`, appended to `mainConfigs` automatically). Risky changes revert after `confirmSeconds` unless kept.
 Singleton {
     id: root
 
@@ -29,7 +29,8 @@ Singleton {
         return Hypr.usingLua ? 'require("caend-monitors")' : "source = ~/.config/hypr/caend-monitors.conf";
     }
 
-    readonly property string mainConfig: Compositor.isNiri ? `${configDir}/niri/config.kdl` : `${configDir}/hypr/hyprland.${Hypr.usingLua ? "lua" : "conf"}`
+    // Caelestia's hyprland config is managed by the dots, so the include goes in its user file when there is one
+    readonly property var mainConfigs: Compositor.isNiri ? [`${configDir}/niri/config.kdl`] : [`${configDir}/caelestia/hypr-user.${Hypr.usingLua ? "lua" : "conf"}`, `${configDir}/hypr/hyprland.${Hypr.usingLua ? "lua" : "conf"}`]
 
     function refresh(): void {
         if (supported)
@@ -191,7 +192,8 @@ Singleton {
     Process {
         id: includer
 
-        command: ["sh", "-c", '[ -f "$1" ] && ! grep -qF "$2" "$1" && printf "\\n%s\\n" "$2" >> "$1"; true', "sh", root.mainConfig, root.includeLine]
+        // Appends to the first config that exists, unless the line is already there
+        command: ["sh", "-c", 'l="$1"; shift; for f; do [ -f "$f" ] || continue; grep -qF "$l" "$f" || printf "\\n%s\\n" "$l" >> "$f"; exit; done', "sh", root.includeLine, ...root.mainConfigs]
     }
 
     Process {
