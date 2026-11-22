@@ -243,6 +243,7 @@ Singleton {
 
     Connections {
         function onConfigReloaded(): void {
+            root.restored = {}; // a reload puts the config's own rules back, so restore ours again
             root.refetchLater();
         }
 
@@ -251,6 +252,7 @@ Singleton {
 
     Connections {
         function onNiriConfigLoaded(): void {
+            root.restored = {}; // a reload puts the config's own rules back, so restore ours again
             root.refetchLater();
         }
 
