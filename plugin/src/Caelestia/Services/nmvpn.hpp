@@ -1,7 +1,5 @@
 #pragma once
 
-#include "networkagent.hpp" // NMVariantMapMap
-
 #include <qdbusmessage.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -9,6 +7,8 @@
 #include <qqmlintegration.h>
 #include <qstring.h>
 #include <qvariant.h>
+
+#include "networkagent.hpp" // NMVariantMapMap
 
 class QDBusServiceWatcher;
 
@@ -29,6 +29,7 @@ public:
     explicit NmVpn(QObject* parent = nullptr);
 
     [[nodiscard]] QVariantList connections() const;
+
     [[nodiscard]] bool loaded() const { return m_loaded; }
 
     Q_INVOKABLE void activate(const QString& uuid);

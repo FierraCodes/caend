@@ -78,8 +78,8 @@ NmVpn::NmVpn(QObject* parent)
         return;
     }
 
-    bus.connect(k_service, k_settingsPath, k_settingsIface, u"NewConnection"_s, this,
-        SLOT(onNewConnection(QDBusObjectPath)));
+    bus.connect(
+        k_service, k_settingsPath, k_settingsIface, u"NewConnection"_s, this, SLOT(onNewConnection(QDBusObjectPath)));
     bus.connect(k_service, k_settingsPath, k_settingsIface, u"ConnectionRemoved"_s, this,
         SLOT(onConnectionRemoved(QDBusObjectPath)));
     // Empty path = every object, so one hook covers all profiles / active connections
@@ -88,8 +88,8 @@ NmVpn::NmVpn(QObject* parent)
     bus.connect(k_service, k_managerPath, k_propsIface, u"PropertiesChanged"_s, this,
         SLOT(onManagerPropertiesChanged(QString, QVariantMap, QStringList)));
 
-    m_watcher = new QDBusServiceWatcher(k_service, bus,
-        QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration, this);
+    m_watcher = new QDBusServiceWatcher(
+        k_service, bus, QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration, this);
     connect(m_watcher, &QDBusServiceWatcher::serviceRegistered, this, &NmVpn::reload);
     connect(m_watcher, &QDBusServiceWatcher::serviceUnregistered, this, &NmVpn::clear);
 
@@ -125,10 +125,9 @@ void NmVpn::activate(const QString& uuid) {
     }
 
     const QDBusObjectPath none(u"/"_s);
-    auto* w = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(call(k_managerPath, k_managerIface,
-                                              u"ActivateConnection"_s,
-                                              { QVariant::fromValue(QDBusObjectPath(it->path)),
-                                                  QVariant::fromValue(none), QVariant::fromValue(none) })),
+    auto* w = new QDBusPendingCallWatcher(
+        QDBusConnection::systemBus().asyncCall(call(k_managerPath, k_managerIface, u"ActivateConnection"_s,
+            { QVariant::fromValue(QDBusObjectPath(it->path)), QVariant::fromValue(none), QVariant::fromValue(none) })),
         this);
     connect(w, &QDBusPendingCallWatcher::finished, this, [this, uuid](QDBusPendingCallWatcher* self) {
         const QDBusPendingReply<QDBusObjectPath> reply = *self;
@@ -145,9 +144,9 @@ void NmVpn::deactivate(const QString& uuid) {
         if (it->uuid != uuid)
             continue;
         it->reachedActivated = true; // a cancelled connect is not a failure
-        auto* w = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(call(k_managerPath, k_managerIface,
-                                                  u"DeactivateConnection"_s,
-                                                  { QVariant::fromValue(QDBusObjectPath(it.key())) })),
+        auto* w = new QDBusPendingCallWatcher(
+            QDBusConnection::systemBus().asyncCall(call(k_managerPath, k_managerIface, u"DeactivateConnection"_s,
+                { QVariant::fromValue(QDBusObjectPath(it.key())) })),
             this);
         connect(w, &QDBusPendingCallWatcher::finished, this, [uuid](QDBusPendingCallWatcher* self) {
             const QDBusPendingReply<> reply = *self;
@@ -205,8 +204,8 @@ void NmVpn::loadProfile(const QString& path) {
             if (isVpnType(type)) {
                 // e.g. org.freedesktop.NetworkManager.openvpn -> openvpn
                 const auto kind = type == u"vpn"_s
-                                    ? settings.value(u"vpn"_s).value(u"service-type"_s).toString().section(u'.', -1)
-                                    : type;
+                                      ? settings.value(u"vpn"_s).value(u"service-type"_s).toString().section(u'.', -1)
+                                      : type;
                 Profile p{ path, con.value(u"uuid"_s).toString(), con.value(u"id"_s).toString(), kind,
                     con.value(u"interface-name"_s).toString() };
                 if (existing != m_profiles.end())
@@ -225,9 +224,8 @@ void NmVpn::loadProfile(const QString& path) {
 }
 
 void NmVpn::fetchActiveConnections() {
-    auto* w = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(
-                                              call(k_managerPath, k_propsIface, u"Get"_s,
-                                                  { k_managerIface, u"ActiveConnections"_s })),
+    auto* w = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(call(k_managerPath, k_propsIface,
+                                              u"Get"_s, { k_managerIface, u"ActiveConnections"_s })),
         this);
     connect(w, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* self) {
         const QDBusPendingReply<QDBusVariant> reply = *self;
