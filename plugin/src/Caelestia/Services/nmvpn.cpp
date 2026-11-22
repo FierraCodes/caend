@@ -166,11 +166,13 @@ void NmVpn::reload() {
     connect(w, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* self) {
         const QDBusPendingReply<QList<QDBusObjectPath>> reply = *self;
         self->deleteLater();
-        if (reply.isError())
+        if (reply.isError()) {
             qCWarning(lcNmVpn) << "Failed to list connections:" << reply.error().message();
-        else
-            for (const auto& path : reply.value())
+        } else {
+            const auto paths = reply.value();
+            for (const auto& path : paths)
                 loadProfile(path.path());
+        }
         stepDone(); // NM missing: an empty list is the real answer
     });
     fetchActiveConnections();
@@ -253,7 +255,7 @@ void NmVpn::setActiveConnections(const QList<QDBusObjectPath>& paths) {
     if (changed)
         emit connectionsChanged();
 
-    for (const auto& path : current) {
+    for (const auto& path : std::as_const(current)) {
         if (m_active.contains(path))
             continue;
         if (m_loading)
