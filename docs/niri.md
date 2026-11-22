@@ -15,6 +15,8 @@ binds {
     Mod+Escape   { spawn "qs" "-c" "caelestia" "ipc" "call" "drawers" "toggle" "session"; }
     Mod+L        { spawn "qs" "-c" "caelestia" "ipc" "call" "lock" "lock"; }
     Mod+Shift+S  { spawn "qs" "-c" "caelestia" "ipc" "call" "picker" "openFreeze"; }
+    Mod+I        { spawn "qs" "-c" "caelestia" "ipc" "call" "nexus" "open"; }
+    Mod+Shift+L allow-when-locked=true { spawn "qs" "-c" "caelestia" "ipc" "call" "session" "sleep"; }
 }
 
 // The shell draws its drawers on this layer namespace
