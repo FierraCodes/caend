@@ -327,6 +327,8 @@ PageBase {
                     }
 
                     IconButton {
+                        // NetworkManager profiles are edited in NetworkManager, not here
+                        visible: !provider.modelData.nmUuid
                         implicitWidth: implicitHeight + (Tokens.padding.large - padding) * 2
                         type: IconButton.Tonal
                         isRound: true
