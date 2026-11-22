@@ -117,7 +117,6 @@ Singleton {
         Quickshell.execDetached(["niri", "msg", "action", ...args]);
     }
 
-
     FileView {
         path: Quickshell.env("CAELESTIA_XKB_RULES_PATH") || "/usr/share/X11/xkb/rules/base.lst"
         onLoaded: {
@@ -164,12 +163,15 @@ Singleton {
             if (ev.WorkspacesChanged) {
                 workspaces = ev.WorkspacesChanged.workspaces;
             } else if (ev.WorkspaceActivated) {
-                const {id, focused} = ev.WorkspaceActivated;
+                const {
+                    id,
+                    focused
+                } = ev.WorkspaceActivated;
                 const output = workspaces.find(w => w.id === id)?.output;
                 workspaces = workspaces.map(w => Object.assign({}, w, {
-                    is_active: w.output === output ? w.id === id : w.is_active,
-                    is_focused: focused ? w.id === id : w.is_focused
-                }));
+                        is_active: w.output === output ? w.id === id : w.is_active,
+                        is_focused: focused ? w.id === id : w.is_focused
+                    }));
             } else if (ev.WindowsChanged) {
                 windows = ev.WindowsChanged.windows;
                 focusedWindowId = windows.find(w => w.is_focused)?.id ?? null;
@@ -207,7 +209,8 @@ Singleton {
                 }
             }
         }
-        onExited: if (root.isNiri) niriRestart.start()
+        onExited: if (root.isNiri)
+            niriRestart.start()
     }
 
     Timer {

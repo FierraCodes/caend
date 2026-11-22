@@ -116,8 +116,10 @@ Singleton {
     }
 
     // Only talk to the Hyprland socket when actually running on Hyprland
-    onUsingLuaChanged: if (Compositor.isHyprland) reloadDynamicConfs()
-    Component.onCompleted: if (Compositor.isHyprland) reloadDynamicConfs()
+    onUsingLuaChanged: if (Compositor.isHyprland)
+        reloadDynamicConfs()
+    Component.onCompleted: if (Compositor.isHyprland)
+        reloadDynamicConfs()
 
     Connections {
         function onRawEvent(event: HyprlandEvent): void {
