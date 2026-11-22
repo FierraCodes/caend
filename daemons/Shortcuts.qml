@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
+import Caelestia.Services
 import qs.components.misc
 import qs.services
 import qs.modules.nexus
@@ -19,6 +20,14 @@ Scope {
         name: "nexus"
         description: "Open nexus"
         onPressed: WindowFactory.create()
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "sleep"
+        description: "Suspend (then hibernate when available)"
+        onPressed: SessionManager.suspendThenHibernate()
     }
 
     // qmllint disable unresolved-type
@@ -155,6 +164,14 @@ Scope {
         }
 
         target: "nexus"
+    }
+
+    IpcHandler {
+        function sleep(): void {
+            SessionManager.suspendThenHibernate();
+        }
+
+        target: "session"
     }
 
     IpcHandler {
