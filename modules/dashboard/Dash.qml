@@ -98,6 +98,20 @@ GridLayout {
         }
     }
 
+    Rect {
+        Layout.row: 0
+        Layout.column: 6
+        Layout.rowSpan: 2
+        Layout.preferredWidth: notifications.implicitWidth
+        Layout.fillHeight: true
+
+        radius: Tokens.rounding.extraLarge
+
+        Notifications {
+            id: notifications
+        }
+    }
+
     component Rect: StyledRect {
         color: Colours.tPalette.m3surfaceContainer
     }
