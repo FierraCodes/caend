@@ -102,7 +102,7 @@ GridLayout {
         Layout.row: 0
         Layout.column: 6
         Layout.rowSpan: 2
-        Layout.preferredWidth: notifications.implicitWidth
+        Layout.preferredWidth: notifications.cardWidth
         Layout.fillHeight: true
 
         radius: Tokens.rounding.extraLarge

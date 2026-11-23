@@ -15,10 +15,12 @@ import qs.modules.lock as Lock
 ColumnLayout {
     id: root
 
+    // Not implicitWidth: ColumnLayout overwrites that with its children's width.
+    // Cards match popup notifications (Content.qml: width - padding - clampedPadding).
+    readonly property real cardWidth: Tokens.sizes.notifs.width + Tokens.padding.large - Math.max(0, Math.min(Tokens.padding.large - Config.border.thickness, Tokens.padding.large))
+
     anchors.fill: parent
     anchors.margins: Tokens.padding.large
-    // Cards match popup notifications (Content.qml: width - padding - clampedPadding).
-    implicitWidth: Tokens.sizes.notifs.width + Tokens.padding.large - Math.max(0, Math.min(Tokens.padding.large - Config.border.thickness, Tokens.padding.large))
 
     spacing: Tokens.spacing.medium
 
