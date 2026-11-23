@@ -1056,6 +1056,19 @@ caelestia wallpaper -f <path_to_wallpaper>
 caelestia scheme set -n dynamic
 ```
 
+### How do I theme Zen Browser with my colour scheme?
+
+Run the setup script once (start and close Zen first so it has a profile):
+
+```sh
+~/.config/quickshell/caelestia/zen/setup.sh
+```
+
+It registers [`zen/caend-zen.css`](zen/caend-zen.css) as a caelestia CLI template, so every scheme or wallpaper
+change regenerates `~/.local/state/caelestia/theme/caend-zen.css`, and links that file into each Zen profile's
+`userChrome.css` (native `~/.zen`, `~/.config/zen` and Flatpak). Restart Zen to pick up a new scheme. To undo it,
+delete the `@import "caend-zen.css";` line from the profile's `chrome/userChrome.css`.
+
 ### My wallpapers aren't showing up in the launcher!
 
 The launcher pulls wallpapers from `~/Pictures/Wallpapers` by default. You can change this in the config. Additionally,
