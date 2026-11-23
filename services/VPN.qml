@@ -256,6 +256,9 @@ Singleton {
     function checkStatus(): void {
         if (root.selectedProvider.length === 0)
             return;
+        // A saved NM profile not read yet: don't check (or auto connect) the fallback provider
+        if (root.selectedProvider.startsWith("nm:") && !root.isNm)
+            return;
         if (root.isNm) {
             if (NmVpn.loaded)
                 root.updateStatus(root.nmStatus());
@@ -671,6 +674,13 @@ Singleton {
                 return;
             console.warn(lc, `NetworkManager failed to connect '${root.active.displayName}':`, message);
             root.reportConnectFailure(Tr.tr("Could not connect to %1").arg(root.active.displayName));
+        }
+
+        function onDeactivationFailed(uuid: string, message: string): void {
+            if (uuid !== root.active.nmUuid)
+                return;
+            console.warn(lc, `NetworkManager failed to disconnect '${root.active.displayName}':`, message);
+            root.reportDisconnectFailure(Tr.tr("Could not disconnect from %1").arg(root.active.displayName));
         }
 
         target: NmVpn

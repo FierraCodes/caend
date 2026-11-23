@@ -39,6 +39,7 @@ signals:
     void connectionsChanged();
     void loadedChanged();
     void activationFailed(const QString& uuid, const QString& message);
+    void deactivationFailed(const QString& uuid, const QString& message);
 
 private slots:
     void onNewConnection(const QDBusObjectPath& path);
