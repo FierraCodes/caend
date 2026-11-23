@@ -347,9 +347,18 @@ FileSystemModel::ScanFilters FileSystemModel::filtersFor(
         if (videos) {
             // Asking QMediaFormat starts the FFmpeg backend, which probes every GPU's decoders (waking an
             // NVIDIA dGPU and loading CUDA) just to list wallpapers, so use the containers FFmpeg always reads.
-            static const QStringList k_videoMimes = { u"video/mp4"_s, u"video/webm"_s, u"video/x-matroska"_s,
-                u"video/quicktime"_s, u"video/x-msvideo"_s, u"video/mpeg"_s, u"video/ogg"_s, u"video/x-flv"_s,
-                u"video/3gpp"_s, u"video/mp2t"_s };
+            static const QStringList k_videoMimes = {
+                u"video/mp4"_s,
+                u"video/webm"_s,
+                u"video/x-matroska"_s,
+                u"video/quicktime"_s,
+                u"video/x-msvideo"_s,
+                u"video/mpeg"_s,
+                u"video/ogg"_s,
+                u"video/x-flv"_s,
+                u"video/3gpp"_s,
+                u"video/mp2t"_s,
+            };
             const QMimeDatabase db;
             for (const auto& name : k_videoMimes) {
                 const auto mimeType = db.mimeTypeForName(name);

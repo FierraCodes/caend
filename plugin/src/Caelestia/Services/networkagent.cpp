@@ -74,7 +74,7 @@ void NetworkAgent::registerAgent() {
     auto msg = QDBusMessage::createMethodCall(k_nmService, u"/org/freedesktop/NetworkManager/AgentManager"_s,
         u"org.freedesktop.NetworkManager.AgentManager"_s, u"Register"_s);
     msg << u"caelestia.shell"_s;
-    auto* watcher = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(msg), this);
+    const auto* watcher = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(msg), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, [](QDBusPendingCallWatcher* self) {
         const QDBusPendingReply<> reply = *self;
         if (reply.isError())
@@ -115,9 +115,9 @@ void NetworkAgent::CancelGetSecrets(const QDBusObjectPath& connectionPath, const
         replyError(k_errorCanceled, u"Cancelled by NetworkManager"_s);
 }
 
-void NetworkAgent::SaveSecrets(const NMVariantMapMap&, const QDBusObjectPath&) {}
+void NetworkAgent::SaveSecrets(const NMVariantMapMap& /*connection*/, const QDBusObjectPath& /*connectionPath*/) {}
 
-void NetworkAgent::DeleteSecrets(const NMVariantMapMap&, const QDBusObjectPath&) {}
+void NetworkAgent::DeleteSecrets(const NMVariantMapMap& /*connection*/, const QDBusObjectPath& /*connectionPath*/) {}
 
 void NetworkAgent::submit(const QVariantMap& secrets) {
     if (!m_active)

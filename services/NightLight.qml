@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.services
 
 // Warm screen tint via hyprsunset (Hyprland). One long-lived process while enabled, no polling.
 Singleton {

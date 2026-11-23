@@ -96,7 +96,7 @@ QString toLuaValue(const QVariant& value) {
     bool isNumber = false;
     str.toDouble(&isNumber);
     if (isNumber || str == u"true"_s || str == u"false"_s)
-        return str;
+        return value.toString(); // not `str`: returning a const local can't move
     auto escaped = str;
     escaped.replace(u'\\', u"\\\\"_s).replace(u'"', u"\\\""_s);
     return u'"' + escaped + u'"';

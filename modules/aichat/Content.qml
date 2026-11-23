@@ -73,7 +73,7 @@ Item {
                 spacing: Tokens.spacing.medium
 
                 model: ScriptModel {
-                    values: Ai.messages
+                    values: [...Ai.messages]
                 }
                 onCountChanged: positionViewAtEnd()
                 onContentHeightChanged: if (atYEnd || Ai.busy)

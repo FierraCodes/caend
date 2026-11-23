@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import Caelestia.Config
+import qs.services
 
 // Named special workspaces from `general.specialWorkspaces`. Toggling one launches its app when
 // no matching window exists and moves the new window in once Hyprland reports it.

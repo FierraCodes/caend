@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
@@ -7,7 +8,6 @@ import Caelestia.Config
 import Caelestia.I18n
 import qs.components.misc
 import qs.services
-import qs.utils
 
 // end4-style recorder: wf-recorder for a region or the focused output, with system audio and/or mic.
 // The process lives as long as the recording, so its running state needs no polling.
@@ -109,28 +109,28 @@ exit $code`
     }
 
     // Global shortcuts, e.g. hl.dsp.global("caelestia:recordRegion"); pressing again stops
-    Shortcut {
+    RecordShortcut {
         name: "record"
         description: "Toggle fullscreen recording"
         region: false
         sound: false
     }
 
-    Shortcut {
+    RecordShortcut {
         name: "recordSound"
         description: "Toggle fullscreen recording with sound"
         region: false
         sound: true
     }
 
-    Shortcut {
+    RecordShortcut {
         name: "recordRegion"
         description: "Toggle region recording"
         region: true
         sound: false
     }
 
-    Shortcut {
+    RecordShortcut {
         name: "recordRegionSound"
         description: "Toggle region recording with sound"
         region: true
@@ -147,7 +147,7 @@ exit $code`
     }
 
     // qmllint disable unresolved-type
-    component Shortcut: CustomShortcut {
+    component RecordShortcut: CustomShortcut {
         // qmllint enable unresolved-type
         required property bool region
         required property bool sound

@@ -52,12 +52,14 @@ public:
     Q_INVOKABLE void cancel();
 
 public slots:
-    // D-Bus: org.freedesktop.NetworkManager.SecretAgent
+    // D-Bus: org.freedesktop.NetworkManager.SecretAgent, so the names are fixed by the interface
+    // NOLINTBEGIN(readability-identifier-naming)
     Q_SCRIPTABLE NMVariantMapMap GetSecrets(const NMVariantMapMap& connection, const QDBusObjectPath& connectionPath,
         const QString& settingName, const QStringList& hints, uint flags, const QDBusMessage& message);
     Q_SCRIPTABLE void CancelGetSecrets(const QDBusObjectPath& connectionPath, const QString& settingName);
     Q_SCRIPTABLE void SaveSecrets(const NMVariantMapMap& connection, const QDBusObjectPath& connectionPath);
     Q_SCRIPTABLE void DeleteSecrets(const NMVariantMapMap& connection, const QDBusObjectPath& connectionPath);
+    // NOLINTEND(readability-identifier-naming)
 
 signals:
     void requestChanged();

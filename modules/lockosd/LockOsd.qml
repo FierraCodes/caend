@@ -86,7 +86,9 @@ Scope {
                 mask: Region {}
 
                 anchors.bottom: true
+                // qmllint disable unqualified unresolved-type
                 margins.bottom: Math.round(modelData.height * 0.18)
+                // qmllint enable unqualified unresolved-type
                 implicitWidth: pill.implicitWidth + 20
                 implicitHeight: pill.implicitHeight + 20
 
