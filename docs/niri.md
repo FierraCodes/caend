@@ -19,6 +19,9 @@ binds {
     Mod+Shift+L allow-when-locked=true { spawn "qs" "-c" "caelestia" "ipc" "call" "session" "sleep"; }
 }
 
+// Display settings (Settings > Display) are saved here
+include "caend-outputs.kdl"
+
 // The shell draws its drawers on this layer namespace
 layer-rule {
     match namespace="^caelestia-(drawers|polkit|lock-osd|network-prompt)$"

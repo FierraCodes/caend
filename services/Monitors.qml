@@ -1,0 +1,274 @@
+pragma Singleton
+
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import qs.services
+import qs.utils
+import "../utils/scripts/monitors.js" as Mon
+
+// Output configuration for Hyprland and Niri. State is read once and again only when the
+// compositor reports a change (no polling). Changes apply live, then get written to a file the
+// compositor config includes (`includeLine`, appended to `mainConfigs` automatically). Risky changes revert after `confirmSeconds` unless kept.
+Singleton {
+    id: root
+
+    readonly property bool supported: Compositor.isHyprland || Compositor.isNiri
+    property var monitors: [] // plain JS array, not list<var> (a sequence wrapper)
+
+    readonly property int confirmSeconds: 15
+    property var snapshot: null // monitors before an unconfirmed change; null when nothing is pending
+    property int secondsLeft: 0
+    property var restored: ({}) // output name -> true once its saved layout was put back
+    property bool rulesLoaded: false
+
+    readonly property string configDir: Quickshell.env("XDG_CONFIG_HOME") || `${Quickshell.env("HOME")}/.config`
+    readonly property string configPath: Compositor.isNiri ? `${configDir}/niri/caend-outputs.kdl` : `${configDir}/hypr/caend-monitors.${Hypr.usingLua ? "lua" : "conf"}`
+    readonly property string includeLine: {
+        if (Compositor.isNiri)
+            return 'include "caend-outputs.kdl"';
+        return Hypr.usingLua ? 'require("caend-monitors")' : "source = ~/.config/hypr/caend-monitors.conf";
+    }
+
+    // Caelestia's hyprland config is managed by the dots, so the include goes in its user file when there is one
+    readonly property var mainConfigs: Compositor.isNiri ? [`${configDir}/niri/config.kdl`] : [`${configDir}/caelestia/hypr-user.${Hypr.usingLua ? "lua" : "conf"}`, `${configDir}/hypr/hyprland.${Hypr.usingLua ? "lua" : "conf"}`]
+
+    function refresh(): void {
+        if (supported)
+            fetch.running = true;
+    }
+
+    function logicalSize(m: var): var {
+        return Mon.logicalSize(m);
+    }
+
+    function parseMode(mode: string): var {
+        return Mon.parseMode(mode);
+    }
+
+    // Mode, scale, rotation, VRR, colour and on/off: applied live, kept only once confirmed.
+    function set(name: string, changes: var): void {
+        const next = monitors.map(m => m.name === name ? Object.assign({}, m, changes) : m);
+        if (changes.disabled && next.every(m => m.disabled))
+            return; // never turn off the last output
+
+        if (!snapshot)
+            snapshot = monitors;
+        monitors = next;
+        apply(next.filter(m => m.name === name));
+        secondsLeft = confirmSeconds;
+        countdown.restart();
+    }
+
+    function keep(): void {
+        countdown.stop();
+        snapshot = null;
+        save();
+        refresh();
+    }
+
+    function revert(): void {
+        countdown.stop();
+        if (!snapshot)
+            return;
+        const before = snapshot;
+        snapshot = null;
+        monitors = before;
+        apply(before);
+    }
+
+    // Positions are harmless, so they apply and save straight away. `positions` is { name: {x, y} }.
+    function move(positions: var): void {
+        monitors = monitors.map(m => positions[m.name] ? Object.assign({}, m, positions[m.name]) : m);
+        apply(monitors.filter(m => positions[m.name]));
+        if (!snapshot)
+            save();
+    }
+
+    function arrange(name: string, x: real, y: real, threshold: real): bool {
+        const positions = Mon.arrange(monitors, name, x, y, threshold);
+        if (positions)
+            move(positions);
+        return !!positions;
+    }
+
+    function apply(list: var): void {
+        if (Compositor.isHyprland) {
+            Hypr.extras.batchMessage(list.map(m => Hypr.usingLua ? `eval ${Mon.hyprLuaLine(m)}` : `keyword ${Mon.hyprConfLine(m).replace(" = ", " ")}`));
+            refetch.restart();
+        } else if (Compositor.isNiri) {
+            // One process for all outputs; values go in as arguments, never into the script text
+            const args = [].concat(...list.map(m => [m.name, m.disabled ? "off" : "on", m.mode, String(m.scale), Mon.TRANSFORMS[m.transform] ?? "normal", String(m.x), String(m.y), m.vrr ? "on" : "off"]));
+            niriApply.command = ["sh", "-c", `
+                while [ $# -ge 8 ]; do
+                    if [ "$2" = off ]; then niri msg output "$1" off
+                    else
+                        niri msg output "$1" on
+                        niri msg output "$1" mode "$3"
+                        niri msg output "$1" scale "$4"
+                        niri msg output "$1" transform "$5"
+                        niri msg output "$1" position set "$6" "$7"
+                        niri msg output "$1" vrr "$8"
+                    fi
+                    shift 8
+                done`, "sh", ...args];
+            niriApply.running = true;
+        }
+    }
+
+    // Saved rules are merged by name, so outputs that are unplugged right now keep their settings.
+    function save(): void {
+        const saved = Object.assign({}, store.rules);
+        for (const m of monitors)
+            saved[m.name] = m;
+        store.rules = saved;
+        storeFile.setText(JSON.stringify(saved, null, 2));
+
+        const rules = Object.values(saved);
+        const comment = Compositor.isNiri ? "//" : Hypr.usingLua ? "--" : "#";
+        let text = `${comment} Generated by caend (Settings > Display). Edits here are overwritten.\n`;
+        if (Compositor.isNiri)
+            text += rules.map(Mon.niriKdl).join("\n");
+        else
+            text += rules.map(Hypr.usingLua ? Mon.hyprLuaLine : Mon.hyprConfLine).join("\n") + "\n";
+        configFile.setText(text);
+    }
+
+    // The shell puts saved layouts back itself, so they stick even if the include line was never added.
+    // Each output is restored once per plug-in, so live changes on the page aren't fought.
+    function restore(next: var): void {
+        const list = [];
+        for (const m of next) {
+            const saved = store.rules[m.name];
+            if (!saved || restored[m.name])
+                continue;
+            restored[m.name] = true;
+            const want = Object.assign({}, m, Mon.layoutOf(saved));
+            if (JSON.stringify(Mon.layoutOf(want)) !== JSON.stringify(Mon.layoutOf(m)))
+                list.push(want);
+        }
+        for (const name in restored)
+            if (!next.some(m => m.name === name))
+                delete restored[name]; // unplugged: restore again next time it shows up
+        if (list.length && !next.every(m => (list.find(l => l.name === m.name) ?? m).disabled))
+            apply(list);
+    }
+
+    function refetchLater(): void {
+        refetch.restart();
+    }
+
+    Component.onCompleted: refresh()
+
+    QtObject {
+        id: store
+
+        property var rules: ({})
+    }
+
+    FileView {
+        id: storeFile
+
+        path: `${Paths.state}/monitors-${Compositor.name}.json`
+        onLoaded: {
+            try {
+                store.rules = JSON.parse(text()) ?? {};
+            } catch (e) {
+                console.warn("[Monitors] bad saved rules:", e);
+            }
+            root.rulesLoaded = true;
+            root.refresh();
+        }
+        onLoadFailed: root.rulesLoaded = true // nothing saved yet
+    }
+
+    FileView {
+        id: configFile
+
+        path: root.supported ? root.configPath : ""
+        // Once our file exists, make sure the main config loads it (appended last so it wins). Only touches a config that exists.
+        onSaved: includer.running = true
+    }
+
+    Process {
+        id: includer
+
+        // Appends to the first config that exists, unless the line is already there
+        command: ["sh", "-c", 'l="$1"; shift; for f; do [ -f "$f" ] || continue; grep -qF "$l" "$f" || printf "\\n%s\\n" "$l" >> "$f"; exit; done', "sh", root.includeLine, ...root.mainConfigs]
+    }
+
+    Process {
+        id: fetch
+
+        command: Compositor.isNiri ? ["niri", "msg", "-j", "outputs"] : ["hyprctl", "monitors", "all", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (root.snapshot)
+                    return; // don't clobber the preview while a change waits for confirmation
+                try {
+                    const data = JSON.parse(text);
+                    const next = (Compositor.isNiri ? Mon.fromNiri(data) : Mon.fromHyprland(data)).sort((a, b) => a.x - b.x || a.y - b.y);
+                    if (root.rulesLoaded)
+                        root.restore(next);
+                    // Unchanged reads must not rebuild the page's menus (that would close an open dropdown)
+                    if (JSON.stringify(next) !== JSON.stringify(root.monitors))
+                        root.monitors = next;
+                } catch (e) {
+                    console.warn("[Monitors] could not read outputs:", e);
+                }
+            }
+        }
+    }
+
+    Process {
+        id: niriApply
+
+        onExited: root.refetchLater()
+    }
+
+    // One read shortly after we change something, so the page shows what the compositor actually accepted
+    Timer {
+        id: refetch
+
+        interval: 400
+        onTriggered: root.refresh()
+    }
+
+    Timer {
+        id: countdown
+
+        interval: 1000
+        repeat: true
+        onTriggered: {
+            if (--root.secondsLeft <= 0)
+                root.revert();
+        }
+    }
+
+    // Outputs plugged/unplugged or config reloaded
+    Connections {
+        function onValuesChanged(): void {
+            root.refetchLater();
+        }
+
+        target: Compositor.isHyprland ? Hypr.monitors : null
+    }
+
+    Connections {
+        function onConfigReloaded(): void {
+            root.restored = {}; // a reload puts the config's own rules back, so restore ours again
+            root.refetchLater();
+        }
+
+        target: Compositor.isHyprland ? Hypr : null
+    }
+
+    Connections {
+        function onNiriConfigLoaded(): void {
+            root.restored = {}; // a reload puts the config's own rules back, so restore ours again
+            root.refetchLater();
+        }
+
+        target: Compositor
+    }
+}
