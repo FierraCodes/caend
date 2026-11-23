@@ -202,8 +202,15 @@ void NetworkAgent::startVpnDialog(
     m_vpnPath = path;
 
     const auto conn = connection.value(u"connection"_s);
-    QStringList args{ u"-u"_s, conn.value(u"uuid"_s).toString(), u"-n"_s, conn.value(u"id"_s).toString(), u"-s"_s,
-        service, u"-i"_s };
+    QStringList args{
+        u"-u"_s,
+        conn.value(u"uuid"_s).toString(),
+        u"-n"_s,
+        conn.value(u"id"_s).toString(),
+        u"-s"_s,
+        service,
+        u"-i"_s,
+    };
     if (flags & k_requestNew)
         args << u"-r"_s;
 
