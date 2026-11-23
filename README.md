@@ -83,6 +83,7 @@ Dependencies:
 - [`aubio`](https://github.com/aubio/aubio)
 - [`libpipewire`](https://github.com/PipeWire/pipewire)
 - [`libqalculate`](https://github.com/Qalculate/libqalculate)
+- [`gnome-keyring`](https://gitlab.gnome.org/GNOME/gnome-keyring) (secret storage; the lock screen unlocks it through `pam_gnome_keyring`)
 - [`power-profiles-daemon`](https://gitlab.freedesktop.org/upower/power-profiles-daemon)
 - [`ttf-material-symbols-variable`](https://github.com/google/material-design-icons)
 - [`ttf-rubik-vf`](https://github.com/googlefonts/rubik)
