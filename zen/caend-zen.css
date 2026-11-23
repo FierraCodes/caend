@@ -1,0 +1,72 @@
+/* caelestia CLI user template: filled into ~/.local/state/caelestia/theme/caend-zen.css on every scheme change.
+   Installed by zen/setup.sh; Zen picks it up on its next start. */
+:root {
+    color-scheme: {{ mode }} !important;
+
+    --zen-primary-color: #{{ primary.hex }} !important;
+    --zen-colors-primary: #{{ secondaryContainer.hex }} !important;
+    --zen-colors-secondary: #{{ surfaceContainerHigh.hex }} !important;
+    --zen-colors-tertiary: #{{ surfaceContainerLow.hex }} !important;
+    --zen-colors-border: #{{ outlineVariant.hex }} !important;
+    --zen-main-browser-background: #{{ surfaceDim.hex }} !important;
+    --zen-main-browser-background-toolbar: #{{ surfaceDim.hex }} !important;
+    --zen-themed-toolbar-bg: #{{ surfaceDim.hex }} !important;
+    --zen-themed-toolbar-bg-transparent: #{{ surfaceDim.hex }} !important;
+    --zen-dialog-background: #{{ surfaceContainer.hex }} !important;
+
+    --toolbar-bgcolor: #{{ surfaceContainer.hex }} !important;
+    --toolbar-color: #{{ onSurface.hex }} !important;
+    --toolbox-bgcolor-inactive: #{{ surfaceDim.hex }} !important;
+    --toolbarbutton-icon-fill: #{{ onSurfaceVariant.hex }} !important;
+    --toolbarbutton-icon-fill-attention: #{{ primary.hex }} !important;
+    --toolbarbutton-hover-background: #{{ surfaceContainerHigh.hex }} !important;
+    --toolbarbutton-active-background: #{{ surfaceContainerHighest.hex }} !important;
+    --toolbar-field-background-color: #{{ surfaceContainerHigh.hex }} !important;
+    --toolbar-field-focus-background-color: #{{ surfaceContainerHighest.hex }} !important;
+    --toolbar-field-color: #{{ onSurfaceVariant.hex }} !important;
+    --toolbar-field-focus-color: #{{ onSurface.hex }} !important;
+    --toolbar-field-focus-border-color: #{{ primary.hex }} !important;
+    --tab-selected-bgcolor: #{{ surfaceContainerHigh.hex }} !important;
+    --tab-selected-textcolor: #{{ onSurface.hex }} !important;
+    --tab-loading-fill: #{{ primary.hex }} !important;
+    --lwt-text-color: #{{ onSurface.hex }} !important;
+    --lwt-sidebar-background-color: #{{ surfaceDim.hex }} !important;
+    --lwt-sidebar-text-color: #{{ onSurface.hex }} !important;
+    --sidebar-background-color: #{{ surfaceDim.hex }} !important;
+    --sidebar-text-color: #{{ onSurface.hex }} !important;
+    --arrowpanel-background: #{{ surfaceContainer.hex }} !important;
+    --arrowpanel-color: #{{ onSurface.hex }} !important;
+    --arrowpanel-border-color: #{{ outlineVariant.hex }} !important;
+    --panel-separator-color: #{{ outlineVariant.hex }} !important;
+    --urlbarView-highlight-background: #{{ primary.hex }} !important;
+    --urlbarView-highlight-color: #{{ onPrimary.hex }} !important;
+    --urlbarView-hover-background: #{{ surfaceContainerHigh.hex }} !important;
+    --focus-outline-color: #{{ primary.hex }} !important;
+    --newtab-background-color: #{{ surface.hex }} !important;
+    --newtab-text-primary-color: #{{ onSurface.hex }} !important;
+    --in-content-primary-button-background: #{{ primary.hex }} !important;
+    --in-content-primary-button-text-color: #{{ onPrimary.hex }} !important;
+}
+
+#urlbar-background {
+    background-color: var(--toolbar-field-background-color) !important;
+}
+
+#urlbar[focused] #urlbar-background {
+    background-color: var(--toolbar-field-focus-background-color) !important;
+}
+
+.urlbarView-url {
+    color: #{{ primary.hex }} !important;
+}
+
+#permissions-granted-icon {
+    color: #{{ primary.hex }} !important;
+}
+
+tooltip {
+    appearance: none !important;
+    background-color: #{{ surfaceContainer.hex }} !important;
+    color: #{{ onSurface.hex }} !important;
+    border: 1px solid #{{ outlineVariant.hex }} !important;
+}
