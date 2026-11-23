@@ -8,15 +8,15 @@
     --zen-colors-secondary: #{{ surfaceContainerHigh.hex }} !important;
     --zen-colors-tertiary: #{{ surfaceContainerLow.hex }} !important;
     --zen-colors-border: #{{ outlineVariant.hex }} !important;
-    --zen-main-browser-background: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
-    --zen-main-browser-background-toolbar: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
-    --zen-themed-toolbar-bg: #{{ surfaceDim.hex }} !important;
-    --zen-themed-toolbar-bg-transparent: #{{ surfaceDim.hex }} !important;
+    --zen-main-browser-background: #{{ surface.hex }} !important;
+    --zen-main-browser-background-toolbar: #{{ surface.hex }} !important;
+    --zen-themed-toolbar-bg: #{{ surface.hex }} !important;
+    --zen-themed-toolbar-bg-transparent: #{{ surface.hex }} !important;
     --zen-dialog-background: #{{ surfaceContainer.hex }} !important;
 
     --toolbar-bgcolor: #{{ surfaceContainer.hex }} !important;
     --toolbar-color: #{{ onSurface.hex }} !important;
-    --toolbox-bgcolor-inactive: #{{ surfaceDim.hex }} !important;
+    --toolbox-bgcolor-inactive: #{{ surface.hex }} !important;
     --toolbarbutton-icon-fill: #{{ onSurfaceVariant.hex }} !important;
     --toolbarbutton-icon-fill-attention: #{{ primary.hex }} !important;
     --toolbarbutton-hover-background: #{{ surfaceContainerHigh.hex }} !important;
@@ -31,9 +31,9 @@
     --tab-selected-textcolor: #{{ onSurface.hex }} !important;
     --tab-loading-fill: #{{ primary.hex }} !important;
     --lwt-text-color: #{{ onSurface.hex }} !important;
-    --lwt-sidebar-background-color: #{{ surfaceDim.hex }} !important;
+    --lwt-sidebar-background-color: #{{ surface.hex }} !important;
     --lwt-sidebar-text-color: #{{ onSurface.hex }} !important;
-    --sidebar-background-color: #{{ surfaceDim.hex }} !important;
+    --sidebar-background-color: #{{ surface.hex }} !important;
     --sidebar-text-color: #{{ onSurface.hex }} !important;
     --arrowpanel-background: #{{ surfaceContainer.hex }} !important;
     --arrowpanel-color: #{{ onSurface.hex }} !important;
@@ -52,10 +52,10 @@
 /* Zen's space gradient sets these inline on the background elements, so :root alone never reaches them. */
 #zen-browser-background,
 #zen-toolbar-background {
-    --zen-main-browser-background: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
-    --zen-main-browser-background-toolbar: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
-    --zen-main-browser-background-old: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
-    --zen-main-browser-background-toolbar-old: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
+    --zen-main-browser-background: #{{ surface.hex }} !important;
+    --zen-main-browser-background-toolbar: #{{ surface.hex }} !important;
+    --zen-main-browser-background-old: #{{ surface.hex }} !important;
+    --zen-main-browser-background-toolbar-old: #{{ surface.hex }} !important;
 }
 
 /* Selected/hovered tabs: Zen ignores --tab-selected-bgcolor in the vertical sidebar. */
