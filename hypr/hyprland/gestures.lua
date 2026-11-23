@@ -23,6 +23,7 @@ hl.gesture({
     fingers   = vars.gestureFingersMore,
     direction = "down",
     action    = function()
-        hl.exec_cmd(vars.sleepGestureCmd)
+        -- Same as the sleep bind: the shell falls back to plain suspend without hibernation
+        hl.dispatch(hl.dsp.global("caelestia:sleep"))
     end,
 })

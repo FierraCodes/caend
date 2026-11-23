@@ -57,7 +57,6 @@ return {
     shellEnv                   = "",
     -- Path to a local caend build dir (e.g. HOME .. "/caend/build"); unset uses the installed plugin
     devBuildDir                = nil,
-    sleepGestureCmd            = "systemctl suspend-then-hibernate",
     specialWsCloseAny          = true,
 
     ------------------

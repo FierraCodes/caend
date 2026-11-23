@@ -38,6 +38,9 @@ local function maybe_copy(src, dst)
     input:close()
 end
 
+-- io.open can't create parent dirs, and a missing hypr-user.lua makes the shell write into this repo
+os.execute("mkdir -p '" .. home .. "/.config/caelestia'")
+
 -- Maybe set current colours to defaults
 maybe_copy(hypr .. "/scheme/default.lua", hypr .. "/scheme/current.lua")
 
