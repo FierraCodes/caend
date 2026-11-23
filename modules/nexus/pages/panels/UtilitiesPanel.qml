@@ -186,6 +186,11 @@ PageBase {
         Repeater {
             model: [
                 {
+                    id: "wallpaperPlaying",
+                    text: Tr.tr("Wallpaper playback"),
+                    subtext: Tr.tr("Pause or play a video wallpaper")
+                },
+                {
                     id: "antiFlashbang",
                     text: Tr.tr("Anti-flashbang"),
                     subtext: Tr.tr("Dim bright screens")
@@ -214,6 +219,16 @@ PageBase {
                     id: "screenshot",
                     text: Tr.tr("Screenshot"),
                     subtext: Tr.tr("Open the screenshot picker")
+                },
+                {
+                    id: "keepAwake",
+                    text: Tr.tr("Keep awake"),
+                    subtext: Tr.tr("Stop the screen from idling or sleeping")
+                },
+                {
+                    id: "screenRecord",
+                    text: Tr.tr("Screen record"),
+                    subtext: Tr.tr("Start or stop a full screen recording")
                 }
             ]
 
@@ -221,7 +236,7 @@ PageBase {
                 required property var modelData
                 required property int index
 
-                last: index === 5
+                last: index === 8
                 text: modelData.text
                 subtext: modelData.subtext
                 disabled: !Config.utilities.cards.quickToggles

@@ -40,8 +40,9 @@ StyledRect {
             return true;
         });
     }
-    readonly property int splitIndex: Math.ceil(quickToggles.length / 2)
-    readonly property bool needExtraRow: quickToggles.length > 6
+    // Balanced rows of at most 6 so every toggle fits the drawer width
+    readonly property int rowCount: Math.max(1, Math.ceil(quickToggles.length / 6))
+    readonly property int perRow: Math.ceil(quickToggles.length / rowCount)
 
     implicitHeight: layout.implicitHeight + Tokens.padding.extraLargeIncreased
 
@@ -60,18 +61,19 @@ StyledRect {
             font: Tokens.font.body.medium
         }
 
-        QuickToggleRow {
-            model: root.needExtraRow ? root.quickToggles.slice(0, root.splitIndex) : root.quickToggles
-        }
+        Repeater {
+            model: root.rowCount
 
-        QuickToggleRow {
-            visible: root.needExtraRow
-            model: root.needExtraRow ? root.quickToggles.slice(root.splitIndex) : []
+            QuickToggleRow {
+                required property int index
+
+                toggles: root.quickToggles.slice(index * root.perRow, (index + 1) * root.perRow)
+            }
         }
     }
 
     component QuickToggleRow: ButtonRow {
-        property alias model: repeater.model
+        property alias toggles: repeater.model
 
         Layout.fillWidth: true
         spacing: Tokens.spacing.small
@@ -208,6 +210,22 @@ StyledRect {
                             root.screenState.utilities = false;
                             Quickshell.execDetached(["qs", "-c", "caelestia", "ipc", "call", "picker", "openFreeze"]);
                         }
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "keepAwake"
+                    delegate: Toggle {
+                        icon: "coffee"
+                        checked: RuntimeState.inhibitIdle
+                        onClicked: RuntimeState.inhibitIdle = !RuntimeState.inhibitIdle
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "screenRecord"
+                    delegate: Toggle {
+                        icon: Recorder.running ? "stop_circle" : "screen_record"
+                        checked: Recorder.running
+                        onClicked: Recorder.running ? Recorder.stop() : Recorder.start()
                     }
                 }
                 DelegateChoice {
