@@ -19,10 +19,10 @@
     --toolbox-bgcolor-inactive: #{{ surface.hex }} !important;
     --toolbarbutton-icon-fill: #{{ onSurfaceVariant.hex }} !important;
     --toolbarbutton-icon-fill-attention: #{{ primary.hex }} !important;
-    --toolbarbutton-hover-background: #{{ surfaceContainerHigh.hex }} !important;
+    --toolbarbutton-hover-background: #{{ surfaceContainer.hex }} !important;
     --toolbarbutton-active-background: #{{ surfaceContainerHighest.hex }} !important;
-    --zen-colors-input-bg: #{{ surfaceContainerHigh.hex }} !important;
-    --toolbar-field-background-color: #{{ surfaceContainerHigh.hex }} !important;
+    --zen-colors-input-bg: #{{ surfaceContainer.hex }} !important;
+    --toolbar-field-background-color: #{{ surfaceContainer.hex }} !important;
     --toolbar-field-focus-background-color: #{{ surfaceContainerHighest.hex }} !important;
     --toolbar-field-color: #{{ onSurfaceVariant.hex }} !important;
     --toolbar-field-focus-color: #{{ onSurface.hex }} !important;
@@ -52,23 +52,27 @@
 /* Zen's space gradient sets these inline on the background elements, so :root alone never reaches them. */
 #zen-browser-background,
 #zen-toolbar-background {
-    --zen-main-browser-background: #{{ surface.hex }} !important;
-    --zen-main-browser-background-toolbar: #{{ surface.hex }} !important;
-    --zen-main-browser-background-old: #{{ surface.hex }} !important;
-    --zen-main-browser-background-toolbar-old: #{{ surface.hex }} !important;
+    --zen-main-browser-background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, #{{ surface.hex }} 88%, #{{ primary.hex }}), #{{ surface.hex }} 70%) !important;
+    --zen-main-browser-background-toolbar: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, #{{ surface.hex }} 88%, #{{ primary.hex }}), #{{ surface.hex }} 70%) !important;
+    --zen-main-browser-background-old: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, #{{ surface.hex }} 88%, #{{ primary.hex }}), #{{ surface.hex }} 70%) !important;
+    --zen-main-browser-background-toolbar-old: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, #{{ surface.hex }} 88%, #{{ primary.hex }}), #{{ surface.hex }} 70%) !important;
 }
 
-/* Selected/hovered tabs: Zen ignores --tab-selected-bgcolor in the vertical sidebar. */
+/* Bar-style pills: containers in surfaceContainer, the active one in primary. Zen's vertical tabs ignore --tab-selected-bgcolor. */
 .tabbrowser-tab:is([selected], [multiselected]) > .tab-stack > .tab-background {
-    background-color: #{{ secondaryContainer.hex }} !important;
+    background-color: #{{ primary.hex }} !important;
+    box-shadow: none !important;
 }
 
-.tabbrowser-tab:not([selected]):hover > .tab-stack > .tab-background {
-    background-color: color-mix(in srgb, #{{ secondaryContainer.hex }} 50%, transparent) !important;
+.tabbrowser-tab:is([selected], [multiselected]) :is(.tab-label, .tab-icon-image, .tab-close-button) {
+    color: #{{ onPrimary.hex }} !important;
+    fill: #{{ onPrimary.hex }} !important;
 }
 
-.tabbrowser-tab[selected] .tab-label {
-    color: #{{ onSecondaryContainer.hex }} !important;
+.tabbrowser-tab:not([selected]):hover > .tab-stack > .tab-background,
+#tabs-newtab-button:hover,
+#vertical-tabs-newtab-button:hover {
+    background-color: #{{ surfaceContainer.hex }} !important;
 }
 
 .zen-browser-grain {
@@ -77,9 +81,9 @@
 
 #urlbar-background,
 .urlbar-background {
-    --zen-urlbar-background-base: #{{ surfaceContainerHigh.hex }} !important;
-    --zen-urlbar-background-transparent: #{{ surfaceContainerHigh.hex }} !important;
-    background-color: #{{ surfaceContainerHigh.hex }} !important;
+    --zen-urlbar-background-base: #{{ surfaceContainer.hex }} !important;
+    --zen-urlbar-background-transparent: #{{ surfaceContainer.hex }} !important;
+    background-color: #{{ surfaceContainer.hex }} !important;
 }
 
 #urlbar[focused] :is(#urlbar-background, .urlbar-background) {
