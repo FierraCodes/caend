@@ -154,10 +154,12 @@ void NmVpn::deactivate(const QString& uuid) {
             continue;
         it->reachedActivated = true; // a cancelled connect is not a failure
         callAsync(this, k_managerPath, k_managerIface, u"DeactivateConnection"_s,
-            { QVariant::fromValue(QDBusObjectPath(it.key())) }, [uuid](const QDBusPendingCall& pending) {
+            { QVariant::fromValue(QDBusObjectPath(it.key())) }, [this, uuid](const QDBusPendingCall& pending) {
                 const QDBusPendingReply<> reply = pending;
-                if (reply.isError())
+                if (reply.isError()) {
                     qCWarning(lcNmVpn) << "Failed to deactivate" << uuid << reply.error().message();
+                    emit deactivationFailed(uuid, reply.error().message());
+                }
             });
     }
 }
@@ -181,6 +183,11 @@ void NmVpn::reload() {
 }
 
 void NmVpn::clear() {
+    // NM is gone: not loaded until it comes back, so a saved NM selection isn't dropped meanwhile
+    if (m_loaded) {
+        m_loaded = false;
+        emit loadedChanged();
+    }
     if (m_profiles.isEmpty() && m_active.isEmpty())
         return;
     m_profiles.clear();
