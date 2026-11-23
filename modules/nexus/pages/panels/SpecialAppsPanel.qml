@@ -94,7 +94,7 @@ PageBase {
 
             label: Tr.tr("Command")
             subtext: Tr.tr("Launched when no matching window is open")
-            placeholderText: "spotify"
+            placeholderText: "sonora"
             onValueEdited: value => root.newCommand = value
         }
 
