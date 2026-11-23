@@ -21,6 +21,7 @@
     --toolbarbutton-icon-fill-attention: #{{ primary.hex }} !important;
     --toolbarbutton-hover-background: #{{ surfaceContainerHigh.hex }} !important;
     --toolbarbutton-active-background: #{{ surfaceContainerHighest.hex }} !important;
+    --zen-colors-input-bg: #{{ surfaceContainerHigh.hex }} !important;
     --toolbar-field-background-color: #{{ surfaceContainerHigh.hex }} !important;
     --toolbar-field-focus-background-color: #{{ surfaceContainerHighest.hex }} !important;
     --toolbar-field-color: #{{ onSurfaceVariant.hex }} !important;
@@ -48,12 +49,30 @@
     --in-content-primary-button-text-color: #{{ onPrimary.hex }} !important;
 }
 
-#urlbar-background {
-    background-color: var(--toolbar-field-background-color) !important;
+/* Zen's space gradient sets these inline on the background elements, so :root alone never reaches them. */
+#zen-browser-background,
+#zen-toolbar-background {
+    --zen-main-browser-background: #{{ surfaceDim.hex }} !important;
+    --zen-main-browser-background-toolbar: #{{ surfaceDim.hex }} !important;
+    --zen-main-browser-background-old: #{{ surfaceDim.hex }} !important;
+    --zen-main-browser-background-toolbar-old: #{{ surfaceDim.hex }} !important;
 }
 
-#urlbar[focused] #urlbar-background {
-    background-color: var(--toolbar-field-focus-background-color) !important;
+.zen-browser-grain {
+    display: none !important;
+}
+
+#urlbar-background,
+.urlbar-background {
+    --zen-urlbar-background-base: #{{ surfaceContainerHigh.hex }} !important;
+    --zen-urlbar-background-transparent: #{{ surfaceContainerHigh.hex }} !important;
+    background-color: #{{ surfaceContainerHigh.hex }} !important;
+}
+
+#urlbar[focused] :is(#urlbar-background, .urlbar-background) {
+    --zen-urlbar-background-base: #{{ surfaceContainerHighest.hex }} !important;
+    --zen-urlbar-background-transparent: #{{ surfaceContainerHighest.hex }} !important;
+    background-color: #{{ surfaceContainerHighest.hex }} !important;
 }
 
 .urlbarView-url {
