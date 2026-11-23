@@ -8,20 +8,22 @@
     --zen-colors-secondary: #{{ surfaceContainerHigh.hex }} !important;
     --zen-colors-tertiary: #{{ surfaceContainerLow.hex }} !important;
     --zen-colors-border: #{{ outlineVariant.hex }} !important;
-    --zen-main-browser-background: #{{ surfaceDim.hex }} !important;
-    --zen-main-browser-background-toolbar: #{{ surfaceDim.hex }} !important;
-    --zen-themed-toolbar-bg: #{{ surfaceDim.hex }} !important;
-    --zen-themed-toolbar-bg-transparent: #{{ surfaceDim.hex }} !important;
+    --zen-main-browser-background: color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) !important;
+    --zen-main-browser-background-toolbar: color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) !important;
+    --zen-themed-toolbar-bg: color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) !important;
+    --zen-themed-toolbar-bg-transparent: color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) !important;
     --zen-dialog-background: #{{ surfaceContainer.hex }} !important;
 
     --toolbar-bgcolor: #{{ surfaceContainer.hex }} !important;
     --toolbar-color: #{{ onSurface.hex }} !important;
-    --toolbox-bgcolor-inactive: #{{ surfaceDim.hex }} !important;
+    --toolbox-bgcolor-inactive: color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) !important;
     --toolbarbutton-icon-fill: #{{ onSurfaceVariant.hex }} !important;
     --toolbarbutton-icon-fill-attention: #{{ primary.hex }} !important;
-    --toolbarbutton-hover-background: #{{ surfaceContainerHigh.hex }} !important;
+    --zen-toolbar-element-bg: #{{ surfaceContainer.hex }} !important;
+    --toolbarbutton-hover-background: #{{ surfaceContainer.hex }} !important;
     --toolbarbutton-active-background: #{{ surfaceContainerHighest.hex }} !important;
-    --toolbar-field-background-color: #{{ surfaceContainerHigh.hex }} !important;
+    --zen-colors-input-bg: #{{ surfaceContainer.hex }} !important;
+    --toolbar-field-background-color: #{{ surfaceContainer.hex }} !important;
     --toolbar-field-focus-background-color: #{{ surfaceContainerHighest.hex }} !important;
     --toolbar-field-color: #{{ onSurfaceVariant.hex }} !important;
     --toolbar-field-focus-color: #{{ onSurface.hex }} !important;
@@ -30,9 +32,9 @@
     --tab-selected-textcolor: #{{ onSurface.hex }} !important;
     --tab-loading-fill: #{{ primary.hex }} !important;
     --lwt-text-color: #{{ onSurface.hex }} !important;
-    --lwt-sidebar-background-color: #{{ surfaceDim.hex }} !important;
+    --lwt-sidebar-background-color: color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) !important;
     --lwt-sidebar-text-color: #{{ onSurface.hex }} !important;
-    --sidebar-background-color: #{{ surfaceDim.hex }} !important;
+    --sidebar-background-color: color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) !important;
     --sidebar-text-color: #{{ onSurface.hex }} !important;
     --arrowpanel-background: #{{ surfaceContainer.hex }} !important;
     --arrowpanel-color: #{{ onSurface.hex }} !important;
@@ -48,12 +50,47 @@
     --in-content-primary-button-text-color: #{{ onPrimary.hex }} !important;
 }
 
-#urlbar-background {
-    background-color: var(--toolbar-field-background-color) !important;
+/* Zen's space gradient sets these inline on the background elements, so :root alone never reaches them. */
+#zen-browser-background,
+#zen-toolbar-background {
+    --zen-main-browser-background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) 88%, #{{ primary.hex }}), color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) 70%) !important;
+    --zen-main-browser-background-toolbar: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) 88%, #{{ primary.hex }}), color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) 70%) !important;
+    --zen-main-browser-background-old: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) 88%, #{{ primary.hex }}), color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) 70%) !important;
+    --zen-main-browser-background-toolbar-old: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) 88%, #{{ primary.hex }}), color-mix(in srgb, #{{ surface.hex }} 90%, #{{ tertiary_paletteKeyColor.hex }}) 70%) !important;
 }
 
-#urlbar[focused] #urlbar-background {
-    background-color: var(--toolbar-field-focus-background-color) !important;
+/* Bar-style pills: containers in surfaceContainer, the active one in primary. Zen's vertical tabs ignore --tab-selected-bgcolor. */
+.tabbrowser-tab:is([selected], [multiselected]) > .tab-stack > .tab-background {
+    background-color: #{{ primary.hex }} !important;
+    box-shadow: none !important;
+}
+
+.tabbrowser-tab:is([selected], [multiselected]) :is(.tab-label, .tab-icon-image, .tab-close-button) {
+    color: #{{ onPrimary.hex }} !important;
+    fill: #{{ onPrimary.hex }} !important;
+}
+
+.tabbrowser-tab:not([selected]):hover > .tab-stack > .tab-background,
+#tabs-newtab-button:hover,
+#vertical-tabs-newtab-button:hover {
+    background-color: #{{ surfaceContainer.hex }} !important;
+}
+
+.zen-browser-grain {
+    display: none !important;
+}
+
+#urlbar-background,
+.urlbar-background {
+    --zen-urlbar-background-base: #{{ surfaceContainer.hex }} !important;
+    --zen-urlbar-background-transparent: #{{ surfaceContainer.hex }} !important;
+    background-color: #{{ surfaceContainer.hex }} !important;
+}
+
+#urlbar[focused] :is(#urlbar-background, .urlbar-background) {
+    --zen-urlbar-background-base: #{{ surfaceContainerHighest.hex }} !important;
+    --zen-urlbar-background-transparent: #{{ surfaceContainerHighest.hex }} !important;
+    background-color: #{{ surfaceContainerHighest.hex }} !important;
 }
 
 .urlbarView-url {
