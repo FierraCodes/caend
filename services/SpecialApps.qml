@@ -4,6 +4,8 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Services.Mpris
+import Quickshell.Services.SystemTray
 import Caelestia.Config
 import qs.services
 
@@ -32,6 +34,22 @@ Singleton {
         Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.move({ window = "address:0x${address}", workspace = "special:${name}", follow = false })` : `movetoworkspacesilent special:${name},address:0x${address}`);
     }
 
+    // Apps closed to the tray have no window, and launching them again usually just exits
+    // ("already running"), so ask the running instance to show itself instead.
+    function raiseHidden(rule: var): bool {
+        const player = Mpris.players.values.find(p => p.canRaise && (matches(rule, p.desktopEntry ?? "") || matches(rule, p.identity ?? "")));
+        if (player) {
+            player.raise();
+            return true;
+        }
+        const item = SystemTray.items.values.find(i => matches(rule, i.id ?? "") || matches(rule, i.title ?? ""));
+        if (item) {
+            item.activate();
+            return true;
+        }
+        return false;
+    }
+
     function toggle(name: string): void {
         if (!Compositor.capabilities.specialWorkspaces)
             return;
@@ -45,7 +63,8 @@ Singleton {
                 pending = Object.assign({}, pending, {
                     [name]: Date.now()
                 });
-                Quickshell.execDetached(typeof rule.command === "string" ? ["sh", "-c", rule.command] : rule.command);
+                if (!raiseHidden(rule))
+                    Quickshell.execDetached(typeof rule.command === "string" ? ["sh", "-c", rule.command] : rule.command);
             }
         }
         Compositor.toggleSpecial(name);
