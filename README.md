@@ -136,6 +136,20 @@ sudo cmake --install build
 > sudo chown -R $USER ~/.config/quickshell/caelestia
 > ```
 
+### Hyprland config
+
+caend ships its own Hyprland config in [`hypr/`](hypr) (keybinds, rules, special workspaces with
+Sonora as the music app). Use it instead of the Caelestia dots' `~/.config/hypr` by linking it:
+
+```sh
+mv ~/.config/hypr ~/.config/hypr.bak  # if you have one
+ln -s "$XDG_CONFIG_HOME/quickshell/caelestia/hypr" ~/.config/hypr
+```
+
+Personal tweaks go in `~/.config/caelestia/hypr-vars.lua` (overrides `hypr/variables.lua`, e.g.
+`return { shellEnv = "LIBVA_DRIVER_NAME=radeonsi" }`) and `~/.config/caelestia/hypr-user.lua`
+(extra config), so the repo stays clean.
+
 ## Usage
 
 You can start the shell by running `caelestia shell -d` (preferred) or `qs -c caelestia -n -d`.
