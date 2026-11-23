@@ -8,8 +8,8 @@
     --zen-colors-secondary: #{{ surfaceContainerHigh.hex }} !important;
     --zen-colors-tertiary: #{{ surfaceContainerLow.hex }} !important;
     --zen-colors-border: #{{ outlineVariant.hex }} !important;
-    --zen-main-browser-background: #{{ surfaceDim.hex }} !important;
-    --zen-main-browser-background-toolbar: #{{ surfaceDim.hex }} !important;
+    --zen-main-browser-background: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
+    --zen-main-browser-background-toolbar: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
     --zen-themed-toolbar-bg: #{{ surfaceDim.hex }} !important;
     --zen-themed-toolbar-bg-transparent: #{{ surfaceDim.hex }} !important;
     --zen-dialog-background: #{{ surfaceContainer.hex }} !important;
@@ -52,10 +52,23 @@
 /* Zen's space gradient sets these inline on the background elements, so :root alone never reaches them. */
 #zen-browser-background,
 #zen-toolbar-background {
-    --zen-main-browser-background: #{{ surfaceDim.hex }} !important;
-    --zen-main-browser-background-toolbar: #{{ surfaceDim.hex }} !important;
-    --zen-main-browser-background-old: #{{ surfaceDim.hex }} !important;
-    --zen-main-browser-background-toolbar-old: #{{ surfaceDim.hex }} !important;
+    --zen-main-browser-background: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
+    --zen-main-browser-background-toolbar: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
+    --zen-main-browser-background-old: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
+    --zen-main-browser-background-toolbar-old: color-mix(in srgb, #{{ surfaceDim.hex }} 85%, #{{ primary.hex }}) !important;
+}
+
+/* Selected/hovered tabs: Zen ignores --tab-selected-bgcolor in the vertical sidebar. */
+.tabbrowser-tab:is([selected], [multiselected]) > .tab-stack > .tab-background {
+    background-color: #{{ secondaryContainer.hex }} !important;
+}
+
+.tabbrowser-tab:not([selected]):hover > .tab-stack > .tab-background {
+    background-color: color-mix(in srgb, #{{ secondaryContainer.hex }} 50%, transparent) !important;
+}
+
+.tabbrowser-tab[selected] .tab-label {
+    color: #{{ onSecondaryContainer.hex }} !important;
 }
 
 .zen-browser-grain {
