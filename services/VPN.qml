@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
+import Caelestia.Services
 import Caelestia.I18n
 
 Singleton {
@@ -21,8 +22,8 @@ Singleton {
 
     property bool connectPending: false
     property bool disconnectPending: false
-    readonly property bool connecting: connectProc.running || connectPending
-    readonly property bool disconnecting: disconnectProc.running || disconnectPending
+    readonly property bool connecting: connectProc.running || connectPending || (isNm && status.state === "connecting")
+    readonly property bool disconnecting: disconnectProc.running || disconnectPending || (isNm && status.state === "disconnecting")
 
     // Internal id of the currently selected provider (persisted). Only one
     // provider can be selected at a time; empty means none. Keyed by id rather
@@ -58,6 +59,23 @@ Singleton {
     // provider name.
     readonly property var active: {
         const custom = root.selected;
+        // NetworkManager profiles are driven over D-Bus by NmVpn, not by commands.
+        if (custom?.nmUuid)
+            return {
+                name: "networkmanager",
+                displayName: custom.displayName,
+                interface: custom.interface,
+                nmUuid: custom.nmUuid,
+                connectCmd: [],
+                disconnectCmd: [],
+                statusCmd: [],
+                parse: null,
+                service: "",
+                connectHint: null,
+                registerCmd: null,
+                serverCmd: null,
+                parseServer: null
+            };
         const name = custom ? (custom.name || "custom") : "wireguard";
         const adapter = adapters.find(a => a.name === name) ?? null;
         const iface = (custom ? custom.interface : "") || (adapter ? adapter.iface : "") || (adapter ? "" : name);
@@ -85,10 +103,24 @@ Singleton {
 
     readonly property var adapters: [wireguardAdapter, warpAdapter, netbirdAdapter, tailscaleAdapter]
 
-    // Live list of configured providers, straight from the typed config list.
-    // Each entry is a config node with id/name/displayName/interface and the
-    // optional connect/disconnect commands.
-    readonly property var providers: GlobalConfig.utilities.vpn.provider.values
+    readonly property bool isNm: !!active.nmUuid
+
+    // Providers from the typed config list. Each entry is a config node with
+    // id/name/displayName/interface and the optional connect/disconnect commands.
+    readonly property var configProviders: GlobalConfig.utilities.vpn.provider.values
+
+    // VPN and WireGuard profiles from NetworkManager, kept live over D-Bus.
+    readonly property var nmProviders: NmVpn.connections.map(c => ({
+                id: `nm:${c.uuid}`,
+                name: "networkmanager",
+                displayName: c.name,
+                interface: c.interface,
+                kind: c.kind,
+                nmUuid: c.uuid
+            }))
+
+    // Config providers first so list indices double as config indices for editing.
+    readonly property var providers: [...configProviders, ...nmProviders]
 
     // Provider entry keys which are cleared when empty instead of written.
     readonly property list<string> optionalKeys: ["displayName", "interface", "connectCmd", "disconnectCmd"]
@@ -120,11 +152,6 @@ Singleton {
         return props;
     }
 
-    // Resolve the stable internal id of the provider entry at `index`.
-    function providerIdAt(index: int): string {
-        return GlobalConfig.utilities.vpn.provider.at(index)?.id ?? "";
-    }
-
     // Add a new provider. data: { name, displayName, interface, connectCmd[],
     // disconnectCmd[] }. Newly added providers are not selected by default.
     function addProvider(data: var): void {
@@ -153,7 +180,7 @@ Singleton {
     // Make the provider at `index` the selected one. If a VPN is currently
     // connected, disconnect first, switch, then reconnect.
     function setActiveProvider(index: int): void {
-        const id = root.providerIdAt(index);
+        const id = root.providers[index]?.id ?? "";
         if (id.length === 0)
             return;
         if (root.connected) {
@@ -172,6 +199,9 @@ Singleton {
     // the stored id matches no configured provider, fall back to the first one
     // (or clear it when the list is empty).
     function ensureSelection(): void {
+        // Don't drop a NetworkManager selection before NM has been read.
+        if (!NmVpn.loaded && root.selectedProvider.startsWith("nm:"))
+            return;
         const providers = root.providers;
         if (providers.some(p => p.id === root.selectedProvider))
             return;
@@ -187,14 +217,20 @@ Singleton {
         }
         if (!connected && !connecting) {
             connectPending = true;
-            connectProc.exec(active.connectCmd);
+            if (isNm)
+                NmVpn.activate(active.nmUuid);
+            else
+                connectProc.exec(active.connectCmd);
         }
     }
 
     function disconnect(): void {
         if (connected && !connecting) {
             disconnectPending = true;
-            disconnectProc.exec(active.disconnectCmd);
+            if (isNm)
+                NmVpn.deactivate(active.nmUuid);
+            else
+                disconnectProc.exec(active.disconnectCmd);
         }
     }
 
@@ -218,9 +254,28 @@ Singleton {
     }
 
     function checkStatus(): void {
-        if (root.selectedProvider.length > 0) {
+        if (root.selectedProvider.length === 0)
+            return;
+        // A saved NM profile not read yet: don't check (or auto connect) the fallback provider
+        if (root.selectedProvider.startsWith("nm:") && !root.isNm)
+            return;
+        if (root.isNm) {
+            if (NmVpn.loaded)
+                root.updateStatus(root.nmStatus());
+        } else {
             statusProc.running = true;
         }
+    }
+
+    function nmStatus(): var {
+        const state = NmVpn.connections.find(c => c.uuid === root.active.nmUuid)?.state ?? "disconnected";
+        return {
+            connected: state === "connected" || state === "disconnecting",
+            state: state,
+            reason: "",
+            authUrl: "",
+            server: ""
+        };
     }
 
     // Refresh live In/Out byte counters, tunnel latency and - for providers
@@ -472,7 +527,7 @@ Singleton {
     // Backfill a stable internal id for entries that lack one (hand-written
     // config entries). Runs once at startup.
     function ensureProviderIds(): void {
-        for (const provider of root.providers)
+        for (const provider of root.configProviders)
             if (provider.id.length === 0)
                 provider.id = root.generateId();
     }
@@ -603,10 +658,38 @@ Singleton {
 
     // ── Generic engine ──────────────────────────────────────────────────────
 
+    Connections {
+        function onConnectionsChanged(): void {
+            if (root.isNm)
+                root.checkStatus();
+        }
+
+        function onLoadedChanged(): void {
+            root.ensureSelection();
+            root.checkStatus();
+        }
+
+        function onActivationFailed(uuid: string, message: string): void {
+            if (uuid !== root.active.nmUuid)
+                return;
+            console.warn(lc, `NetworkManager failed to connect '${root.active.displayName}':`, message);
+            root.reportConnectFailure(Tr.tr("Could not connect to %1").arg(root.active.displayName));
+        }
+
+        function onDeactivationFailed(uuid: string, message: string): void {
+            if (uuid !== root.active.nmUuid)
+                return;
+            console.warn(lc, `NetworkManager failed to disconnect '${root.active.displayName}':`, message);
+            root.reportDisconnectFailure(Tr.tr("Could not disconnect from %1").arg(root.active.displayName));
+        }
+
+        target: NmVpn
+    }
+
     Process {
         id: nmMonitor
 
-        running: root.selectedProvider.length > 0
+        running: root.selectedProvider.length > 0 && !root.isNm
         command: ["nmcli", "monitor"]
         stdout: SplitParser {
             onRead: statusCheckTimer.restart()

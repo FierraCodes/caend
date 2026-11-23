@@ -11,12 +11,15 @@
 #include <qvariant.h>
 
 class QDBusServiceWatcher;
+class QProcess;
 
 namespace caelestia::shell::services {
 
 using NMVariantMapMap = QMap<QString, QVariantMap>;
+using NMStringMap = QMap<QString, QString>;
 
 // NetworkManager secret agent: NM asks it for Wi-Fi / 802.1X secrets and the shell shows the prompt.
+// VPN secrets (OpenConnect, OpenVPN, ...) go to the VPN plugin's own auth dialog, as nm-applet does.
 class NetworkAgent : public QObject {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.NetworkManager.SecretAgent")
@@ -52,12 +55,14 @@ public:
     Q_INVOKABLE void cancel();
 
 public slots:
-    // D-Bus: org.freedesktop.NetworkManager.SecretAgent
+    // D-Bus: org.freedesktop.NetworkManager.SecretAgent, so the names are fixed by the interface
+    // NOLINTBEGIN(readability-identifier-naming)
     Q_SCRIPTABLE NMVariantMapMap GetSecrets(const NMVariantMapMap& connection, const QDBusObjectPath& connectionPath,
         const QString& settingName, const QStringList& hints, uint flags, const QDBusMessage& message);
     Q_SCRIPTABLE void CancelGetSecrets(const QDBusObjectPath& connectionPath, const QString& settingName);
     Q_SCRIPTABLE void SaveSecrets(const NMVariantMapMap& connection, const QDBusObjectPath& connectionPath);
     Q_SCRIPTABLE void DeleteSecrets(const NMVariantMapMap& connection, const QDBusObjectPath& connectionPath);
+    // NOLINTEND(readability-identifier-naming)
 
 signals:
     void requestChanged();
@@ -66,6 +71,9 @@ private:
     void registerAgent();
     void finish();
     void replyError(const QString& name, const QString& text);
+    void startVpnDialog(const NMVariantMapMap& connection, const QString& path, const QStringList& hints, uint flags,
+        const QDBusMessage& message);
+    void finishVpn(const QDBusMessage& reply);
 
     bool m_active = false;
     bool m_retry = false;
@@ -76,8 +84,13 @@ private:
     QVariantMap m_prefill;
     QDBusMessage m_pending;
     QDBusServiceWatcher* m_watcher = nullptr;
+
+    QProcess* m_vpnDialog = nullptr;
+    QDBusMessage m_vpnPending;
+    QString m_vpnPath;
 };
 
 } // namespace caelestia::shell::services
 
 Q_DECLARE_METATYPE(caelestia::shell::services::NMVariantMapMap)
+Q_DECLARE_METATYPE(caelestia::shell::services::NMStringMap)

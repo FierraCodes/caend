@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
@@ -26,12 +27,7 @@ Singleton {
     readonly property bool isNiri: name === "niri"
 
     // What the UI may offer. Hide features rather than branching on `name`.
-    readonly property QtObject capabilities: QtObject {
-        readonly property bool specialWorkspaces: root.isHyprland
-        readonly property bool layerRules: root.isHyprland
-        readonly property bool runtimeOptions: root.isHyprland
-        readonly property bool windowActions: root.isHyprland
-    }
+    readonly property Capabilities capabilities: Capabilities {}
 
     // ---- Windows / workspaces ----
 
@@ -64,6 +60,8 @@ Singleton {
     readonly property string defaultKbLayout: isHyprland ? Hypr.defaultKbLayout : (kbMap.get(niri.kbNames[0] ?? "") ?? "??")
     // Full xkb layout description -> short code, e.g. "English (US)" -> "us"
     readonly property var kbMap: new Map()
+
+    signal niriConfigLoaded
 
     function anyFullscreen(): bool {
         if (!isHyprland)
@@ -191,6 +189,8 @@ Singleton {
                 kbIdx = ev.KeyboardLayoutsChanged.keyboard_layouts.current_idx;
             } else if (ev.KeyboardLayoutSwitched) {
                 kbIdx = ev.KeyboardLayoutSwitched.idx;
+            } else if (ev.ConfigLoaded) {
+                root.niriConfigLoaded();
             }
         }
     }
@@ -271,5 +271,12 @@ Singleton {
             capsFile.reload();
             numFile.reload();
         }
+    }
+
+    component Capabilities: QtObject {
+        readonly property bool specialWorkspaces: root.isHyprland
+        readonly property bool layerRules: root.isHyprland
+        readonly property bool runtimeOptions: root.isHyprland
+        readonly property bool windowActions: root.isHyprland
     }
 }

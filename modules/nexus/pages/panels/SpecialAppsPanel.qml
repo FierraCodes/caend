@@ -85,7 +85,7 @@ PageBase {
 
             label: Tr.tr("Window class")
             subtext: Tr.tr("Regex for the app's window class. Empty matches the name")
-            placeholderText: "^([Ss]potify)$"
+            placeholderText: "^([Ss]onora)$"
             onValueEdited: value => root.newClass = value
         }
 
@@ -94,7 +94,7 @@ PageBase {
 
             label: Tr.tr("Command")
             subtext: Tr.tr("Launched when no matching window is open")
-            placeholderText: "spotify"
+            placeholderText: "sonora"
             onValueEdited: value => root.newCommand = value
         }
 

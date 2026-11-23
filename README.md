@@ -78,6 +78,7 @@ Dependencies:
 - [`brightnessctl`](https://github.com/Hummer12007/brightnessctl)
 - [`libcava`](https://github.com/LukashonakV/cava)
 - [`networkmanager`](https://gitlab.freedesktop.org/NetworkManager/NetworkManager)
+- `networkmanager-openconnect` (optional, OpenConnect VPN profiles; any `networkmanager-*` VPN plugin with an auth dialog works)
 - [`lm_sensors`](https://github.com/lm-sensors/lm-sensors)
 - [`aubio`](https://github.com/aubio/aubio)
 - [`libpipewire`](https://github.com/PipeWire/pipewire)
@@ -134,6 +135,20 @@ sudo cmake --install build
 > sudo cmake --install build
 > sudo chown -R $USER ~/.config/quickshell/caelestia
 > ```
+
+### Hyprland config
+
+caend ships its own Hyprland config in [`hypr/`](hypr) (keybinds, rules, special workspaces with
+Sonora as the music app). Use it instead of the Caelestia dots' `~/.config/hypr` by linking it:
+
+```sh
+mv ~/.config/hypr ~/.config/hypr.bak  # if you have one
+ln -s "$XDG_CONFIG_HOME/quickshell/caelestia/hypr" ~/.config/hypr
+```
+
+Personal tweaks go in `~/.config/caelestia/hypr-vars.lua` (overrides `hypr/variables.lua`, e.g.
+`return { shellEnv = "LIBVA_DRIVER_NAME=radeonsi" }`) and `~/.config/caelestia/hypr-user.lua`
+(extra config), so the repo stays clean.
 
 ## Usage
 
@@ -845,7 +860,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
         "brightnessIncrement": 0.1,
         "maxVolume": 1.0,
         "smartScheme": true,
-        "defaultPlayer": "Spotify",
+        "defaultPlayer": "Sonora",
         "playerAliases": [
             { "from": "com.github.th_ch.youtube_music", "to": "YT Music" }
         ],

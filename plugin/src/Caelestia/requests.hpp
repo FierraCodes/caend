@@ -18,7 +18,7 @@ public:
         const QJSValue& headers = QJSValue()) const;
     // POSTs `body` and calls onLine(line) for every line of the response as it streams in, then
     // onDone(error, statusCode) once (error is "" on success). Returns the reply, which has abort().
-    Q_INVOKABLE QObject* stream(const QUrl& url, const QString& body, const QJSValue& onLine,
+    Q_INVOKABLE [[nodiscard]] QObject* stream(const QUrl& url, const QString& body, const QJSValue& onLine,
         const QJSValue& onDone = QJSValue(), const QJSValue& headers = QJSValue()) const;
     Q_INVOKABLE void resetCookies() const;
 
