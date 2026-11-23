@@ -126,7 +126,6 @@ class DashboardTokens : public settings::ObjectNode {
     CONFIG_PROPERTY(int, uptimeSize, 30)
     CONFIG_PROPERTY(int, dateTimeWidth, 110)
     CONFIG_PROPERTY(int, mediaWidth, 200)
-    CONFIG_PROPERTY(int, notifsWidth, 320)
     CONFIG_PROPERTY(int, mediaProgressSweep, 180)
     CONFIG_PROPERTY(int, mediaProgressThickness, 6)
     CONFIG_PROPERTY(int, resourceProgressThickness, 6)

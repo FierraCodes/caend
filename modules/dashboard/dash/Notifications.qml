@@ -17,7 +17,8 @@ ColumnLayout {
 
     anchors.fill: parent
     anchors.margins: Tokens.padding.large
-    implicitWidth: Tokens.sizes.dashboard.notifsWidth
+    // Cards match popup notifications (Content.qml: width - padding - clampedPadding).
+    implicitWidth: Tokens.sizes.notifs.width + Tokens.padding.large - Math.max(0, Math.min(Tokens.padding.large - Config.border.thickness, Tokens.padding.large))
 
     spacing: Tokens.spacing.medium
 
