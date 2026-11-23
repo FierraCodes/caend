@@ -59,7 +59,8 @@ QString authDialogFor(const QString& service) {
     // shortcut: only the usual plugin dirs, add more if a distro installs .name files elsewhere
     for (const auto& path : { u"/etc/NetworkManager/VPN"_s, u"/usr/lib/NetworkManager/VPN"_s }) {
         const QDir dir(path);
-        for (const auto& file : dir.entryList({ u"*.name"_s }, QDir::Files)) {
+        const auto files = dir.entryList({ u"*.name"_s }, QDir::Files);
+        for (const auto& file : files) {
             const QSettings ini(dir.filePath(file), QSettings::IniFormat);
             if (ini.value(u"VPN Connection/service"_s).toString() == service)
                 return ini.value(u"GNOME/auth-dialog"_s).toString();
