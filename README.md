@@ -78,6 +78,7 @@ Dependencies:
 - [`brightnessctl`](https://github.com/Hummer12007/brightnessctl)
 - [`libcava`](https://github.com/LukashonakV/cava)
 - [`networkmanager`](https://gitlab.freedesktop.org/NetworkManager/NetworkManager)
+- `networkmanager-openconnect` (optional, OpenConnect VPN profiles; any `networkmanager-*` VPN plugin with an auth dialog works)
 - [`lm_sensors`](https://github.com/lm-sensors/lm-sensors)
 - [`aubio`](https://github.com/aubio/aubio)
 - [`libpipewire`](https://github.com/PipeWire/pipewire)
