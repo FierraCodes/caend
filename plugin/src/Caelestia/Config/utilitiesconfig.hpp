@@ -98,10 +98,12 @@ class UtilitiesConfig : public settings::ObjectNode {
             LIST_ENTRY(vpn, false),
             LIST_ENTRY(antiFlashbang, true),
             LIST_ENTRY(powerProfile, true),
-            LIST_ENTRY(nightLight, false),
-            LIST_ENTRY(darkMode, false),
-            LIST_ENTRY(colorPicker, false),
-            LIST_ENTRY(screenshot, false),
+            LIST_ENTRY(nightLight, true),
+            LIST_ENTRY(darkMode, true),
+            LIST_ENTRY(colorPicker, true),
+            LIST_ENTRY(screenshot, true),
+            LIST_ENTRY(keepAwake, true),
+            LIST_ENTRY(screenRecord, true),
         }))
 };
 
