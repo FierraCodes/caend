@@ -31,6 +31,7 @@ const QString k_errorCanceled = u"org.freedesktop.NetworkManager.SecretAgent.Use
 
 constexpr uint k_allowInteraction = 0x1;
 constexpr uint k_requestNew = 0x2;
+constexpr uint k_capVpnHints = 0x1; // NM_SECRET_AGENT_CAPABILITY_VPN_HINTS
 
 // Which secrets a setting needs, given the connection NM sent
 QStringList fieldsFor(const QString& setting, const NMVariantMapMap& connection, QVariantMap& prefill) {
@@ -54,8 +55,13 @@ QStringList fieldsFor(const QString& setting, const NMVariantMapMap& connection,
     return {};
 }
 
+struct AuthDialog {
+    QString path;
+    bool supportsHints = false;
+};
+
 // The auth dialog a VPN plugin ships, from its .name file, e.g. /usr/lib/nm-openconnect-auth-dialog
-QString authDialogFor(const QString& service) {
+AuthDialog authDialogFor(const QString& service) {
     // shortcut: only the usual plugin dirs, add more if a distro installs .name files elsewhere
     for (const auto& path : { u"/etc/NetworkManager/VPN"_s, u"/usr/lib/NetworkManager/VPN"_s }) {
         const QDir dir(path);
@@ -63,7 +69,10 @@ QString authDialogFor(const QString& service) {
         for (const auto& file : files) {
             const QSettings ini(dir.filePath(file), QSettings::IniFormat);
             if (ini.value(u"VPN Connection/service"_s).toString() == service)
-                return ini.value(u"GNOME/auth-dialog"_s).toString();
+                return {
+                    .path = ini.value(u"GNOME/auth-dialog"_s).toString(),
+                    .supportsHints = ini.value(u"GNOME/supports-hints"_s).toBool(),
+                };
         }
     }
     return {};
@@ -101,8 +110,9 @@ NetworkAgent::NetworkAgent(QObject* parent)
 
 void NetworkAgent::registerAgent() {
     auto msg = QDBusMessage::createMethodCall(k_nmService, u"/org/freedesktop/NetworkManager/AgentManager"_s,
-        u"org.freedesktop.NetworkManager.AgentManager"_s, u"Register"_s);
-    msg << u"caelestia.shell"_s;
+        u"org.freedesktop.NetworkManager.AgentManager"_s, u"RegisterWithCapabilities"_s);
+    // VPN hints: without it NM drops every VPN to non-interactive connects (no OTP/challenge prompts)
+    msg << u"caelestia.shell"_s << k_capVpnHints;
     const auto* watcher = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(msg), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, [](QDBusPendingCallWatcher* self) {
         const QDBusPendingReply<> reply = *self;
@@ -114,10 +124,8 @@ void NetworkAgent::registerAgent() {
 
 NMVariantMapMap NetworkAgent::GetSecrets(const NMVariantMapMap& connection, const QDBusObjectPath& connectionPath,
     const QString& settingName, const QStringList& hints, uint flags, const QDBusMessage& message) {
-    Q_UNUSED(hints)
-
     if (settingName == u"vpn"_s) {
-        startVpnDialog(connection, connectionPath.path(), flags, message);
+        startVpnDialog(connection, connectionPath.path(), hints, flags, message);
         return {};
     }
 
@@ -182,13 +190,13 @@ void NetworkAgent::finish() {
 
 // Speaks the auth-dialog protocol: VPN data and saved secrets go in on stdin, the dialog prints
 // "key\nvalue\n" pairs then a blank line, and waits for QUIT.
-void NetworkAgent::startVpnDialog(
-    const NMVariantMapMap& connection, const QString& path, uint flags, const QDBusMessage& message) {
+void NetworkAgent::startVpnDialog(const NMVariantMapMap& connection, const QString& path, const QStringList& hints,
+    uint flags, const QDBusMessage& message) {
     const auto vpn = connection.value(u"vpn"_s);
     const auto service = vpn.value(u"service-type"_s).toString();
     const auto dialog = authDialogFor(service);
-    if (!(flags & k_allowInteraction) || dialog.isEmpty()) {
-        if (dialog.isEmpty())
+    if (!(flags & k_allowInteraction) || dialog.path.isEmpty()) {
+        if (dialog.path.isEmpty())
             qCWarning(lcNetworkAgent) << "No auth dialog installed for" << service;
         QDBusConnection::systemBus().send(message.createErrorReply(k_errorNoSecrets, u"No secrets available"_s));
         return;
@@ -213,6 +221,10 @@ void NetworkAgent::startVpnDialog(
     };
     if (flags & k_requestNew)
         args << u"-r"_s;
+    if (dialog.supportsHints) {
+        for (const auto& hint : hints)
+            args << u"-t"_s << hint;
+    }
 
     auto* proc = new QProcess(this);
     m_vpnDialog = proc;
@@ -248,7 +260,7 @@ void NetworkAgent::startVpnDialog(
         proc->deleteLater();
     });
 
-    proc->start(dialog, args);
+    proc->start(dialog.path, args);
 
     QByteArray input;
     const auto data = stringMap(vpn.value(u"data"_s));

@@ -71,8 +71,8 @@ private:
     void registerAgent();
     void finish();
     void replyError(const QString& name, const QString& text);
-    void startVpnDialog(
-        const NMVariantMapMap& connection, const QString& path, uint flags, const QDBusMessage& message);
+    void startVpnDialog(const NMVariantMapMap& connection, const QString& path, const QStringList& hints, uint flags,
+        const QDBusMessage& message);
     void finishVpn(const QDBusMessage& reply);
 
     bool m_active = false;
