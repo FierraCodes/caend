@@ -68,14 +68,14 @@ create_bind(vars.kbLock, hl.dsp.global("caelestia:lock"))
 create_bind(vars.kbNexus, hl.dsp.global("caelestia:nexus"))
 
 create_bind(vars.kbRestoreLock, function()
-    hl.dispatch(hl.dsp.exec_cmd("env LIBVA_DRIVER_NAME=radeonsi __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json caelestia shell -d"))
+    hl.dispatch(hl.dsp.exec_cmd("env " .. vars.shellEnv .. " caelestia shell -d"))
     hl.dispatch(hl.dsp.global("caelestia:lock"))
 end, locked)
 
 
 -- Kill/restart
 create_bind("CTRL + SUPER + SHIFT + R", hl.dsp.exec_cmd("caelestia shell -k"), release)
-create_bind("CTRL + SUPER + ALT + R", hl.dsp.exec_cmd("env LIBVA_DRIVER_NAME=radeonsi __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json caelestia shell -r -d"), release)
+create_bind("CTRL + SUPER + ALT + R", hl.dsp.exec_cmd("env " .. vars.shellEnv .. " caelestia shell -r -d"), release)
 
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0
