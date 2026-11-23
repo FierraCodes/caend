@@ -19,6 +19,7 @@
     --toolbox-bgcolor-inactive: #{{ surface.hex }} !important;
     --toolbarbutton-icon-fill: #{{ onSurfaceVariant.hex }} !important;
     --toolbarbutton-icon-fill-attention: #{{ primary.hex }} !important;
+    --zen-toolbar-element-bg: #{{ surfaceContainer.hex }} !important;
     --toolbarbutton-hover-background: #{{ surfaceContainer.hex }} !important;
     --toolbarbutton-active-background: #{{ surfaceContainerHighest.hex }} !important;
     --zen-colors-input-bg: #{{ surfaceContainer.hex }} !important;
