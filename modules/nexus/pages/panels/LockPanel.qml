@@ -3,10 +3,22 @@ pragma ComponentBehavior: Bound
 import QtQuick.Layouts
 import Caelestia.Config
 import Caelestia.I18n
+import qs.components.controls
 import qs.modules.nexus.common
 
 PageBase {
     id: root
+
+    readonly property list<MenuItem> faceAuthItems: [
+        MenuItem {
+            text: "Howdy"
+            value: FaceAuthProvider.Howdy
+        },
+        MenuItem {
+            text: "Visage"
+            value: FaceAuthProvider.Visage
+        }
+    ]
 
     title: Tr.tr("Lock screen")
     isSubPage: true
@@ -114,11 +126,20 @@ PageBase {
         }
 
         ToggleRow {
+            text: Tr.tr("Face")
+            subtext: Tr.tr("Unlock with face recognition")
+            checked: GlobalConfig.lock.enableFaceAuth
+            onToggled: GlobalConfig.lock.enableFaceAuth = checked
+        }
+
+        SelectRow {
             last: true
-            text: Tr.tr("Face (Howdy)")
-            subtext: Tr.tr("Unlock with Howdy face recognition")
-            checked: GlobalConfig.lock.enableHowdy
-            onToggled: GlobalConfig.lock.enableHowdy = checked
+            label: Tr.tr("Face provider")
+            subtext: Tr.tr("Which face unlock program to use. Both need an IR camera to be safe")
+            menuOnTop: true
+            menuItems: root.faceAuthItems
+            active: root.faceAuthItems.find(i => i.value === GlobalConfig.lock.faceAuthProvider)
+            onSelected: item => GlobalConfig.lock.faceAuthProvider = item.value
         }
     }
 }
