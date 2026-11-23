@@ -8,7 +8,7 @@ import Caelestia.Config
 import Caelestia.I18n
 import qs.components.misc
 import qs.services
-import qs.utils
+import qs.utils // qmllint disable unused-imports
 
 // end4-style recorder: wf-recorder for a region or the focused output, with system audio and/or mic.
 // The process lives as long as the recording, so its running state needs no polling.
