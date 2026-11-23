@@ -74,26 +74,11 @@ Scope {
                 obj.state = Pam.None;
     }
 
-    // Unlocks the GNOME login keyring with the password that unlocked the screen (end4's lock.security.unlockKeyring)
-    Process {
-        id: keyring
-
-        property string password
-
-        command: ["gnome-keyring-daemon", "--unlock"]
-        stdinEnabled: true
-        onStarted: {
-            write(password);
-            password = "";
-            stdinEnabled = false; // EOF ends the password
-        }
-        onExited: stdinEnabled = true
-    }
-
     PamContext {
         id: passwd
 
-        config: "passwd"
+        // passwd-keyring adds pam_gnome_keyring, which unlocks the running daemon over its control socket
+        config: GlobalConfig.lock.unlockKeyring ? "passwd-keyring" : "passwd"
         configDirectory: Quickshell.shellPath("assets/pam.d")
 
         onMessageChanged: {
@@ -107,20 +92,14 @@ Scope {
             if (!responseRequired)
                 return;
 
-            if (GlobalConfig.lock.unlockKeyring)
-                keyring.password = root.buffer;
             respond(root.buffer);
             root.buffer = "";
         }
 
         onCompleted: res => {
-            if (res === PamResult.Success) {
-                if (keyring.password)
-                    keyring.running = true;
+            if (res === PamResult.Success)
                 return root.lock.unlock();
-            }
 
-            keyring.password = "";
             root.clearTransientState();
 
             if (res === PamResult.Error)
