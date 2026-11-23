@@ -85,7 +85,7 @@ PageBase {
 
             label: Tr.tr("Window class")
             subtext: Tr.tr("Regex for the app's window class. Empty matches the name")
-            placeholderText: "^([Ss]potify)$"
+            placeholderText: "^([Ss]onora)$"
             onValueEdited: value => root.newClass = value
         }
 
