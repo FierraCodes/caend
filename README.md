@@ -846,7 +846,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
         "brightnessIncrement": 0.1,
         "maxVolume": 1.0,
         "smartScheme": true,
-        "defaultPlayer": "Spotify",
+        "defaultPlayer": "Sonora",
         "playerAliases": [
             { "from": "com.github.th_ch.youtube_music", "to": "YT Music" }
         ],

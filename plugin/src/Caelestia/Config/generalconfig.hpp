@@ -116,8 +116,8 @@ class GeneralConfig : public settings::ObjectNode {
         DEFAULT_ARG({
             vmap({
                 { u"name"_s, u"music"_s },
-                { u"command"_s, QStringList{ u"spotify"_s } },
-                { u"class"_s, u"^([Ss]potify|feishin|[Ss]upersonic)$"_s },
+                { u"command"_s, QStringList{ u"sonora"_s } },
+                { u"class"_s, u"^([Ss]onora|feishin|[Ss]upersonic)$"_s },
             }),
             vmap({
                 { u"name"_s, u"communication"_s },
