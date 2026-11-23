@@ -75,19 +75,14 @@ Item {
     Wrapper {
         id: content
 
+        // Slide in from the bar's side: centred across the bar, pushed out past the bar edge as it hides.
+        // Plain x/y rather than anchors, since the edge anchor and the centre anchor change with the bar side.
+        readonly property real hideW: (-implicitWidth - 5) * root.offsetScale
+        readonly property real hideH: (-implicitHeight - 5) * root.offsetScale
+
         screen: root.screen
         offsetScale: root.offsetScale
-
-        // Slide in from the bar's side
-        anchors.verticalCenter: root.horizontal ? undefined : parent.verticalCenter
-        anchors.horizontalCenter: root.horizontal ? parent.horizontalCenter : undefined
-        anchors.left: root.side === "left" ? parent.left : undefined
-        anchors.right: root.side === "right" ? parent.right : undefined
-        anchors.top: root.side === "top" ? parent.top : undefined
-        anchors.bottom: root.side === "bottom" ? parent.bottom : undefined
-        anchors.leftMargin: (-implicitWidth - 5) * root.offsetScale
-        anchors.rightMargin: (-implicitWidth - 5) * root.offsetScale
-        anchors.topMargin: (-implicitHeight - 5) * root.offsetScale
-        anchors.bottomMargin: (-implicitHeight - 5) * root.offsetScale
+        x: root.horizontal ? (parent.width - width) / 2 : root.side === "left" ? hideW : parent.width - width - hideW
+        y: !root.horizontal ? (parent.height - height) / 2 : root.side === "top" ? hideH : parent.height - height - hideH
     }
 }

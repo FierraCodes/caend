@@ -18,6 +18,7 @@ qml_module(caelestia-services
         lyrics.cpp
         sessionmanager.cpp
         networkagent.cpp
+        nmvpn.cpp
         networkusage.cpp
         hyprdevices.cpp
         hyprextras.cpp

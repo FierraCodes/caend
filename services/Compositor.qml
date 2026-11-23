@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
@@ -26,12 +27,7 @@ Singleton {
     readonly property bool isNiri: name === "niri"
 
     // What the UI may offer. Hide features rather than branching on `name`.
-    readonly property QtObject capabilities: QtObject {
-        readonly property bool specialWorkspaces: root.isHyprland
-        readonly property bool layerRules: root.isHyprland
-        readonly property bool runtimeOptions: root.isHyprland
-        readonly property bool windowActions: root.isHyprland
-    }
+    readonly property Capabilities capabilities: Capabilities {}
 
     // ---- Windows / workspaces ----
 
@@ -271,5 +267,12 @@ Singleton {
             capsFile.reload();
             numFile.reload();
         }
+    }
+
+    component Capabilities: QtObject {
+        readonly property bool specialWorkspaces: root.isHyprland
+        readonly property bool layerRules: root.isHyprland
+        readonly property bool runtimeOptions: root.isHyprland
+        readonly property bool windowActions: root.isHyprland
     }
 }

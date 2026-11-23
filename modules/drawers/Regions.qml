@@ -39,8 +39,8 @@ Region {
 
     R {
         panel: root.panels.launcher
-        y: panel.floating ? panel.y + root.panels.y : root.bottomEdge - height
-        height: panel.floating ? panel.height : panel.height * (1 - root.panels.launcher.offsetScale) + root.borderThickness
+        y: root.panels.launcher.floating ? panel.y + root.panels.y : root.bottomEdge - height
+        height: root.panels.launcher.floating ? panel.height : panel.height * (1 - root.panels.launcher.offsetScale) + root.borderThickness
     }
 
     R {

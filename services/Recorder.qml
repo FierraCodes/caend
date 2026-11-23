@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
@@ -7,7 +8,7 @@ import Caelestia.Config
 import Caelestia.I18n
 import qs.components.misc
 import qs.services
-import qs.utils
+import qs.utils // qmllint disable unused-imports
 
 // end4-style recorder: wf-recorder for a region or the focused output, with system audio and/or mic.
 // The process lives as long as the recording, so its running state needs no polling.
@@ -109,32 +110,40 @@ exit $code`
     }
 
     // Global shortcuts, e.g. hl.dsp.global("caelestia:recordRegion"); pressing again stops
-    Shortcut {
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
         name: "record"
         description: "Toggle fullscreen recording"
-        region: false
-        sound: false
+
+        onPressed: root.running ? root.stop() : root.start(false, false)
     }
 
-    Shortcut {
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
         name: "recordSound"
         description: "Toggle fullscreen recording with sound"
-        region: false
-        sound: true
+
+        onPressed: root.running ? root.stop() : root.start(false, true)
     }
 
-    Shortcut {
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
         name: "recordRegion"
         description: "Toggle region recording"
-        region: true
-        sound: false
+
+        onPressed: root.running ? root.stop() : root.start(true, false)
     }
 
-    Shortcut {
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
         name: "recordRegionSound"
         description: "Toggle region recording with sound"
-        region: true
-        sound: true
+
+        onPressed: root.running ? root.stop() : root.start(true, true)
     }
 
     Connections {
@@ -144,14 +153,5 @@ exit $code`
 
         enabled: root.running
         target: Time
-    }
-
-    // qmllint disable unresolved-type
-    component Shortcut: CustomShortcut {
-        // qmllint enable unresolved-type
-        required property bool region
-        required property bool sound
-
-        onPressed: root.running ? root.stop() : root.start(region, sound)
     }
 }

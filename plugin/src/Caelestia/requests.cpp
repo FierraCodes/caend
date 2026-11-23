@@ -109,7 +109,7 @@ QObject* Requests::stream(const QUrl& url, const QString& body, const QJSValue& 
     QQmlEngine::setObjectOwnership(reply, QQmlEngine::CppOwnership);
 
     // Holds a partial line between chunks
-    auto buffer = std::make_shared<QByteArray>();
+    const auto buffer = std::make_shared<QByteArray>();
     const auto emitLines = [buffer, onLine](bool flush) {
         qsizetype newline;
         while ((newline = buffer->indexOf('\n')) >= 0) {
