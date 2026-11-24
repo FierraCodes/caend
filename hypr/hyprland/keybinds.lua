@@ -150,7 +150,8 @@ create_bind(vars.kbCloseWindow, hl.dsp.window.close())
 -- Special workspace toggles
 create_bind(vars.kbSpecialWs, fn.toggle("specialws"))
 create_bind(vars.kbSystemMonitorWs, fn.toggle("sysmon"))
-create_bind(vars.kbMusicWs, fn.toggle("music"))
+-- Media key (XF86Tools on most boards, XF86AudioMedia on some) also opens the music workspace
+create_bind({ vars.kbMusicWs, "XF86Tools", "XF86AudioMedia" }, fn.toggle("music"))
 create_bind(vars.kbCommunicationWs, fn.toggle("communication"))
 create_bind(vars.kbTodoWs, fn.toggle("todo"))
 
