@@ -97,6 +97,8 @@ Scope {
         if (keyNames[key])
             return keyNames[key];
         // xf86fooBar is lower-cased by now, so just drop the prefix and capitalise
+        if (key.startsWith("code:"))
+            return `Key ${key.slice(5)}`;
         const k = key.replace(/^xf86/, "");
         return k.length <= 1 ? k.toUpperCase() : k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, " ");
     }
