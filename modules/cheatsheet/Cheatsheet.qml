@@ -35,6 +35,46 @@ Scope {
         return names;
     }
 
+    // Friendly names for keysyms that aren't drawn as keycaps (media keys, mouse buttons, ...)
+    readonly property var keyNames: ({
+            xf86audioraisevolume: "Volume +",
+            xf86audiolowervolume: "Volume −",
+            xf86audiomute: "Mute",
+            xf86audiomicmute: "Mic mute",
+            xf86audioplay: "Play",
+            xf86audiopause: "Pause",
+            xf86audionext: "Next",
+            xf86audioprev: "Previous",
+            xf86audiostop: "Stop",
+            xf86audiomedia: "Media",
+            xf86tools: "Tools",
+            xf86monbrightnessup: "Brightness +",
+            xf86monbrightnessdown: "Brightness −",
+            xf86calculator: "Calculator",
+            xf86mail: "Mail",
+            xf86search: "Search",
+            xf86explorer: "Explorer",
+            xf86homepage: "Home page",
+            mouse_up: "Scroll up",
+            mouse_down: "Scroll down",
+            mouse_left: "Scroll left",
+            mouse_right: "Scroll right",
+            "mouse:272": "Left click",
+            "mouse:273": "Right click",
+            "mouse:274": "Middle click",
+            return: "Enter",
+            slash: "/",
+            backslash: "\\",
+            comma: ",",
+            period: ".",
+            minus: "-",
+            equal: "=",
+            space: "Space",
+            page_up: "Page Up",
+            page_down: "Page Down",
+            super_l: "Super"
+        })
+
     function buildRows(): var {
         const rows = [];
         rows.push([["Esc", ["escape"], 1], ["", [], 0.5], ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => [`F${n}`, [`f${n}`], 1]), ["", [], 0.5], ["Print", ["print"], 1.25], ["Del", ["delete"], 1.25]]);
@@ -51,6 +91,14 @@ Scope {
                         bit,
                         glyph
                     })));
+    }
+
+    function keyName(key: string): string {
+        if (keyNames[key])
+            return keyNames[key];
+        // xf86fooBar is lower-cased by now, so just drop the prefix and capitalise
+        const k = key.replace(/^xf86/, "");
+        return k.length <= 1 ? k.toUpperCase() : k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, " ");
     }
 
     function modNames(mask: int): list<string> {
@@ -313,9 +361,26 @@ Scope {
                                     }
 
                                     StyledText {
-                                        text: `${other.modelData.key}  ${other.modelData.label}`
-                                        color: Colours.palette.m3onSurfaceVariant
+                                        text: other.modelData.label
+                                        color: Colours.palette.m3onSurface
                                         font: Tokens.font.body.small
+                                    }
+
+                                    // Keycap-style badge with the key's friendly name
+                                    StyledRect {
+                                        implicitWidth: keyName.implicitWidth + Tokens.padding.small * 2
+                                        implicitHeight: keyName.implicitHeight + Tokens.padding.extraSmall
+                                        radius: Tokens.rounding.extraSmall
+                                        color: Colours.palette.m3secondaryContainer
+
+                                        StyledText {
+                                            id: keyName
+
+                                            anchors.centerIn: parent
+                                            text: root.keyName(other.modelData.key)
+                                            color: Colours.palette.m3onSecondaryContainer
+                                            font: Tokens.font.label.small
+                                        }
                                     }
                                 }
                             }
@@ -365,7 +430,7 @@ Scope {
                                     }
 
                                     StyledText {
-                                        text: [...root.modNames(detail.modelData.mods), detail.modelData.key.toUpperCase()].join(" + ")
+                                        text: [...root.modNames(detail.modelData.mods), root.keyName(detail.modelData.key)].join(" + ")
                                         color: Colours.palette.m3secondary
                                         font: Tokens.font.label.medium
                                     }
