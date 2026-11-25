@@ -116,9 +116,11 @@ Scope {
                     return;
                 }
 
-                root.queued = false;
+                // Set waiting before clearing queued so the field never re-enables (which wipes its text)
+                const response = input.text;
                 root.waiting = true;
-                flow.submit(input.text);
+                root.queued = false;
+                flow.submit(response);
             }
 
             name: "polkit"
