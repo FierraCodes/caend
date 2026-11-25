@@ -84,8 +84,15 @@ Singleton {
         return "bolt";
     }
 
-    onOpenChanged: if (!open)
-        superHeld = false
+    // A bind-less submap while open, so Hyprland lets every modifier through to the cheatsheet (see keybinds.lua)
+    onOpenChanged: {
+        if (!open)
+            superHeld = false;
+        if (Compositor.isHyprland) {
+            const map = open ? "caend-cheatsheet" : "reset";
+            Hypr.dispatch(Hypr.usingLua ? `hl.dsp.submap("${map}")` : `submap ${map}`);
+        }
+    }
 
     FileView {
         id: niriConfig
