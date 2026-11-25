@@ -168,7 +168,8 @@ create_bind(vars.kbCloseWindow, hl.dsp.window.close(), nil, "Close window")
 -- Special workspace toggles
 create_bind(vars.kbSpecialWs, fn.toggle("specialws"), nil, "Special workspace")
 create_bind(vars.kbSystemMonitorWs, fn.toggle("sysmon"), nil, "System monitor")
-create_bind(vars.kbMusicWs, fn.toggle("music"), nil, "Music")
+-- Media key (XF86Tools on most boards, XF86AudioMedia on some) also opens the music workspace
+create_bind({ vars.kbMusicWs, "XF86Tools", "XF86AudioMedia" }, fn.toggle("music"), nil, "Music")
 create_bind(vars.kbCommunicationWs, fn.toggle("communication"), nil, "Communication")
 create_bind(vars.kbTodoWs, fn.toggle("todo"), nil, "Todo")
 
@@ -224,9 +225,10 @@ create_bind(
 create_bind(vars.kbSleep, hl.dsp.global("caelestia:sleep"), locked, "Sleep")
 
 -- Clipboard and emoji picker
-create_bind(vars.kbClipboard, hl.dsp.exec_cmd("pkill fuzzel || caelestia clipboard"), nil, "Clipboard history")
-create_bind(vars.kbClipboardDel, hl.dsp.exec_cmd("pkill fuzzel || caelestia clipboard -d"), nil, "Delete from clipboard")
-create_bind(vars.kbEmoji, hl.dsp.exec_cmd("pkill fuzzel || caelestia emoji -p"), nil, "Emoji picker")
+-- Both open in the launcher; Shift+Del on a clipboard entry removes it
+create_bind(vars.kbClipboard, hl.dsp.global("caelestia:clipboard"), nil, "Clipboard history")
+create_bind(vars.kbClipboardDel, hl.dsp.global("caelestia:clipboard"), nil, "Clipboard history")
+create_bind(vars.kbEmoji, hl.dsp.global("caelestia:emoji"), nil, "Emoji picker")
 create_bind(
     vars.kbClipboardPasteLatest,
     hl.dsp.exec_cmd('sleep 0.5s && ydotool type -d 1 "$(cliphist list | head -1 | cliphist decode)"'),
