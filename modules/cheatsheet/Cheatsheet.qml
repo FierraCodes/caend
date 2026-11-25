@@ -23,15 +23,19 @@ Scope {
     readonly property int shiftBit: Keybinds.mod.shift
 
     // [label, keysym names (lower case), width in key units, modifier bit, glyph icon]
-    readonly property var rows: [
-        [["Esc", ["escape"], 1], ["", [], 0.5], ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => [`F${n}`, [`f${n}`], 1]), ["", [], 0.5], ["Print", ["print"], 1.25], ["Del", ["delete"], 1.25]],
-        [["`", ["grave"], 1], ...["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map(n => [n, [n], 1]), ["-", ["minus"], 1], ["=", ["equal"], 1], ["", ["backspace"], 2, 0, "backspace"], ["PgUp", ["page_up", "prior"], 1.25]],
-        [["", ["tab"], 1.5, 0, "keyboard_tab"], ..."QWERTYUIOP".split("").map(c => [c, [c.toLowerCase()], 1]), ["[", ["bracketleft"], 1], ["]", ["bracketright"], 1], ["\\", ["backslash"], 1.5], ["PgDn", ["page_down", "next"], 1.25]],
-        [["", ["caps_lock"], 1.75, 0, "keyboard_capslock"], ..."ASDFGHJKL".split("").map(c => [c, [c.toLowerCase()], 1]), [";", ["semicolon"], 1], ["'", ["apostrophe"], 1], ["", ["return", "enter"], 2.25, 0, "keyboard_return"], ["Home", ["home"], 1.25]],
-        [["Shift", ["shift_l"], 2.25, shiftBit], ..."ZXCVBNM".split("").map(c => [c, [c.toLowerCase()], 1]), [",", ["comma"], 1], [".", ["period"], 1], ["/", ["slash"], 1], ["Shift", ["shift_r"], 1.75, shiftBit], ["", ["up"], 1, 0, "keyboard_arrow_up"], ["End", ["end"], 1.25]],
-        [["Ctrl", ["control_l"], 1.5, ctrlBit], ["Super", ["super_l"], 1.25, superBit], ["Alt", ["alt_l"], 1.25, altBit], ["", ["space"], 6, 0, "space_bar"], ["Alt", ["alt_r"], 1.25, altBit], ["Super", ["super_r"], 1.25, superBit], ["Ctrl", ["control_r"], 1.25, ctrlBit], ["", ["left"], 1, 0, "keyboard_arrow_left"], ["", ["down"], 1, 0, "keyboard_arrow_down"], ["", ["right"], 1, 0, "keyboard_arrow_right"], ["", [], 0.25]]
-    ]
+    readonly property var rows: buildRows()
     readonly property var keyboardNames: rows.flat().flatMap(k => k[1])
+
+    function buildRows(): var {
+        const rows = [];
+        rows.push([["Esc", ["escape"], 1], ["", [], 0.5], ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => [`F${n}`, [`f${n}`], 1]), ["", [], 0.5], ["Print", ["print"], 1.25], ["Del", ["delete"], 1.25]]);
+        rows.push([["`", ["grave"], 1], ...["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map(n => [n, [n], 1]), ["-", ["minus"], 1], ["=", ["equal"], 1], ["", ["backspace"], 2, 0, "backspace"], ["PgUp", ["page_up", "prior"], 1.25]]);
+        rows.push([["", ["tab"], 1.5, 0, "keyboard_tab"], ..."QWERTYUIOP".split("").map(c => [c, [c.toLowerCase()], 1]), ["[", ["bracketleft"], 1], ["]", ["bracketright"], 1], ["\\", ["backslash"], 1.5], ["PgDn", ["page_down", "next"], 1.25]]);
+        rows.push([["", ["caps_lock"], 1.75, 0, "keyboard_capslock"], ..."ASDFGHJKL".split("").map(c => [c, [c.toLowerCase()], 1]), [";", ["semicolon"], 1], ["'", ["apostrophe"], 1], ["", ["return", "enter"], 2.25, 0, "keyboard_return"], ["Home", ["home"], 1.25]]);
+        rows.push([["Shift", ["shift_l"], 2.25, shiftBit], ..."ZXCVBNM".split("").map(c => [c, [c.toLowerCase()], 1]), [",", ["comma"], 1], [".", ["period"], 1], ["/", ["slash"], 1], ["Shift", ["shift_r"], 1.75, shiftBit], ["", ["up"], 1, 0, "keyboard_arrow_up"], ["End", ["end"], 1.25]]);
+        rows.push([["Ctrl", ["control_l"], 1.5, ctrlBit], ["Super", ["super_l"], 1.25, superBit], ["Alt", ["alt_l"], 1.25, altBit], ["", ["space"], 6, 0, "space_bar"], ["Alt", ["alt_r"], 1.25, altBit], ["Super", ["super_r"], 1.25, superBit], ["Ctrl", ["control_r"], 1.25, ctrlBit], ["", ["left"], 1, 0, "keyboard_arrow_left"], ["", ["down"], 1, 0, "keyboard_arrow_down"], ["", ["right"], 1, 0, "keyboard_arrow_right"], ["", [], 0.25]]);
+        return rows;
+    }
 
     function modNames(mask: int): list<string> {
         const out = [];
@@ -230,7 +234,19 @@ Scope {
                                 Repeater {
                                     model: keyRow.modelData
 
-                                    Keycap {}
+                                    Keycap {
+                                        unit: card.unit
+                                        layer: win.layer
+                                        binds: win.bindsFor(modelData[1])
+                                        hovered: win.hoveredKey === modelData
+                                        onHover: inside => {
+                                            if (inside)
+                                                win.hoveredKey = modelData;
+                                            else if (win.hoveredKey === modelData)
+                                                win.hoveredKey = null;
+                                        }
+                                        onToggled: bit => win.latched ^= bit
+                                    }
                                 }
                             }
                         }
@@ -335,79 +351,6 @@ Scope {
                             }
                         }
                     }
-                }
-            }
-
-            component Keycap: StyledRect {
-                id: key
-
-                required property var modelData
-                readonly property real units: modelData[2]
-                readonly property int modBit: modelData[3] ?? 0
-                readonly property bool spacer: modelData[1].length === 0
-                readonly property var binds: spacer ? [] : win.bindsFor(modelData[1])
-                readonly property bool bound: binds.length > 0
-                readonly property bool modOn: modBit && (win.layer & modBit)
-                readonly property bool hovered: win.hoveredKey === modelData
-
-                width: card.unit * units - (spacer ? 0 : card.unit * 0.12)
-                height: card.unit
-                radius: Tokens.rounding.small
-                opacity: spacer ? 0 : 1
-                color: modOn ? Colours.palette.m3primary : bound ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHighest
-                border.width: hovered ? 2 : 0
-                border.color: Colours.palette.m3primary
-
-                StateLayer {
-                    visible: !key.spacer
-                    color: key.modOn ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
-                    onContainsMouseChanged: {
-                        if (containsMouse)
-                            win.hoveredKey = key.modelData;
-                        else if (win.hoveredKey === key.modelData)
-                            win.hoveredKey = null;
-                    }
-                    onClicked: if (key.modBit)
-                        win.latched ^= key.modBit
-                }
-
-                // Action icon for bound keys; glyph for keys like Enter or arrows
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    anchors.verticalCenterOffset: key.bound && (key.modelData[0] || key.modelData[4]) ? -card.unit * 0.1 : 0
-                    visible: key.bound || (!key.modelData[0] && key.modelData[4])
-                    text: key.bound ? key.binds[0].icon : key.modelData[4] ?? ""
-                    color: key.bound ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                    fill: key.bound ? 1 : 0
-                    fontStyle: Tokens.font.icon.builders.medium.scale(card.unit / 52).build()
-                }
-
-                StyledText {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: card.unit * 0.06
-                    visible: key.bound && (key.modelData[0] || key.modelData[4])
-                    text: key.modelData[0] || ""
-                    color: Colours.palette.m3onSecondaryContainer
-                    font: Tokens.font.label.builders.small.scale(card.unit / 60).build()
-                }
-
-                MaterialIcon {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: card.unit * 0.04
-                    visible: key.bound && !key.modelData[0] && key.modelData[4]
-                    text: key.modelData[4] ?? ""
-                    color: Colours.palette.m3onSecondaryContainer
-                    fontStyle: Tokens.font.icon.builders.small.scale(card.unit / 60).build()
-                }
-
-                StyledText {
-                    anchors.centerIn: parent
-                    visible: !key.bound && !!key.modelData[0]
-                    text: key.modelData[0]
-                    color: key.modOn ? Colours.palette.m3onPrimary : Colours.palette.m3outline
-                    font: Tokens.font.body.builders.medium.scale(card.unit / 52).build()
                 }
             }
         }

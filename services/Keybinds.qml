@@ -26,8 +26,8 @@ Singleton {
     // Hyprland eats a lone SUPER press for the launcher bind, so the launcher shortcut reports it instead
     property bool superHeld
 
-    onOpenChanged: if (!open)
-        superHeld = false
+    // First match wins, so put specific words before general ones
+    readonly property var iconRules: [[/cheatsheet|hotkey/i, "keyboard"], [/launcher/i, "apps"], [/session|power off|quit/i, "power_settings_new"], [/sidebar/i, "view_sidebar"], [/notif/i, "notifications_off"], [/panels|dashboard/i, "dashboard"], [/restart|reload/i, "restart_alt"], [/kill/i, "dangerous"], [/lock group/i, "lock"], [/lock/i, "lock"], [/settings|nexus/i, "settings"], [/move window.*workspace|move-window-to|move-column-to/i, "move_item"], [/workspace|focus-workspace/i, "workspaces"], [/cycle|group/i, "tab"], [/focus left|focus-column-left/i, "arrow_back"], [/focus right|focus-column-right/i, "arrow_forward"], [/focus up|focus-window-up/i, "arrow_upward"], [/focus down|focus-window-down/i, "arrow_downward"], [/move window|move-/i, "open_with"], [/width|height|resize|size/i, "aspect_ratio"], [/drag/i, "drag_pan"], [/center/i, "filter_center_focus"], [/picture/i, "picture_in_picture"], [/pin/i, "push_pin"], [/fullscreen|maximi/i, "fullscreen"], [/float/i, "flip_to_front"], [/close/i, "close"], [/special/i, "star"], [/system monitor|sysmon/i, "monitor_heart"], [/music/i, "music_note"], [/communication/i, "forum"], [/todo/i, "checklist"], [/terminal|alacritty|foot|kitty/i, "terminal"], [/browser|firefox|zen/i, "language"], [/editor|code/i, "code"], [/file/i, "folder"], [/audio settings|pavucontrol/i, "tune"], [/screenshot|screen-shot/i, "screenshot_region"], [/record/i, "videocam"], [/colou?r/i, "colorize"], [/brightness up/i, "brightness_high"], [/brightness/i, "brightness_low"], [/play|pause/i, "play_pause"], [/next track/i, "skip_next"], [/previous track/i, "skip_previous"], [/stop/i, "stop"], [/microphone/i, "mic_off"], [/mute/i, "volume_off"], [/volume up/i, "volume_up"], [/volume/i, "volume_down"], [/sleep|suspend/i, "bedtime"], [/clipboard/i, "content_paste"], [/emoji/i, "mood"], [/notification/i, "notifications"]]
 
     function fromHypr(raw: var): var {
         return (raw ?? []).filter(b => !b.non_consuming && !b.catch_all && !b.submap && b.key).map(b => {
@@ -77,15 +77,15 @@ Singleton {
         return out;
     }
 
-    // First match wins, so put specific words before general ones
-    readonly property var iconRules: [[/cheatsheet|hotkey/i, "keyboard"], [/launcher/i, "apps"], [/session|power off|quit/i, "power_settings_new"], [/sidebar/i, "view_sidebar"], [/notif/i, "notifications_off"], [/panels|dashboard/i, "dashboard"], [/restart|reload/i, "restart_alt"], [/kill/i, "dangerous"], [/lock group/i, "lock"], [/lock/i, "lock"], [/settings|nexus/i, "settings"], [/move window.*workspace|move-window-to|move-column-to/i, "move_item"], [/workspace|focus-workspace/i, "workspaces"], [/cycle|group/i, "tab"], [/focus left|focus-column-left/i, "arrow_back"], [/focus right|focus-column-right/i, "arrow_forward"], [/focus up|focus-window-up/i, "arrow_upward"], [/focus down|focus-window-down/i, "arrow_downward"], [/move window|move-/i, "open_with"], [/width|height|resize|size/i, "aspect_ratio"], [/drag/i, "drag_pan"], [/center/i, "filter_center_focus"], [/picture/i, "picture_in_picture"], [/pin/i, "push_pin"], [/fullscreen|maximi/i, "fullscreen"], [/float/i, "flip_to_front"], [/close/i, "close"], [/special/i, "star"], [/system monitor|sysmon/i, "monitor_heart"], [/music/i, "music_note"], [/communication/i, "forum"], [/todo/i, "checklist"], [/terminal|alacritty|foot|kitty/i, "terminal"], [/browser|firefox|zen/i, "language"], [/editor|code/i, "code"], [/file/i, "folder"], [/audio settings|pavucontrol/i, "tune"], [/screenshot|screen-shot/i, "screenshot_region"], [/record/i, "videocam"], [/colou?r/i, "colorize"], [/brightness up/i, "brightness_high"], [/brightness/i, "brightness_low"], [/play|pause/i, "play_pause"], [/next track/i, "skip_next"], [/previous track/i, "skip_previous"], [/stop/i, "stop"], [/microphone/i, "mic_off"], [/mute/i, "volume_off"], [/volume up/i, "volume_up"], [/volume/i, "volume_down"], [/sleep|suspend/i, "bedtime"], [/clipboard/i, "content_paste"], [/emoji/i, "mood"], [/notification/i, "notifications"]]
-
     function iconFor(label: string): string {
         for (const [re, icon] of iconRules)
             if (re.test(label))
                 return icon;
         return "bolt";
     }
+
+    onOpenChanged: if (!open)
+        superHeld = false
 
     FileView {
         id: niriConfig
