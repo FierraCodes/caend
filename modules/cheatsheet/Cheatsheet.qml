@@ -24,7 +24,15 @@ Scope {
 
     // [label, keysym names (lower case), width in key units, modifier bit, glyph icon]
     readonly property var rows: buildRows()
-    readonly property var keyboardNames: rows.flat().flatMap(k => k[1])
+    // Set of keysym names drawn on the keyboard
+    readonly property var keyboardNames: {
+        const names = {};
+        for (const row of rows)
+            for (const k of row)
+                for (const n of k.names)
+                    names[n] = true;
+        return names;
+    }
 
     function buildRows(): var {
         const rows = [];
@@ -34,7 +42,14 @@ Scope {
         rows.push([["", ["caps_lock"], 1.75, 0, "keyboard_capslock"], ..."ASDFGHJKL".split("").map(c => [c, [c.toLowerCase()], 1]), [";", ["semicolon"], 1], ["'", ["apostrophe"], 1], ["", ["return", "enter"], 2.25, 0, "keyboard_return"], ["Home", ["home"], 1.25]]);
         rows.push([["Shift", ["shift_l"], 2.25, shiftBit], ..."ZXCVBNM".split("").map(c => [c, [c.toLowerCase()], 1]), [",", ["comma"], 1], [".", ["period"], 1], ["/", ["slash"], 1], ["Shift", ["shift_r"], 1.75, shiftBit], ["", ["up"], 1, 0, "keyboard_arrow_up"], ["End", ["end"], 1.25]]);
         rows.push([["Ctrl", ["control_l"], 1.5, ctrlBit], ["Super", ["super_l"], 1.25, superBit], ["Alt", ["alt_l"], 1.25, altBit], ["", ["space"], 6, 0, "space_bar"], ["Alt", ["alt_r"], 1.25, altBit], ["Super", ["super_r"], 1.25, superBit], ["Ctrl", ["control_r"], 1.25, ctrlBit], ["", ["left"], 1, 0, "keyboard_arrow_left"], ["", ["down"], 1, 0, "keyboard_arrow_down"], ["", ["right"], 1, 0, "keyboard_arrow_right"], ["", [], 0.25]]);
-        return rows;
+        // Objects, not tuples: nested JS arrays don't survive a var property / Repeater model intact
+        return rows.map(r => r.map(([label, names, units, bit = 0, glyph = ""]) => ({
+                        label,
+                        names,
+                        units,
+                        bit,
+                        glyph
+                    })));
     }
 
     function modNames(mask: int): list<string> {
@@ -70,7 +85,7 @@ Scope {
                         map[b.key] = [...(map[b.key] ?? []), b];
                 return map;
             }
-            readonly property var otherBinds: Object.keys(layerBinds).filter(k => !root.keyboardNames.includes(k)).flatMap(k => layerBinds[k])
+            readonly property var otherBinds: Object.keys(layerBinds).filter(k => !root.keyboardNames[k]).flatMap(k => layerBinds[k])
 
             function bitFor(key: int): int {
                 switch (key) {
@@ -237,7 +252,7 @@ Scope {
                                     Keycap {
                                         unit: card.unit
                                         layerMask: win.layer
-                                        binds: win.bindsFor(modelData[1])
+                                        binds: win.bindsFor(modelData.names)
                                         hovered: win.hoveredKey === modelData
                                         onHover: inside => {
                                             if (inside)
@@ -304,7 +319,7 @@ Scope {
                         ColumnLayout {
                             id: details
 
-                            readonly property var binds: win.hoveredKey ? win.bindsFor(win.hoveredKey[1]) : []
+                            readonly property var binds: win.hoveredKey ? win.bindsFor(win.hoveredKey.names) : []
 
                             anchors.left: parent.left
                             anchors.right: parent.right
@@ -314,7 +329,7 @@ Scope {
 
                             StyledText {
                                 visible: details.binds.length === 0
-                                text: win.hoveredKey ? Tr.tr("Nothing bound to %1 on this layer").arg([...root.modNames(win.layer), win.hoveredKey[0] || win.hoveredKey[1][0]].join(" + ")) : Tr.tr("Hold or click SUPER, CTRL, ALT and SHIFT to switch layers. Hover a key to see what it does.")
+                                text: win.hoveredKey ? Tr.tr("Nothing bound to %1 on this layer").arg([...root.modNames(win.layer), win.hoveredKey.label || win.hoveredKey.names[0]].join(" + ")) : Tr.tr("Hold or click SUPER, CTRL, ALT and SHIFT to switch layers. Hover a key to see what it does.")
                                 color: Colours.palette.m3onSurfaceVariant
                                 font: Tokens.font.body.medium
                             }

@@ -3,7 +3,7 @@ import Caelestia.Config
 import qs.components
 import qs.services
 
-// One key of the cheatsheet keyboard. modelData: [label, keysym names, width in units, modifier bit, glyph icon]
+// One key of the cheatsheet keyboard. modelData: { label, names, units, bit, glyph }
 StyledRect {
     id: key
 
@@ -12,9 +12,9 @@ StyledRect {
     required property int layerMask
     required property var binds
     property bool hovered
-    readonly property real units: modelData[2]
-    readonly property int modBit: modelData[3] ?? 0
-    readonly property bool spacer: modelData[1].length === 0
+    readonly property real units: modelData.units
+    readonly property int modBit: modelData.bit
+    readonly property bool spacer: modelData.names.length === 0
     readonly property bool bound: binds.length > 0
     readonly property bool modOn: modBit && (layerMask & modBit)
 
@@ -40,9 +40,9 @@ StyledRect {
     // Action icon for bound keys; glyph for keys like Enter or arrows
     MaterialIcon {
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: key.bound && (key.modelData[0] || key.modelData[4]) ? -key.unit * 0.1 : 0
-        visible: key.bound || (!key.modelData[0] && key.modelData[4])
-        text: key.bound ? key.binds[0].icon : key.modelData[4] ?? ""
+        anchors.verticalCenterOffset: key.bound && (key.modelData.label || key.modelData.glyph) ? -key.unit * 0.1 : 0
+        visible: key.bound || (!key.modelData.label && key.modelData.glyph)
+        text: key.bound ? key.binds[0].icon : key.modelData.glyph
         color: key.bound ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
         fill: key.bound ? 1 : 0
         fontStyle: Tokens.font.icon.builders.medium.scale(key.unit / 52).build()
@@ -52,8 +52,8 @@ StyledRect {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: key.unit * 0.06
-        visible: key.bound && (key.modelData[0] || key.modelData[4])
-        text: key.modelData[0] || ""
+        visible: key.bound && (key.modelData.label || key.modelData.glyph)
+        text: key.modelData.label || ""
         color: Colours.palette.m3onSecondaryContainer
         font: Tokens.font.label.builders.small.scale(key.unit / 60).build()
     }
@@ -62,16 +62,16 @@ StyledRect {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: key.unit * 0.04
-        visible: key.bound && !key.modelData[0] && key.modelData[4]
-        text: key.modelData[4] ?? ""
+        visible: key.bound && !key.modelData.label && key.modelData.glyph
+        text: key.modelData.glyph
         color: Colours.palette.m3onSecondaryContainer
         fontStyle: Tokens.font.icon.builders.small.scale(key.unit / 60).build()
     }
 
     StyledText {
         anchors.centerIn: parent
-        visible: !key.bound && !!key.modelData[0]
-        text: key.modelData[0]
+        visible: !key.bound && !!key.modelData.label
+        text: key.modelData.label
         color: key.modOn ? Colours.palette.m3onPrimary : Colours.palette.m3outline
         font: Tokens.font.body.builders.medium.scale(key.unit / 52).build()
     }
