@@ -104,9 +104,6 @@ Scope {
         StyledWindow {
             id: polkitWindow
 
-            name: "polkit"
-            screen: Quickshell.screens.find(s => Compositor.isFocusedScreen(s)) ?? Quickshell.screens[0]
-
             function submit(): void {
                 const flow = root.agent?.flow;
                 if (!flow || !input.text)
@@ -123,6 +120,9 @@ Scope {
                 root.waiting = true;
                 flow.submit(input.text);
             }
+
+            name: "polkit"
+            screen: Quickshell.screens.find(s => Compositor.isFocusedScreen(s)) ?? Quickshell.screens[0]
 
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
