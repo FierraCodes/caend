@@ -7,6 +7,7 @@ import Caelestia.I18n
 import qs.components
 import qs.components.controls
 import qs.services
+import qs.modules.launcher.services
 
 Item {
     id: root
@@ -86,6 +87,16 @@ Item {
         Keys.onEscapePressed: root.screenState.launcher = false
 
         Keys.onPressed: event => {
+            // Shift+Delete removes the selected clipboard entry from history
+            if (event.key === Qt.Key_Delete && (event.modifiers & Qt.ShiftModifier) && text.startsWith(GlobalConfig.launcher.clipboardPrefix)) {
+                const entry = list.currentList?.currentItem?.modelData?.entry;
+                if (entry) {
+                    Spotlight.deleteClipboard(entry);
+                    event.accepted = true;
+                    return;
+                }
+            }
+
             if (!GlobalConfig.launcher.vimKeybinds)
                 return;
 
@@ -106,12 +117,23 @@ Item {
             }
         }
 
-        Component.onCompleted: forceActiveFocus()
+        Component.onCompleted: {
+            forceActiveFocus();
+            if (root.screenState.launcherQuery)
+                text = root.screenState.launcherQuery;
+        }
 
         Connections {
             function onLauncherChanged(): void {
-                if (!root.screenState.launcher)
+                if (!root.screenState.launcher) {
                     search.text = "";
+                    root.screenState.launcherQuery = "";
+                }
+            }
+
+            function onLauncherQueryChanged(): void {
+                if (root.screenState.launcherQuery)
+                    search.text = root.screenState.launcherQuery;
             }
 
             function onSessionChanged(): void {

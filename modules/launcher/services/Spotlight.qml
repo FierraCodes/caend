@@ -131,7 +131,8 @@ Singleton {
             const preview = entry.slice(entry.indexOf("\t") + 1);
             return {
                 name: preview.slice(0, 120),
-                desc: `#${entry.slice(0, entry.indexOf("\t"))}`,
+                desc: Tr.tr("#%1 · Shift+Del to remove").arg(entry.slice(0, entry.indexOf("\t"))),
+                entry,
                 icon: preview.startsWith("[[ binary data") ? "image" : "content_paste",
                 verb: Tr.tr("Copy"),
                 onClicked: list => {
@@ -189,6 +190,12 @@ Singleton {
                     verb: Tr.tr("Copy"),
                     onClicked: copy(b.combo)
                 }));
+    }
+
+    function deleteClipboard(entry: string): void {
+        clipboardEntries = clipboardEntries.filter(e => e !== entry);
+        // Entry passed as an argument, never spliced into the script
+        Quickshell.execDetached(["sh", "-c", "printf '%s' \"$1\" | cliphist delete", "sh", entry]);
     }
 
     function reloadClipboard(): void {
