@@ -366,21 +366,8 @@ Scope {
                                         font: Tokens.font.body.small
                                     }
 
-                                    // Keycap-style badge with the key's friendly name
-                                    StyledRect {
-                                        implicitWidth: keyName.implicitWidth + Tokens.padding.small * 2
-                                        implicitHeight: keyName.implicitHeight + Tokens.padding.extraSmall
-                                        radius: Tokens.rounding.extraSmall
-                                        color: Colours.palette.m3secondaryContainer
-
-                                        StyledText {
-                                            id: keyName
-
-                                            anchors.centerIn: parent
-                                            text: root.keyName(other.modelData.key)
-                                            color: Colours.palette.m3onSecondaryContainer
-                                            font: Tokens.font.label.small
-                                        }
+                                    KeyBadge {
+                                        text: root.keyName(other.modelData.key)
                                     }
                                 }
                             }
@@ -430,16 +417,21 @@ Scope {
                                     }
 
                                     StyledText {
-                                        text: [...root.modNames(detail.modelData.mods), root.keyName(detail.modelData.key)].join(" + ")
-                                        color: Colours.palette.m3secondary
-                                        font: Tokens.font.label.medium
-                                    }
-
-                                    StyledText {
                                         Layout.fillWidth: true
                                         text: detail.modelData.label
                                         elide: Text.ElideRight
                                         font: Tokens.font.body.medium
+                                    }
+
+                                    // One badge per key in the combo, same style as the chips above
+                                    Repeater {
+                                        model: [...root.modNames(detail.modelData.mods), root.keyName(detail.modelData.key)]
+
+                                        KeyBadge {
+                                            required property string modelData
+
+                                            text: modelData
+                                        }
                                     }
                                 }
                             }
