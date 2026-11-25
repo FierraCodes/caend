@@ -16,6 +16,7 @@ binds {
     Mod+L        { spawn "qs" "-c" "caelestia" "ipc" "call" "lock" "lock"; }
     Mod+Shift+S  { spawn "qs" "-c" "caelestia" "ipc" "call" "picker" "openFreeze"; }
     Mod+I        { spawn "qs" "-c" "caelestia" "ipc" "call" "nexus" "open"; }
+    Mod+Slash hotkey-overlay-title="Keybind cheatsheet" { spawn "qs" "-c" "caelestia" "ipc" "call" "cheatsheet" "toggle"; }
     Mod+Shift+L allow-when-locked=true { spawn "qs" "-c" "caelestia" "ipc" "call" "session" "sleep"; }
 }
 
@@ -29,6 +30,9 @@ layer-rule {
 ```
 
 `qs -c caelestia ipc show` lists every IPC target and function.
+
+The keybind cheatsheet reads the `binds {}` block of this file and labels each bind with its
+`hotkey-overlay-title` (falling back to the action), so give your binds titles for nicer labels.
 
 ## What works on Niri today
 

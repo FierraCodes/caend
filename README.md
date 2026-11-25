@@ -167,6 +167,11 @@ If using the [Caelestia dotfiles][dots-repo], the keybinds are already configure
 Otherwise, the [`keybinds.lua`](https://github.com/caelestia-dots/caelestia/blob/main/hypr/hyprland/keybinds.lua#L63-L67) file
 contains an example of how to use global shortcuts.
 
+Press <kbd>SUPER</kbd> + <kbd>/</kbd> for the keybind cheatsheet: a keyboard that shows what each key does.
+Hold or click any mix of SUPER, CTRL, ALT and SHIFT to switch layers, and hover a key to read its binds.
+It reads the live binds from Hyprland (`hyprctl binds`), so give your own `hl.bind` calls a
+`description` to label them (binds without one show their dispatcher).
+
 All IPC commands can be accessed via `caelestia shell ...`, for example:
 
 ```sh
