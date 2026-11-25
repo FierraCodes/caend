@@ -236,7 +236,7 @@ Scope {
 
                                     Keycap {
                                         unit: card.unit
-                                        layer: win.layer
+                                        layerMask: win.layer
                                         binds: win.bindsFor(modelData[1])
                                         hovered: win.hoveredKey === modelData
                                         onHover: inside => {

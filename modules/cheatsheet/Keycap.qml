@@ -9,14 +9,14 @@ StyledRect {
 
     required property var modelData
     required property real unit
-    required property int layer
+    required property int layerMask
     required property var binds
     property bool hovered
     readonly property real units: modelData[2]
     readonly property int modBit: modelData[3] ?? 0
     readonly property bool spacer: modelData[1].length === 0
     readonly property bool bound: binds.length > 0
-    readonly property bool modOn: modBit && (layer & modBit)
+    readonly property bool modOn: modBit && (layerMask & modBit)
 
     signal hover(inside: bool)
     signal toggled(bit: int)
