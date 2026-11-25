@@ -161,6 +161,32 @@ keyring. In Seahorse, right-click `Login` and use **Change Password** if they di
 The lock screen's "Unlock keyring" option (on by default) uses the same module, so after unlocking the
 screen the keyring is unlocked too.
 
+### Face unlock for admin prompts (optional)
+
+The lock screen does face unlock on its own (it ships its own PAM file), but admin prompts
+(pkexec, GParted, the polkit dialog) authenticate through polkit's PAM stack, which caend can't touch.
+To unlock those with your face too, set up [Howdy](https://github.com/boltgolt/howdy) (or `howdy-next`
+from the AUR) and enrol a face first (`sudo howdy add`), then add it to `/etc/pam.d/polkit-1` only:
+
+```sh
+# Newer polkit ships its PAM file in /usr/lib/pam.d; copy it so the edit survives updates
+[ -f /etc/pam.d/polkit-1 ] || sudo cp /usr/lib/pam.d/polkit-1 /etc/pam.d/polkit-1
+sudo cp /etc/pam.d/polkit-1 /etc/pam.d/polkit-1.bak
+sudo sed -i '0,/^auth/s//auth       sufficient   pam_howdy.so\nauth/' /etc/pam.d/polkit-1
+```
+
+The file should now start its `auth` lines with `auth sufficient pam_howdy.so`, before the
+`include system-auth` line. caend notices that line and the polkit dialog shows a Face ID-style scan:
+it unlocks by itself when your face is recognised, otherwise it shakes and asks for your password.
+You can type the password while it is still scanning; it is sent as soon as the scan gives up.
+
+- `sufficient` means a failed or missing face scan is ignored and PAM falls through to the password,
+  and it sits before `pam_faillock`, so face misses never count towards the lockout.
+- Only `polkit-1` changes. `sudo`, your login manager and TTY logins stay password-only, so if anything
+  goes wrong `sudo mv /etc/pam.d/polkit-1.bak /etc/pam.d/polkit-1` puts it back.
+- After a wrong password polkit starts a new attempt, so the face scan runs once more before the
+  password box comes back.
+
 ### Hyprland config
 
 caend ships its own Hyprland config in [`hypr/`](hypr) (keybinds, rules, special workspaces with

@@ -22,6 +22,35 @@ Scope {
     readonly property PolkitAgent agent: agentLoader.item as PolkitAgent
     property bool failed
     property bool waiting // A response was submitted and polkit has not answered yet
+    property bool queued // Enter was pressed while the face scan still ran; the password goes once PAM asks for it
+    property bool succeeded
+    // Face unlock runs inside polkit's own PAM stack, so only show the scan when that stack has a face module
+    property bool faceAvailable
+    // Kept after the flow ends so the dialog keeps its text during the success animation
+    property string message
+
+    Process {
+        id: faceCheck
+
+        running: true
+        command: ["grep", "-qsE", "^[[:space:]]*auth[[:space:]].*pam_(howdy|visage)\\.so", "/etc/pam.d/polkit-1", "/etc/pam.d/system-auth"]
+        onExited: code => root.faceAvailable = code === 0
+    }
+
+    Binding {
+        target: root
+        property: "message"
+        value: root.agent.flow.message
+        when: !!root.agent?.flow
+        restoreMode: Binding.RestoreNone
+    }
+
+    // Hold the dialog open briefly so the success tick is seen
+    Timer {
+        id: successHold
+
+        interval: 700
+    }
 
     // Other agents (polkit-gnome, hyprpolkitagent...) register first if autostarted, so stop them before registering ours
     Process {
@@ -45,7 +74,10 @@ Scope {
             // No automatic identity switch: each cancelled PAM conversation counts toward pam_faillock's lockout
             onAuthenticationRequestStarted: {
                 root.waiting = false;
+                root.queued = false;
                 root.failed = false;
+                root.succeeded = false;
+                faceCheck.running = true;
             }
         }
     }
@@ -57,15 +89,40 @@ Scope {
             root.waiting = false;
         }
 
+        function onAuthenticationSucceeded(): void {
+            root.succeeded = true;
+            if (root.faceAvailable)
+                successHold.restart();
+        }
+
         target: root.agent?.flow ?? null
     }
 
     LazyLoader {
-        active: root.agent?.isActive ?? false
+        active: (root.agent?.isActive ?? false) || successHold.running
 
         StyledWindow {
+            id: polkitWindow
+
             name: "polkit"
             screen: Quickshell.screens.find(s => Compositor.isFocusedScreen(s)) ?? Quickshell.screens[0]
+
+            function submit(): void {
+                const flow = root.agent?.flow;
+                if (!flow || !input.text)
+                    return;
+
+                root.failed = false;
+                // howdy is still looking, so PAM hasn't asked for the password yet
+                if (!flow.isResponseRequired) {
+                    root.queued = true;
+                    return;
+                }
+
+                root.queued = false;
+                root.waiting = true;
+                flow.submit(input.text);
+            }
 
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
@@ -77,6 +134,15 @@ Scope {
             StyledRect {
                 anchors.fill: parent
                 color: Qt.alpha(Colours.palette.m3scrim, 0.5)
+            }
+
+            Connections {
+                function onIsResponseRequiredChanged(): void {
+                    if (root.queued && root.agent.flow.isResponseRequired)
+                        polkitWindow.submit();
+                }
+
+                target: root.agent?.flow ?? null
             }
 
             StyledRect {
@@ -111,9 +177,17 @@ Scope {
 
                     MaterialIcon {
                         Layout.alignment: Qt.AlignHCenter
+                        visible: !root.faceAvailable
                         text: "security"
                         color: Colours.palette.m3secondary
                         fontStyle: Tokens.font.icon.large
+                    }
+
+                    FaceScan {
+                        Layout.alignment: Qt.AlignHCenter
+                        visible: root.faceAvailable
+                        // Once PAM asks for a password (or one was sent), the face module has given up
+                        status: root.succeeded ? FaceScan.Success : (root.agent?.flow?.isResponseRequired || root.waiting) ? FaceScan.Failed : FaceScan.Scanning
                     }
 
                     StyledText {
@@ -123,8 +197,17 @@ Scope {
                     }
 
                     StyledText {
+                        Layout.alignment: Qt.AlignHCenter
+                        visible: root.faceAvailable
+                        animate: true
+                        text: root.succeeded ? Tr.tr("Authenticated") : (root.agent?.flow?.isResponseRequired || root.waiting) ? Tr.tr("Face not recognised, use your password") : Tr.tr("Looking for your face...")
+                        color: Colours.palette.m3onSurfaceVariant
+                        font: Tokens.font.body.small
+                    }
+
+                    StyledText {
                         Layout.fillWidth: true
-                        text: root.agent?.flow?.message ?? ""
+                        text: root.message
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -158,7 +241,7 @@ Scope {
 
                         Layout.fillWidth: true
                         focus: true
-                        enabled: !root.waiting
+                        enabled: !root.waiting && !root.queued
                         placeholderText: (root.agent?.flow?.inputPrompt ?? "").trim().replace(/:$/, "") || Tr.tr("Password")
                         echoMode: masked ? TextInput.Password : TextInput.Normal
                         // Masked input is drawn as end4-style shapes, so hide the real dots and cursor
@@ -166,7 +249,8 @@ Scope {
                         hideCursor: masked
                         isError: root.failed
                         // polkit's own message says why it failed (e.g. a broken helper), not just "wrong"
-                        errorText: root.agent?.flow?.supplementaryIsError ? root.agent.flow.supplementaryMessage : Tr.tr("Wrong password, try again")
+                        // With face unlock the latest supplementary error is the face module's, not the password's
+                        errorText: !root.faceAvailable && root.agent?.flow?.supplementaryIsError ? root.agent.flow.supplementaryMessage : Tr.tr("Wrong password, try again")
                         onAccepted: submit.clicked()
                         Keys.onEscapePressed: root.agent?.flow?.cancelAuthenticationRequest()
                         onEnabledChanged: if (enabled) {
@@ -270,12 +354,8 @@ Scope {
 
                             text: Tr.trCtx("Authenticate", "button")
                             type: TextButton.Text
-                            disabled: root.waiting || !input.text
-                            onClicked: {
-                                root.waiting = true;
-                                root.failed = false;
-                                root.agent?.flow?.submit(input.text);
-                            }
+                            disabled: root.waiting || root.queued || !input.text
+                            onClicked: polkitWindow.submit()
                         }
                     }
                 }
