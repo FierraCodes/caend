@@ -259,6 +259,11 @@ Scope {
                 return (mods & Qt.ShiftModifier ? root.shiftBit : 0) | (mods & Qt.ControlModifier ? root.ctrlBit : 0) | (mods & Qt.AltModifier ? root.altBit : 0) | (mods & Qt.MetaModifier ? root.superBit : 0);
             }
 
+            // Compare by name: Repeater model entries are copies, so identity checks miss
+            function isHovered(k: var): bool {
+                return !!hoveredKey && k.names.length > 0 && hoveredKey.names[0] === k.names[0];
+            }
+
             function bindsFor(names: var): var {
                 // Plain loops: V4 has no flat/flatMap
                 const out = [];
@@ -417,11 +422,11 @@ Scope {
                                         unit: card.unit
                                         layerMask: win.layer
                                         binds: win.bindsFor(modelData.names)
-                                        hovered: win.hoveredKey === modelData
+                                        hovered: win.isHovered(modelData)
                                         onHover: inside => {
                                             if (inside)
                                                 win.hoveredKey = modelData;
-                                            else if (win.hoveredKey === modelData)
+                                            else if (win.isHovered(modelData))
                                                 win.hoveredKey = null;
                                         }
                                         onToggled: bit => win.latched ^= bit
