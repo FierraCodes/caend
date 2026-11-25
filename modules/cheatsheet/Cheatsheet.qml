@@ -75,6 +75,54 @@ Scope {
             super_l: "Super"
         })
 
+    // keysym name -> key object, for keys pressed while the cheatsheet is open
+    readonly property var keyByName: {
+        const map = {};
+        for (const row of rows)
+            for (const k of row)
+                for (const n of k.names)
+                    map[n] = k;
+        return map;
+    }
+    // Shifted characters back to their unshifted key, and ASCII symbols to keysym names
+    readonly property var unshift: ({
+            "!": "1",
+            "@": "2",
+            "#": "3",
+            "$": "4",
+            "%": "5",
+            "^": "6",
+            "&": "7",
+            "*": "8",
+            "(": "9",
+            ")": "0",
+            "_": "-",
+            "+": "=",
+            "<": ",",
+            ">": ".",
+            "?": "/",
+            "|": "\\",
+            "{": "[",
+            "}": "]",
+            ":": ";",
+            "\"": "'",
+            "~": "`"
+        })
+    readonly property var symbolNames: ({
+            "-": "minus",
+            "=": "equal",
+            ",": "comma",
+            ".": "period",
+            "/": "slash",
+            "\\": "backslash",
+            "[": "bracketleft",
+            "]": "bracketright",
+            ";": "semicolon",
+            "'": "apostrophe",
+            "`": "grave",
+            " ": "space"
+        })
+
     function buildRows(): var {
         const rows = [];
         rows.push([["Esc", ["escape"], 1], ["", [], 0.5], ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => [`F${n}`, [`f${n}`], 1]), ["", [], 0.5], ["Print", ["print"], 1.25], ["Del", ["delete"], 1.25]]);
@@ -101,6 +149,51 @@ Scope {
             return `Key ${key.slice(5)}`;
         const k = key.replace(/^xf86/, "");
         return k.length <= 1 ? k.toUpperCase() : k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, " ");
+    }
+
+    // Qt key code -> lower-case keysym name as used by the keyboard rows
+    function keysymFor(key: int): string {
+        if (key >= Qt.Key_F1 && key <= Qt.Key_F12)
+            return `f${key - Qt.Key_F1 + 1}`;
+        switch (key) {
+        case Qt.Key_Escape:
+            return "escape";
+        case Qt.Key_Tab:
+        case Qt.Key_Backtab:
+            return "tab";
+        case Qt.Key_Backspace:
+            return "backspace";
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+            return "return";
+        case Qt.Key_Delete:
+            return "delete";
+        case Qt.Key_Print:
+            return "print";
+        case Qt.Key_Home:
+            return "home";
+        case Qt.Key_End:
+            return "end";
+        case Qt.Key_PageUp:
+            return "page_up";
+        case Qt.Key_PageDown:
+            return "page_down";
+        case Qt.Key_Left:
+            return "left";
+        case Qt.Key_Right:
+            return "right";
+        case Qt.Key_Up:
+            return "up";
+        case Qt.Key_Down:
+            return "down";
+        case Qt.Key_CapsLock:
+            return "caps_lock";
+        }
+        if (key >= 0x80)
+            return "";
+        let ch = String.fromCharCode(key).toLowerCase();
+        ch = unshift[ch] ?? ch;
+        return symbolNames[ch] ?? ch;
     }
 
     function modNames(mask: int): list<string> {
@@ -224,8 +317,15 @@ Scope {
                     Component.onCompleted: forceActiveFocus()
 
                     Keys.onPressed: event => {
-                        if (!event.isAutoRepeat)
+                        if (!event.isAutoRepeat) {
                             win.held = win.maskOf(event.modifiers) | win.bitFor(event.key);
+                            // A full combo (e.g. SUPER + T) keeps its layer and shows that key's card
+                            const pressed = win.bitFor(event.key) ? null : root.keyByName[root.keysymFor(event.key)];
+                            if (pressed) {
+                                win.latched = win.layer;
+                                win.hoveredKey = pressed;
+                            }
+                        }
                         event.accepted = true;
                     }
                     Keys.onReleased: event => {
@@ -397,7 +497,7 @@ Scope {
 
                             StyledText {
                                 visible: details.binds.length === 0
-                                text: win.hoveredKey ? Tr.tr("Nothing bound to %1 on this layer").arg([...root.modNames(win.layer), win.hoveredKey.label || win.hoveredKey.names[0]].join(" + ")) : Tr.tr("Hold or click SUPER, CTRL, ALT and SHIFT to switch layers. Hover a key to see what it does.")
+                                text: win.hoveredKey ? Tr.tr("Nothing bound to %1 on this layer").arg([...root.modNames(win.layer), win.hoveredKey.label || win.hoveredKey.names[0]].join(" + ")) : Tr.tr("Hold or click SUPER, CTRL, ALT and SHIFT to switch layers. Hover a key or press a combo to see what it does.")
                                 color: Colours.palette.m3onSurfaceVariant
                                 font: Tokens.font.body.medium
                             }
