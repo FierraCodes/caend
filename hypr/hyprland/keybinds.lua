@@ -71,14 +71,13 @@ create_bind(
 create_bind(vars.kbSession, hl.dsp.global("caelestia:session"), nil, "Session menu")
 create_bind(vars.kbCheatsheet, hl.dsp.global("caelestia:cheatsheet"), nil, "Keybind cheatsheet")
 -- While the cheatsheet is open the shell enters this submap, so no other bind swallows SUPER/CTRL/...
--- and the cheatsheet sees them. Escape (or the cheatsheet bind) closes it, and still leaves the submap
--- if the shell is gone.
+-- and the cheatsheet sees them. The cheatsheet bind closes it, and still leaves the submap if the shell is gone.
 hl.define_submap("caend-cheatsheet", function()
     local close = function()
         hl.dispatch(hl.dsp.submap("reset"))
         hl.dispatch(hl.dsp.global("caelestia:cheatsheet"))
     end
-    create_bind({ "Escape", vars.kbCheatsheet }, close, nil, "Close keybind cheatsheet")
+    create_bind(vars.kbCheatsheet, close, nil, "Close keybind cheatsheet")
 end)
 create_bind(vars.kbShowSidebar, hl.dsp.global("caelestia:sidebar"), nil, "Sidebar")
 create_bind(vars.kbClearNotifs, hl.dsp.global("caelestia:clearNotifs"), locked, "Clear notifications")

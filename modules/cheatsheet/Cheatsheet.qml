@@ -8,6 +8,7 @@ import Caelestia.Config
 import Caelestia.I18n
 import qs.components
 import qs.components.containers
+import qs.components.controls
 import qs.components.effects
 import qs.services
 
@@ -137,9 +138,9 @@ Scope {
                 anchors.fill: parent
                 color: Qt.alpha(Colours.palette.m3scrim, 0.5)
 
+                // Eat clicks outside the card; only the close button (or SUPER + /) closes it
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: Keybinds.open = false
                 }
             }
 
@@ -168,21 +169,13 @@ Scope {
                     level: 3
                 }
 
-                // Swallow clicks so they don't reach the scrim
-                MouseArea {
-                    anchors.fill: parent
-                }
-
                 Item {
                     focus: true
                     Component.onCompleted: forceActiveFocus()
 
                     Keys.onPressed: event => {
-                        if (event.key === Qt.Key_Escape) {
-                            Keybinds.open = false;
-                        } else if (!event.isAutoRepeat) {
+                        if (!event.isAutoRepeat)
                             win.held = win.maskOf(event.modifiers) | win.bitFor(event.key);
-                        }
                         event.accepted = true;
                     }
                     Keys.onReleased: event => {
@@ -244,6 +237,12 @@ Scope {
                                     font: Tokens.font.label.medium
                                 }
                             }
+                        }
+
+                        IconButton {
+                            type: IconButton.Text
+                            icon: "close"
+                            onClicked: Keybinds.open = false
                         }
                     }
 
