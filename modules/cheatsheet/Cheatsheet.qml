@@ -85,7 +85,13 @@ Scope {
                         map[b.key] = [...(map[b.key] ?? []), b];
                 return map;
             }
-            readonly property var otherBinds: Object.keys(layerBinds).filter(k => !root.keyboardNames[k]).flatMap(k => layerBinds[k])
+            readonly property var otherBinds: {
+                const out = [];
+                for (const k of Object.keys(layerBinds))
+                    if (!root.keyboardNames[k])
+                        out.push(...layerBinds[k]);
+                return out;
+            }
 
             function bitFor(key: int): int {
                 switch (key) {
@@ -104,8 +110,17 @@ Scope {
                 return 0;
             }
 
+            // Qt modifier flags -> Hyprland modmask bits
+            function maskOf(mods: int): int {
+                return (mods & Qt.ShiftModifier ? root.shiftBit : 0) | (mods & Qt.ControlModifier ? root.ctrlBit : 0) | (mods & Qt.AltModifier ? root.altBit : 0) | (mods & Qt.MetaModifier ? root.superBit : 0);
+            }
+
             function bindsFor(names: var): var {
-                return names.flatMap(n => layerBinds[n] ?? []);
+                // Plain loops: V4 has no flat/flatMap
+                const out = [];
+                for (const n of names)
+                    out.push(...(layerBinds[n] ?? []));
+                return out;
             }
 
             name: "cheatsheet"
@@ -166,13 +181,13 @@ Scope {
                         if (event.key === Qt.Key_Escape) {
                             Keybinds.open = false;
                         } else if (!event.isAutoRepeat) {
-                            win.held |= win.bitFor(event.key);
+                            win.held = win.maskOf(event.modifiers) | win.bitFor(event.key);
                         }
                         event.accepted = true;
                     }
                     Keys.onReleased: event => {
                         if (!event.isAutoRepeat)
-                            win.held &= ~win.bitFor(event.key);
+                            win.held = win.maskOf(event.modifiers) & ~win.bitFor(event.key);
                         event.accepted = true;
                     }
                 }
