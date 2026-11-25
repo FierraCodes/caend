@@ -137,6 +137,30 @@ sudo cmake --install build
 > sudo chown -R $USER ~/.config/quickshell/caelestia
 > ```
 
+### Unlock the keyring at login
+
+Apps and the AI drawer keep secrets in the GNOME keyring. Your login manager has to unlock the
+`Login` keyring with your password, or you get a "keyring is locked" popup after logging in.
+Add `pam_gnome_keyring` to your login manager's PAM file (`/etc/pam.d/greetd` for greetd,
+`/etc/pam.d/sddm` for SDDM, and so on). The `auth` line goes after the existing `auth` lines,
+and the `session` line goes after the existing `session` lines:
+
+```
+auth       optional     pam_gnome_keyring.so
+session    optional     pam_gnome_keyring.so auto_start
+```
+
+For greetd, appending both lines to the end of the file does exactly that:
+
+```sh
+printf 'auth       optional     pam_gnome_keyring.so\nsession    optional     pam_gnome_keyring.so auto_start\n' | sudo tee -a /etc/pam.d/greetd
+```
+
+The `Login` keyring's password must match your account password, and it should be the default
+keyring. In Seahorse, right-click `Login` and use **Change Password** if they differ, then **Set as default**.
+The lock screen's "Unlock keyring" option (on by default) uses the same module, so after unlocking the
+screen the keyring is unlocked too.
+
 ### Hyprland config
 
 caend ships its own Hyprland config in [`hypr/`](hypr) (keybinds, rules, special workspaces with
