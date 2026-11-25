@@ -44,6 +44,7 @@ HyprExtras::HyprExtras(QObject* parent)
 
     refreshOptions();
     refreshDevices();
+    refreshBinds();
 
     m_socket = new QLocalSocket(this);
 
@@ -60,6 +61,10 @@ QVariantHash HyprExtras::options() const {
 
 HyprDevices* HyprExtras::devices() const {
     return m_devices;
+}
+
+QVariantList HyprExtras::binds() const {
+    return m_binds;
 }
 
 void HyprExtras::message(const QString& message) {
@@ -174,6 +179,25 @@ void HyprExtras::refreshDevices() {
     });
 }
 
+void HyprExtras::refreshBinds() {
+    if (!m_bindsRefresh.isNull()) {
+        m_bindsRefresh->close();
+    }
+
+    m_bindsRefresh = makeRequestJson(u"binds"_s, [this](bool success, const QJsonDocument& response) {
+        m_bindsRefresh.reset();
+        if (!success) {
+            return;
+        }
+
+        auto binds = response.array().toVariantList();
+        if (binds != m_binds) {
+            m_binds = std::move(binds);
+            emit bindsChanged();
+        }
+    });
+}
+
 void HyprExtras::socketError(QLocalSocket::LocalSocketError error) const {
     if (!m_socketValid) {
         qCWarning(lcHypr) << "socketError: unable to connect to Hyprland event socket:" << error;
@@ -209,6 +233,7 @@ void HyprExtras::readEvent() {
 void HyprExtras::handleEvent(const QString& event) {
     if (event == u"configreloaded"_s) {
         refreshOptions();
+        refreshBinds();
     } else if (event == u"activelayout"_s) {
         refreshDevices();
     }

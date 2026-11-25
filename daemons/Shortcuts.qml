@@ -103,14 +103,30 @@ Scope {
         // qmllint enable unresolved-type
         name: "launcher"
         description: "Toggle launcher"
-        onPressed: root.launcherInterrupted = false
+        onPressed: {
+            root.launcherInterrupted = false;
+            if (Keybinds.open)
+                Keybinds.superHeld = true;
+        }
         onReleased: {
+            if (Keybinds.open) {
+                Keybinds.superHeld = false; // SUPER is a cheatsheet layer key while it is open
+                return;
+            }
             if (!root.launcherInterrupted && !root.hasFullscreen) {
                 const screenState = ShellState.forActive();
                 screenState.launcher = !screenState.launcher;
             }
             root.launcherInterrupted = false;
         }
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "cheatsheet"
+        description: "Toggle keybind cheatsheet"
+        onPressed: Keybinds.open = !Keybinds.open
     }
 
     // qmllint disable unresolved-type
