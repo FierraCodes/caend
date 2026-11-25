@@ -7,6 +7,7 @@ import Caelestia.Config
 import Caelestia.I18n
 import qs.components
 import qs.components.containers
+import qs.components.controls
 import qs.services
 import qs.modules.lock as Lock
 
@@ -24,12 +25,36 @@ ColumnLayout {
 
     spacing: Tokens.spacing.medium
 
-    StyledText {
+    RowLayout {
         Layout.fillWidth: true
-        text: Notifs.notClosed.length > 0 ? Tr.trN("%n notification", "%n notifications", Notifs.notClosed.length) : Tr.tr("Notifications")
-        color: Colours.palette.m3outline
-        font: Tokens.font.mono.builders.small.weight(Font.Medium).build()
-        elide: Text.ElideRight
+        spacing: Tokens.spacing.small
+
+        StyledText {
+            Layout.fillWidth: true
+            text: Notifs.notClosed.length > 0 ? Tr.trN("%n notification", "%n notifications", Notifs.notClosed.length) : Tr.tr("Notifications")
+            color: Colours.palette.m3outline
+            font: Tokens.font.mono.builders.small.weight(Font.Medium).build()
+            elide: Text.ElideRight
+        }
+
+        IconButton {
+            isRound: true
+            icon: "clear_all"
+            type: IconButton.Text
+            font: Tokens.font.icon.builders.small.weight(Font.Bold).build()
+            enabled: Notifs.notClosed.length > 0
+            opacity: enabled ? 1 : 0
+            onClicked: {
+                for (const n of Notifs.notClosed.slice())
+                    n.close();
+            }
+
+            Behavior on opacity {
+                Anim {
+                    type: Anim.DefaultEffects
+                }
+            }
+        }
     }
 
     ClipRect {
