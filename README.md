@@ -175,6 +175,10 @@ caelestia shell mpris getActive trackTitle
 
 You can view the list of available IPC commands by running `caelestia shell -s`.
 
+The clipboard history and emoji picker live in the launcher. Open the launcher straight in one of its modes with
+`caelestia shell launcher toggle <mode>` (`clipboard`, `emoji`, `symbol`, `keybind`, `web`, `shell`, `math`, `apps` or `actions`),
+which is handy for Niri binds. In clipboard mode, Shift+Delete removes the selected entry.
+
 ### PFP/Wallpapers
 
 The profile picture for the dashboard is read from the file `~/.face`. You can set it by clicking it in the dashboard,

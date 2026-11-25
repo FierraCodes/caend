@@ -14,6 +14,35 @@ Scope {
     property bool launcherInterrupted
     readonly property bool hasFullscreen: Compositor.focusedHasFullscreen
 
+    // Opens the launcher in a spotlight mode (e.g. "clipboard", "emoji"); pressing it again closes it
+    function toggleLauncherMode(mode: string): void {
+        if (hasFullscreen)
+            return;
+        const conf = GlobalConfig.launcher;
+        const prefixes = {
+            clipboard: conf.clipboardPrefix,
+            emoji: conf.emojiPrefix,
+            symbol: conf.symbolPrefix,
+            keybind: conf.keybindPrefix,
+            web: conf.webPrefix,
+            shell: conf.shellPrefix,
+            math: conf.mathPrefix,
+            apps: conf.appPrefix,
+            actions: conf.actionPrefix
+        };
+        if (!(mode in prefixes)) {
+            console.warn(lc, `Launcher mode "${mode}" does not exist`);
+            return;
+        }
+        const screenState = ShellState.forActive();
+        if (screenState.launcher && screenState.launcherQuery === prefixes[mode]) {
+            screenState.launcher = false;
+            return;
+        }
+        screenState.launcherQuery = prefixes[mode];
+        screenState.launcher = true;
+    }
+
     // qmllint disable unresolved-type
     CustomShortcut {
         // qmllint enable unresolved-type
@@ -82,6 +111,22 @@ Scope {
             }
             root.launcherInterrupted = false;
         }
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "clipboard"
+        description: "Toggle clipboard history in the launcher"
+        onPressed: root.toggleLauncherMode("clipboard")
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "emoji"
+        description: "Toggle emoji picker in the launcher"
+        onPressed: root.toggleLauncherMode("emoji")
     }
 
     // qmllint disable unresolved-type
@@ -156,6 +201,14 @@ Scope {
         }
 
         target: "drawers"
+    }
+
+    IpcHandler {
+        function toggle(mode: string): void {
+            root.toggleLauncherMode(mode);
+        }
+
+        target: "launcher"
     }
 
     IpcHandler {

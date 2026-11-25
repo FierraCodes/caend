@@ -13,6 +13,9 @@ PersistentProperties {
     property bool sidebar
     property bool aichat
 
+    // Text the launcher opens with, e.g. the clipboard prefix (set by Shortcuts.openLauncher)
+    property string launcherQuery
+
     // Dashboard state
     property int dashboardTab
     property date dashboardDate: new Date()
