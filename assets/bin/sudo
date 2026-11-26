@@ -33,7 +33,7 @@ for a in "$@"; do
             c=${flags:0:1} flags=${flags:1}
             case $c in
             [SnA]) exec "$real" "$@" ;;
-            [CDgpRrTtUu])
+            [CDghpRrTtUu])
                 [ -z "$flags" ] && skip=1
                 break
                 ;;
