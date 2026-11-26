@@ -89,14 +89,6 @@ Scope {
         restoreMode: Binding.RestoreNone
     }
 
-    Binding {
-        target: root
-        property: "lastFlow"
-        value: root.agent?.flow ?? null
-        when: !!root.agent?.flow
-        restoreMode: Binding.RestoreNone
-    }
-
     // polkit can end the flow just before it reports success, so keep the window for that gap
     Timer {
         id: closeBridge
@@ -140,6 +132,8 @@ Scope {
                 root.queued = false;
                 root.failed = false;
                 root.succeeded = false;
+                // Set once here, not bound: a binding would follow the agent's flow to null before the success signal
+                root.lastFlow = flow;
                 faceCheck.running = true;
             }
         }
