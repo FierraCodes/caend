@@ -82,7 +82,7 @@ Scope {
     Binding {
         target: root
         property: "message"
-        value: root.agent.flow.message
+        value: root.agent?.flow?.message ?? ""
         when: !!root.agent?.flow
         restoreMode: Binding.RestoreNone
     }
