@@ -10,9 +10,9 @@ set -u
 if [ "${1:-}" = --face ]; then
     exec 2>/dev/null # Runs behind the user's prompt, so keep it quiet
     ipc() { qs -c caelestia ipc call sudo "$@" >/dev/null; }
-    # The fish hook writes sudo's exit status here, for sudos that finish between two polls
-    result="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/caend-askpass-face-${2:?}"
-    rm -f "$result"
+    # The fish hook writes sudo's exit status here, for sudos that finish between two polls.
+    # Keyed by this watcher's PID, since back-to-back sudos from one shell overlap
+    result="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/caend-askpass-face-$$"
     sudo_pid=
     for _ in 1 2 3 4 5 6 7 8 9 10; do
         sudo_pid=$(pgrep -n -x -P "${2:?}" sudo) && break
