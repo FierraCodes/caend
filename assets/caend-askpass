@@ -8,7 +8,8 @@ set -u
 # Howdy runs inside sudo before any password prompt, so watch that sudo and drive the dialog's scan:
 # the command starting means the face (or password) passed, a caend-askpass child means Howdy gave up.
 if [ "${1:-}" = --face ]; then
-    ipc() { qs -c caelestia ipc call sudo "$@" >/dev/null 2>&1; }
+    exec 2>/dev/null # Runs behind the user's prompt, so keep it quiet
+    ipc() { qs -c caelestia ipc call sudo "$@" >/dev/null; }
     # The fish hook writes sudo's exit status here, for sudos that finish between two polls
     result="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/caend-askpass-face-${2:?}"
     rm -f "$result"
@@ -22,9 +23,9 @@ if [ "${1:-}" = --face ]; then
     command=${command% }
     command=${command/#*sudo -A /sudo }
 
-    # shortcut: polls sudo's children every 0.1s while it lives (max ~5.5 min); sudo has no event to wait on
+    # shortcut: polls sudo's children every 0.05s while it lives (max ~5.5 min); sudo has no event to wait on
     shown=0 asked=0 ticks=0
-    while [ -d "/proc/$sudo_pid" ] && [ "$ticks" -lt 3300 ]; do
+    while [ -d "/proc/$sudo_pid" ] && [ "$ticks" -lt 6600 ]; do
         kids=$(ps -o comm=,args= --ppid "$sudo_pid")
         # Howdy runs its matcher as sudo's child (howdy-next: lib/howdy/howdy-compare, howdy: lib/security/howdy/compare.py), reaped ones linger as <defunct>
         if grep -vE '^caend-askpass |lib/(security/)?howdy/|<defunct>' <<<"$kids" | grep -q .; then
@@ -33,12 +34,13 @@ if [ "${1:-}" = --face ]; then
             break
         fi
         grep -q '^caend-askpass ' <<<"$kids" && asked=1
-        # A cached sudo timestamp starts the command at once, so only show the scan once sudo lingers
-        if [ "$shown" = 0 ] && [ "$asked" = 0 ] && [ "$ticks" -ge 3 ]; then
+        # Show the scan as soon as Howdy's matcher runs (a quick match can beat any delay), or once sudo
+        # lingers; a cached sudo timestamp starts the command at once and never gets here
+        if [ "$shown" = 0 ] && [ "$asked" = 0 ] && { grep -qE 'lib/(security/)?howdy/' <<<"$kids" || [ "$ticks" -ge 6 ]; }; then
             ipc scan "$command"
             shown=1
         fi
-        sleep 0.1
+        sleep 0.05
         ticks=$((ticks + 1))
     done
     if [ "$shown" = 1 ] && [ "$asked" = 0 ] && [ ! -d "/proc/$sudo_pid" ]; then
