@@ -29,6 +29,8 @@ Scope {
     property bool faceAvailable
     // Kept after the flow ends so the dialog keeps its text during the success animation
     property string message
+    // The agent drops its flow before the flow emits authenticationSucceeded, so listen on a reference that outlives that
+    property AuthFlow lastFlow
     // A sudo request from caend-askpass, answered through the FIFO it waits on
     property string sudoFifo
     property string sudoPrompt
@@ -83,6 +85,14 @@ Scope {
         target: root
         property: "message"
         value: root.agent?.flow?.message ?? ""
+        when: !!root.agent?.flow
+        restoreMode: Binding.RestoreNone
+    }
+
+    Binding {
+        target: root
+        property: "lastFlow"
+        value: root.agent?.flow ?? null
         when: !!root.agent?.flow
         restoreMode: Binding.RestoreNone
     }
@@ -148,7 +158,7 @@ Scope {
                 successHold.restart();
         }
 
-        target: root.agent?.flow ?? null
+        target: root.lastFlow
     }
 
     IpcHandler {
