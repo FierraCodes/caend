@@ -15,9 +15,21 @@ password: sudoers rules, the 5-minute timestamp, `pam_faillock` and `/etc/pam.d/
 
 If the shell isn't running (a TTY, SSH), the helper asks in the terminal instead.
 
-Face unlock doesn't apply here: sudo checks the password itself, so the dialog only asks for a
-password. If you add Howdy to `/etc/pam.d/sudo` yourself, sudo tries your face first and only opens
-the dialog when that fails. caend never edits `/etc/pam.d`.
+### Face unlock
+
+sudo runs its own PAM stack, so face unlock only happens if Howdy is in `/etc/pam.d/sudo`. caend
+never edits `/etc/pam.d`; to add it yourself (same `sufficient` line as for polkit, so misses fall
+through to the password and don't count towards `pam_faillock`):
+
+```sh
+sudo cp /etc/pam.d/sudo /etc/pam.d/sudo.bak
+sudo sed -i '0,/^auth/s//auth       sufficient   pam_howdy.so\nauth/' /etc/pam.d/sudo
+```
+
+Howdy runs inside sudo before the password prompt, so the fish hook starts `caend-askpass --face`
+next to each sudo. It shows the same Face ID scan as the polkit dialog while sudo waits (skipped when
+sudo's timestamp is still fresh), the success tick when the command starts, and the password field
+once Howdy gives up. bash/zsh aliases get the password dialog but not the scan.
 
 ## Setup
 

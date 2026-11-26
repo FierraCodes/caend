@@ -34,11 +34,16 @@ Scope {
     property string sudoPrompt
     property string sudoCommand
     property bool sudoFailed
+    // Howdy in /etc/pam.d/sudo runs before sudo asks, so caend-askpass --face reports its scan from outside
+    property bool sudoFace
+    property bool sudoScanning
+    property bool sudoFaceOk
     readonly property bool polkitActive: root.agent?.isActive ?? false
     // polkit goes first, a sudo request waits behind it
-    readonly property bool sudoMode: !polkitActive && sudoFifo !== ""
-    // sudo checks the password itself (Howdy in /etc/pam.d/sudo runs before it asks), so no scan here
-    readonly property bool showFace: faceAvailable && !sudoMode
+    readonly property bool sudoMode: !polkitActive && (sudoFifo !== "" || sudoScanning || sudoFaceOk)
+    readonly property bool showFace: sudoMode ? sudoFace : faceAvailable
+    // Once PAM asks for a password (or one was sent), the face module has given up
+    readonly property int faceStatus: sudoMode ? (sudoFaceOk ? FaceScan.Success : sudoScanning ? FaceScan.Scanning : FaceScan.Failed) : succeeded ? FaceScan.Success : (agent?.flow?.isResponseRequired || waiting) ? FaceScan.Failed : FaceScan.Scanning
 
     function answerSudo(reply: string): void {
         // The FIFO check keeps a stale path from becoming a regular file holding the password
@@ -50,10 +55,15 @@ Scope {
     }
 
     function cancel(): void {
-        if (sudoMode)
+        if (sudoFifo !== "" && sudoMode) {
             answerSudo("cancel\n");
-        else
+        } else if (sudoMode) {
+            // Howdy can't be stopped from here; sudo falls back to the password dialog once it gives up
+            sudoScanning = false;
+            sudoFace = false;
+        } else {
             agent?.flow?.cancelAuthenticationRequest();
+        }
     }
 
     Process {
@@ -77,6 +87,10 @@ Scope {
         id: successHold
 
         interval: 700
+        onTriggered: {
+            root.sudoFaceOk = false;
+            root.sudoFace = false;
+        }
     }
 
     // Other agents (polkit-gnome, hyprpolkitagent...) register first if autostarted, so stop them before registering ours
@@ -138,6 +152,9 @@ Scope {
             root.sudoPrompt = prompt;
             root.sudoCommand = command;
             root.sudoFailed = retry === "1";
+            // Howdy gave up, since sudo is asking for the password now; a retry keeps showing that
+            root.sudoFace = root.sudoScanning || (root.sudoFailed && root.sudoFace);
+            root.sudoScanning = false;
             return "ok";
         }
 
@@ -147,11 +164,35 @@ Scope {
                 root.sudoFifo = "";
         }
 
+        // From caend-askpass --face: sudo is running Howdy, so show the scan until it asks or runs the command
+        function scan(command: string): void {
+            root.sudoCommand = command;
+            root.sudoFailed = false;
+            root.sudoFaceOk = false;
+            root.sudoFace = true;
+            root.sudoScanning = true;
+        }
+
+        function faceOk(): void {
+            if (!root.sudoScanning)
+                return;
+            root.sudoScanning = false;
+            root.sudoFaceOk = true;
+            successHold.restart();
+        }
+
+        // sudo finished or ran its command; the success tick (if any) ends on its own
+        function done(): void {
+            root.sudoScanning = false;
+            if (!root.sudoFaceOk)
+                root.sudoFace = false;
+        }
+
         target: "sudo"
     }
 
     LazyLoader {
-        active: root.polkitActive || root.sudoFifo !== "" || successHold.running
+        active: root.polkitActive || root.sudoFifo !== "" || root.sudoScanning || successHold.running
 
         StyledWindow {
             id: polkitWindow
@@ -260,8 +301,7 @@ Scope {
                     FaceScan {
                         Layout.alignment: Qt.AlignHCenter
                         visible: root.showFace
-                        // Once PAM asks for a password (or one was sent), the face module has given up
-                        status: root.succeeded ? FaceScan.Success : (root.agent?.flow?.isResponseRequired || root.waiting) ? FaceScan.Failed : FaceScan.Scanning
+                        status: root.faceStatus
                     }
 
                     StyledText {
@@ -274,14 +314,14 @@ Scope {
                         Layout.alignment: Qt.AlignHCenter
                         visible: root.showFace
                         animate: true
-                        text: root.succeeded ? Tr.tr("Authenticated") : (root.agent?.flow?.isResponseRequired || root.waiting) ? Tr.tr("Face not recognised, use your password") : Tr.tr("Looking for your face...")
+                        text: root.faceStatus === FaceScan.Success ? Tr.tr("Authenticated") : root.faceStatus === FaceScan.Failed ? Tr.tr("Face not recognised, use your password") : Tr.tr("Looking for your face...")
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                     }
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: root.sudoMode ? Tr.tr("sudo needs your password to run:\n%1").arg(root.sudoCommand) : root.message
+                        text: root.sudoMode ? Tr.tr("sudo wants to run:\n%1").arg(root.sudoCommand) : root.message
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -315,7 +355,7 @@ Scope {
 
                         Layout.fillWidth: true
                         focus: true
-                        enabled: root.sudoMode || (!root.waiting && !root.queued)
+                        enabled: root.sudoMode ? root.sudoFifo !== "" : !root.waiting && !root.queued
                         placeholderText: (root.sudoMode ? root.sudoPrompt : root.agent?.flow?.inputPrompt ?? "").trim().replace(/:$/, "") || Tr.tr("Password")
                         echoMode: masked ? TextInput.Password : TextInput.Normal
                         // Masked input is drawn as end4-style shapes, so hide the real dots and cursor
@@ -428,7 +468,7 @@ Scope {
 
                             text: Tr.trCtx("Authenticate", "button")
                             type: TextButton.Text
-                            disabled: (!root.sudoMode && (root.waiting || root.queued)) || !input.text
+                            disabled: (root.sudoMode ? root.sudoFifo === "" : root.waiting || root.queued) || !input.text
                             onClicked: polkitWindow.submit()
                         }
                     }
