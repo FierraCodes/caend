@@ -28,12 +28,13 @@ if [ "${1:-}" = --face ]; then
     while [ -d "/proc/$sudo_pid" ] && [ "$ticks" -lt 6600 ]; do
         kids=$(ps -o comm=,args= --ppid "$sudo_pid")
         # Howdy runs its matcher as sudo's child (howdy-next: lib/howdy/howdy-compare, howdy: lib/security/howdy/compare.py), reaped ones linger as <defunct>
-        if grep -vE '^caend-askpass |lib/(security/)?howdy/|<defunct>' <<<"$kids" | grep -q .; then
+        # The askpass helper is a script, so match its path in args (comm is its interpreter, e.g. bash)
+        if grep -vE 'caend-askpass|lib/(security/)?howdy/|<defunct>' <<<"$kids" | grep -q .; then
             # The command started, so sudo authenticated
             [ "$shown" = 1 ] && [ "$asked" = 0 ] && ipc faceOk
             break
         fi
-        grep -q '^caend-askpass ' <<<"$kids" && asked=1
+        grep -q 'caend-askpass' <<<"$kids" && asked=1
         # Show the scan as soon as Howdy's matcher runs (a quick match can beat any delay), or once sudo
         # lingers; a cached sudo timestamp starts the command at once and never gets here
         if [ "$shown" = 0 ] && [ "$asked" = 0 ] && { grep -qE 'lib/(security/)?howdy/' <<<"$kids" || [ "$ticks" -ge 6 ]; }; then
