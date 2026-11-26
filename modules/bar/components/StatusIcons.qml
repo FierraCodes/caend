@@ -16,6 +16,11 @@ StyledRect {
     property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
 
+    // Config id of a status icon item from `items` ("" if not one)
+    function entryId(item: Item): string {
+        return (item as EntryWrapper)?.modelData.id ?? "";
+    }
+
     readonly property int spacing: Tokens.spacing.medium / 2
     readonly property bool horizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
 
