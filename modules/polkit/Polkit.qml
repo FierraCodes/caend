@@ -133,7 +133,7 @@ Scope {
                 root.failed = false;
                 root.succeeded = false;
                 // Set once here, not bound: a binding would follow the agent's flow to null before the success signal
-                root.lastFlow = flow;
+                root.lastFlow = root.agent?.flow ?? null;
                 faceCheck.running = true;
             }
         }
