@@ -6,12 +6,15 @@ password: sudoers rules, the 5-minute timestamp, `pam_faillock` and `/etc/pam.d/
 
 ## How it works
 
-1. `caend-askpass` (installed to `/usr/bin`) is the `SUDO_ASKPASS` helper.
-2. When sudo needs a password it runs the helper, which asks the running shell over IPC
+1. The session puts caend's `sudo` (`assets/bin/sudo`) first on `PATH`. It runs the real sudo with
+   `-A`, so every sudo uses the helper: typed in any shell, or run by a script like `cachy-update`,
+   `paru` or `makepkg`. It leaves `-S` (password on stdin) and `-n` (never ask) alone.
+2. `caend-askpass` (installed to `/usr/bin`) is the `SUDO_ASKPASS` helper.
+3. When sudo needs a password it runs the helper, which asks the running shell over IPC
    (`qs -c caelestia ipc call sudo ask ...`) to open the dialog, showing the command sudo was given.
-3. The password comes back through a private FIFO in `$XDG_RUNTIME_DIR/caend-askpass/`
+4. The password comes back through a private FIFO in `$XDG_RUNTIME_DIR/caend-askpass/`
    (never on a command line) and the helper prints it for sudo. Cancel or Escape makes sudo fail.
-4. A wrong password shows the dialog again with "Wrong password, try again", as sudo retries.
+5. A wrong password shows the dialog again with "Wrong password, try again", as sudo retries.
 
 If the shell isn't running (a TTY, SSH), the helper asks in the terminal instead.
 
@@ -26,10 +29,10 @@ sudo cp /etc/pam.d/sudo /etc/pam.d/sudo.bak
 sudo sed -i '0,/^auth/s//auth       sufficient   pam_howdy.so\nauth/' /etc/pam.d/sudo
 ```
 
-Howdy runs inside sudo before the password prompt, so the fish hook starts `caend-askpass --face`
-next to each sudo. It shows the same Face ID scan as the polkit dialog while sudo waits (skipped when
+Howdy runs inside sudo before the password prompt, so caend's sudo starts `caend-askpass --face`
+next to the real sudo. It shows the same Face ID scan as the polkit dialog while sudo waits (skipped when
 sudo's timestamp is still fresh), the success tick when the command starts, and the password field
-once Howdy gives up. bash/zsh aliases get the password dialog but not the scan.
+once Howdy gives up.
 
 ## Setup
 
@@ -38,12 +41,13 @@ On a fresh install this needs nothing:
 - **Hyprland**: `hypr/hyprland/env.lua` sets `SUDO_ASKPASS` when it finds `caend-askpass` on `PATH`.
   Set `sudoAskpass` in `~/.config/caelestia/hypr-vars.lua` to a path to use another helper, or to
   `false` to keep sudo in the terminal.
-- **fish**: `/usr/share/fish/vendor_conf.d/caend-sudo.fish` makes interactive `sudo` run `sudo -A`
-  while `SUDO_ASKPASS` and `WAYLAND_DISPLAY` are set. A `sudo` function in your own config wins.
+  When it's set, it also puts caend's `sudo` first on `PATH` (from `~/.config/quickshell/caelestia`
+  or `/etc/xdg/quickshell/caelestia`), for every shell and script started in the session.
 - Apps started without a terminal (scripts from the launcher, keybinds) use the helper on their own:
   sudo picks askpass by itself when there's no terminal and `SUDO_ASKPASS` is set.
 
-**Niri**: add the variable to `~/.config/niri/config.kdl`:
+**Niri**: Niri can't add to `PATH`, so set the helper in `~/.config/niri/config.kdl` and put caend's
+`sudo` first on `PATH` in your shell config:
 
 ```kdl
 environment {
@@ -51,14 +55,15 @@ environment {
 }
 ```
 
-**bash / zsh**: add to `~/.bashrc` or `~/.zshrc`:
-
 ```sh
-[ -n "$SUDO_ASKPASS" ] && [ -n "$WAYLAND_DISPLAY" ] && alias sudo='sudo -A'
+# fish (~/.config/fish/config.fish)
+fish_add_path -gpm /etc/xdg/quickshell/caelestia/assets/bin
+# bash / zsh (~/.bashrc, ~/.zshrc)
+export PATH="/etc/xdg/quickshell/caelestia/assets/bin:$PATH"
 ```
 
-Tools that call `/usr/bin/sudo` from their own process (e.g. `paru`, `makepkg`) still ask in the
-terminal unless they pass `-A` (for paru, try `SudoFlags = -A` in `~/.config/paru/paru.conf`).
+Only programs that run `/usr/bin/sudo` by its full path skip caend's `sudo`; with a terminal they
+ask there, without one sudo uses the helper by itself.
 
 ## Safety
 

@@ -190,8 +190,8 @@ You can type the password while it is still scanning; it is sent as soon as the 
 ### sudo in the polkit dialog
 
 `sudo` asks for its password in the same dialog as polkit instead of the terminal, through the
-`caend-askpass` helper (`SUDO_ASKPASS`). On Hyprland with fish this works out of the box; Niri, bash
-and zsh need one line each. See [docs/sudo.md](docs/sudo.md).
+`caend-askpass` helper (`SUDO_ASKPASS`), also when a script such as `cachy-update` runs sudo. On
+Hyprland this works out of the box; Niri needs two lines. See [docs/sudo.md](docs/sudo.md).
 
 ### Hyprland config
 

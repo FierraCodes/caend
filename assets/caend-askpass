@@ -4,14 +4,14 @@
 # Falls back to the terminal when the shell is not running (e.g. a TTY or SSH session).
 set -u
 
-# --face <shell pid>: run in the background by the fish sudo hook when /etc/pam.d/sudo has Howdy.
+# --face <pid>: run in the background by caend's sudo (assets/bin/sudo), with its PID, when /etc/pam.d/sudo has Howdy.
 # Howdy runs inside sudo before any password prompt, so watch that sudo and drive the dialog's scan:
 # the command starting means the face (or password) passed, a caend-askpass child means Howdy gave up.
 if [ "${1:-}" = --face ]; then
     exec 2>/dev/null # Runs behind the user's prompt, so keep it quiet
     ipc() { qs -c caelestia ipc call sudo "$@" >/dev/null; }
-    # The fish hook writes sudo's exit status here, for sudos that finish between two polls.
-    # Keyed by this watcher's PID, since back-to-back sudos from one shell overlap
+    # caend's sudo writes sudo's exit status here, for sudos that finish between two polls.
+    # Keyed by this watcher's PID, since back-to-back sudos can overlap
     result="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/caend-askpass-face-$$"
     sudo_pid=
     for _ in 1 2 3 4 5 6 7 8 9 10; do
