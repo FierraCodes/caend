@@ -26,3 +26,25 @@ if vars.devBuildDir then
     hl.env("QML2_IMPORT_PATH", vars.devBuildDir .. "/qml")
     hl.env("CAELESTIA_LIB_DIR", vars.devBuildDir .. "/lib")
 end
+
+-- sudo asks for its password in the shell's polkit dialog (docs/sudo.md)
+local askpass = vars.sudoAskpass
+if askpass == nil then
+    for dir in (os.getenv("PATH") or ""):gmatch("[^:]+") do
+        local f = io.open(dir .. "/caend-askpass", "r")
+        if f then
+            f:close()
+            askpass = dir .. "/caend-askpass"
+            break
+        end
+    end
+    -- A dev checkout symlinked to ~/.config/hypr isn't installed, so use the helper next to it
+    local checkout = os.getenv("HOME") .. "/.config/hypr/../assets/caend-askpass"
+    local f = not askpass and io.open(checkout, "r")
+    if f then
+        f:close()
+        askpass = checkout
+    end
+end
+-- Empty when turned off, so an inherited value doesn't keep the fish hook on
+hl.env("SUDO_ASKPASS", askpass or "")

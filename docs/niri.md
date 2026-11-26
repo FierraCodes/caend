@@ -20,6 +20,11 @@ binds {
     Mod+Shift+L allow-when-locked=true { spawn "qs" "-c" "caelestia" "ipc" "call" "session" "sleep"; }
 }
 
+// sudo asks for its password in the shell's polkit dialog (docs/sudo.md)
+environment {
+    SUDO_ASKPASS "/usr/bin/caend-askpass"
+}
+
 // Display settings (Settings > Display) are saved here
 include "caend-outputs.kdl"
 

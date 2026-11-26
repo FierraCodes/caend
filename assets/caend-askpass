@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# sudo askpass helper (SUDO_ASKPASS): asks for the password in caend's polkit dialog.
+# Prints the password on stdout for sudo; exits 1 when cancelled.
+# Falls back to the terminal when the shell is not running (e.g. a TTY or SSH session).
+set -u
+
+# --face <shell pid>: run in the background by the fish sudo hook when /etc/pam.d/sudo has Howdy.
+# Howdy runs inside sudo before any password prompt, so watch that sudo and drive the dialog's scan:
+# the command starting means the face (or password) passed, a caend-askpass child means Howdy gave up.
+if [ "${1:-}" = --face ]; then
+    exec 2>/dev/null # Runs behind the user's prompt, so keep it quiet
+    ipc() { qs -c caelestia ipc call sudo "$@" >/dev/null; }
+    # The fish hook writes sudo's exit status here, for sudos that finish between two polls.
+    # Keyed by this watcher's PID, since back-to-back sudos from one shell overlap
+    result="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/caend-askpass-face-$$"
+    sudo_pid=
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        sudo_pid=$(pgrep -n -x -P "${2:?}" sudo) && break
+        sleep 0.05
+    done
+    [ -n "$sudo_pid" ] || exit 0
+    command=$(tr '\0' ' ' <"/proc/$sudo_pid/cmdline" 2>/dev/null)
+    command=${command% }
+    command=${command/#*sudo -A /sudo }
+
+    # shortcut: polls sudo's children every 0.05s while it lives (max ~5.5 min); sudo has no event to wait on
+    shown=0 asked=0 ticks=0
+    while [ -d "/proc/$sudo_pid" ] && [ "$ticks" -lt 6600 ]; do
+        kids=$(ps -o comm=,args= --ppid "$sudo_pid")
+        # Howdy runs its matcher as sudo's child (howdy-next: lib/howdy/howdy-compare, howdy: lib/security/howdy/compare.py), reaped ones linger as <defunct>
+        # The askpass helper is a script, so match its path in args (comm is its interpreter, e.g. bash)
+        if grep -vE 'caend-askpass|lib/(security/)?howdy/|<defunct>' <<<"$kids" | grep -q .; then
+            # The command started, so sudo authenticated
+            [ "$shown" = 1 ] && [ "$asked" = 0 ] && ipc faceOk
+            break
+        fi
+        grep -q 'caend-askpass' <<<"$kids" && asked=1
+        # Show the scan as soon as Howdy's matcher runs (a quick match can beat any delay), or once sudo
+        # lingers; a cached sudo timestamp starts the command at once and never gets here
+        if [ "$shown" = 0 ] && [ "$asked" = 0 ] && { grep -qE 'lib/(security/)?howdy/' <<<"$kids" || [ "$ticks" -ge 6 ]; }; then
+            ipc scan "$command"
+            shown=1
+        fi
+        sleep 0.05
+        ticks=$((ticks + 1))
+    done
+    if [ "$shown" = 1 ] && [ "$asked" = 0 ] && [ ! -d "/proc/$sudo_pid" ]; then
+        for _ in 1 2 3 4 5 6 7 8 9 10; do
+            [ -s "$result" ] && break
+            sleep 0.05
+        done
+        # sudo exits 1 when authentication fails or is interrupted
+        [ -s "$result" ] && [ "$(cat "$result")" != 1 ] && ipc faceOk
+    fi
+    rm -f "$result"
+    [ "$shown" = 1 ] && ipc done
+    exit 0
+fi
+
+prompt=${1:-Password: }
+runtime=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+base="$runtime/caend-askpass"
+
+tty_fallback() {
+    { exec 4<>/dev/tty; } 2>/dev/null || exit 1
+    printf '%s' "$prompt" >&4
+    IFS= read -rs -u 4 pass
+    status=$?
+    printf '\n' >&4
+    [ "$status" -eq 0 ] || exit 1
+    printf '%s\n' "$pass"
+    exit 0
+}
+
+mkdir -p -m 700 "$base" || tty_fallback
+
+# Our parent is sudo: show its command line, minus the -A that routed it here
+command=$(tr '\0' ' ' <"/proc/$PPID/cmdline" 2>/dev/null)
+command=${command% }
+command=${command/#*sudo -A /sudo }
+
+# sudo runs the helper again after a wrong password, so a second run for the same sudo is a retry.
+# The marker holds sudo's start time so a reused PID doesn't count as one.
+start=$(awk '{print $22}' "/proc/$PPID/stat" 2>/dev/null)
+marker="$base/sudo-$PPID"
+retry=0
+[ -n "$start" ] && [ "$(cat "$marker" 2>/dev/null)" = "$start" ] && retry=1
+for m in "$base"/sudo-*; do
+    [ -e "$m" ] && [ ! -d "/proc/${m##*/sudo-}" ] && rm -f "$m"
+done
+[ -n "$start" ] && printf '%s' "$start" >"$marker"
+
+fifo=$(mktemp -u "$base/req.XXXXXX") && mkfifo -m 600 "$fifo" || tty_fallback
+answered=0
+cleanup() {
+    [ "$answered" -eq 0 ] && qs -c caelestia ipc call sudo cancel "$fifo" >/dev/null 2>&1
+    rm -f "$fifo"
+}
+trap cleanup EXIT
+trap 'exit 1' INT TERM HUP
+
+# Read-write open so it never blocks, even if the shell dies before answering
+exec 3<>"$fifo"
+reply=$(qs -c caelestia ipc call sudo ask "$fifo" "$prompt" "$command" "$retry" 2>/dev/null)
+if [ "$reply" != ok ]; then
+    answered=1
+    rm -f "$fifo"
+    tty_fallback
+fi
+
+# sudo's own passwd_timeout is 5 minutes, so give up a little after it
+IFS= read -r -t 330 -u 3 status || exit 1
+answered=1
+[ "$status" = ok ] || exit 1
+IFS= read -r -t 5 -u 3 pass || exit 1
+printf '%s\n' "$pass"

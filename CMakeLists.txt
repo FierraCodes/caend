@@ -73,6 +73,9 @@ if("shell" IN_LIST ENABLE_MODULES)
     endforeach()
 
     install(PROGRAMS assets/wrap_term_launch.sh DESTINATION "${INSTALL_QSCONFDIR}/assets")
+    # sudo's password dialog: the SUDO_ASKPASS helper, and a fish hook that makes sudo use it (docs/sudo.md)
+    install(PROGRAMS assets/caend-askpass DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(FILES assets/fish/caend-sudo.fish DESTINATION "${CMAKE_INSTALL_DATADIR}/fish/vendor_conf.d")
 
     file(READ shell.qml SHELL_QML)
     string(REPLACE "settings.watchFiles: true" "settings.watchFiles: false" SHELL_QML "${SHELL_QML}")
