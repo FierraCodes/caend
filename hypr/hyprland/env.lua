@@ -38,6 +38,13 @@ if askpass == nil then
             break
         end
     end
+    -- A dev checkout symlinked to ~/.config/hypr isn't installed, so use the helper next to it
+    local checkout = os.getenv("HOME") .. "/.config/hypr/../assets/caend-askpass"
+    local f = not askpass and io.open(checkout, "r")
+    if f then
+        f:close()
+        askpass = checkout
+    end
 end
 -- Empty when turned off, so an inherited value doesn't keep the fish hook on
 hl.env("SUDO_ASKPASS", askpass or "")
