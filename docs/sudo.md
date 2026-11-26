@@ -41,8 +41,8 @@ On a fresh install this needs nothing:
 - **Hyprland**: `hypr/hyprland/env.lua` sets `SUDO_ASKPASS` when it finds `caend-askpass` on `PATH`.
   Set `sudoAskpass` in `~/.config/caelestia/hypr-vars.lua` to a path to use another helper, or to
   `false` to keep sudo in the terminal.
-  When it's set, it also puts caend's `sudo` first on `PATH` (from `~/.config/quickshell/caelestia`
-  or `/etc/xdg/quickshell/caelestia`), for every shell and script started in the session.
+  When it's set, it also puts caend's `sudo` first on `PATH` (from `~/.config/quickshell/caelestia/assets/bin`
+  or `/usr/share/caend/bin`), for every shell and script started in the session.
 - Apps started without a terminal (scripts from the launcher, keybinds) use the helper on their own:
   sudo picks askpass by itself when there's no terminal and `SUDO_ASKPASS` is set.
 
@@ -57,9 +57,9 @@ environment {
 
 ```sh
 # fish (~/.config/fish/config.fish)
-fish_add_path -gpm /etc/xdg/quickshell/caelestia/assets/bin
+fish_add_path -gpm /usr/share/caend/bin
 # bash / zsh (~/.bashrc, ~/.zshrc)
-export PATH="/etc/xdg/quickshell/caelestia/assets/bin:$PATH"
+export PATH="/usr/share/caend/bin:$PATH"
 ```
 
 Only programs that run `/usr/bin/sudo` by its full path skip caend's `sudo`; with a terminal they

@@ -75,7 +75,8 @@ if("shell" IN_LIST ENABLE_MODULES)
     install(PROGRAMS assets/wrap_term_launch.sh DESTINATION "${INSTALL_QSCONFDIR}/assets")
     # sudo's password dialog: the SUDO_ASKPASS helper, and the sudo that the session puts first on PATH (docs/sudo.md)
     install(PROGRAMS assets/caend-askpass DESTINATION "${CMAKE_INSTALL_BINDIR}")
-    install(PROGRAMS assets/bin/sudo DESTINATION "${INSTALL_QSCONFDIR}/assets/bin")
+    # Next to the helper (bin/../share/caend/bin), where hypr/hyprland/env.lua finds it from the helper's path
+    install(PROGRAMS assets/bin/sudo DESTINATION "${CMAKE_INSTALL_DATADIR}/caend/bin")
 
     file(READ shell.qml SHELL_QML)
     string(REPLACE "settings.watchFiles: true" "settings.watchFiles: false" SHELL_QML "${SHELL_QML}")

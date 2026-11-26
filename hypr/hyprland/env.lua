@@ -52,10 +52,12 @@ hl.env("SUDO_ASKPASS", askpass or "")
 -- caend's sudo goes first on PATH, so sudo run by scripts (e.g. cachy-update) uses the dialog too
 if askpass then
     local home = os.getenv("HOME")
-    local dirs = { home .. "/.config/quickshell/caelestia/assets/bin", home .. "/.config/hypr/../assets/bin" }
-    for dir in (os.getenv("XDG_CONFIG_DIRS") or "/etc/xdg"):gmatch("[^:]+") do
-        table.insert(dirs, dir .. "/quickshell/caelestia/assets/bin")
-    end
+    -- A user config or dev checkout first, then the install next to the helper (<prefix>/share/caend/bin)
+    local dirs = {
+        home .. "/.config/quickshell/caelestia/assets/bin",
+        home .. "/.config/hypr/../assets/bin",
+        askpass:gsub("/[^/]*$", "") .. "/../share/caend/bin",
+    }
     local path = os.getenv("PATH") or ""
     for _, dir in ipairs(dirs) do
         local f = io.open(dir .. "/sudo", "r")
