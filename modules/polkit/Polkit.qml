@@ -205,9 +205,14 @@ Scope {
                 target: root.agent?.flow ?? null
             }
 
-            // A new sudo request (e.g. sudo's retry after a wrong password) starts with an empty field
+            // A new sudo request (e.g. sudo's retry after a wrong password) starts with an empty field,
+            // and so does a switch between sudo and polkit, so one's password never answers the other
             Connections {
                 function onSudoFifoChanged(): void {
+                    input.text = "";
+                }
+
+                function onSudoModeChanged(): void {
                     input.text = "";
                 }
 

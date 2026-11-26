@@ -39,6 +39,5 @@ if askpass == nil then
         end
     end
 end
-if askpass then
-    hl.env("SUDO_ASKPASS", askpass)
-end
+-- Empty when turned off, so an inherited value doesn't keep the fish hook on
+hl.env("SUDO_ASKPASS", askpass or "")
