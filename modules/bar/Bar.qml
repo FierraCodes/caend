@@ -103,7 +103,7 @@ GridLayout {
     function handleWheel(pos: real, angleDelta: point): void {
         const ch = childAlong(root, pos) as EntryWrapper;
         // Speaker/mic status icons always scroll their own volume, wherever they sit on the bar
-        const iconId = ch?.entryId === "statusIcons" ? childAlong((ch.item as StatusIcons).items, pos)?.modelData.id : "";
+        const iconId = ch?.entryId === "statusIcons" ? (childAlong((ch.item as StatusIcons).items, pos) as StatusIcons.EntryWrapper)?.modelData.id : "";
         if ((iconId === "audio" || iconId === "microphone") && Config.bar.scrollActions.volume) {
             const mic = iconId === "microphone";
             if (angleDelta.y > 0)
