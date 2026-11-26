@@ -26,3 +26,19 @@ if vars.devBuildDir then
     hl.env("QML2_IMPORT_PATH", vars.devBuildDir .. "/qml")
     hl.env("CAELESTIA_LIB_DIR", vars.devBuildDir .. "/lib")
 end
+
+-- sudo asks for its password in the shell's polkit dialog (docs/sudo.md)
+local askpass = vars.sudoAskpass
+if askpass == nil then
+    for dir in (os.getenv("PATH") or ""):gmatch("[^:]+") do
+        local f = io.open(dir .. "/caend-askpass", "r")
+        if f then
+            f:close()
+            askpass = dir .. "/caend-askpass"
+            break
+        end
+    end
+end
+if askpass then
+    hl.env("SUDO_ASKPASS", askpass)
+end

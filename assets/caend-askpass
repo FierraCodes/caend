@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# sudo askpass helper (SUDO_ASKPASS): asks for the password in caend's polkit dialog.
+# Prints the password on stdout for sudo; exits 1 when cancelled.
+# Falls back to the terminal when the shell is not running (e.g. a TTY or SSH session).
+set -u
+
+prompt=${1:-Password: }
+runtime=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+base="$runtime/caend-askpass"
+
+tty_fallback() {
+    { exec 4<>/dev/tty; } 2>/dev/null || exit 1
+    printf '%s' "$prompt" >&4
+    IFS= read -rs -u 4 pass
+    status=$?
+    printf '\n' >&4
+    [ "$status" -eq 0 ] || exit 1
+    printf '%s\n' "$pass"
+    exit 0
+}
+
+mkdir -p -m 700 "$base" || tty_fallback
+
+# Our parent is sudo: show its command line, minus the -A that routed it here
+command=$(tr '\0' ' ' <"/proc/$PPID/cmdline" 2>/dev/null)
+command=${command% }
+command=${command/#*sudo -A /sudo }
+
+# sudo runs the helper again after a wrong password, so a second run for the same sudo is a retry.
+# The marker holds sudo's start time so a reused PID doesn't count as one.
+start=$(awk '{print $22}' "/proc/$PPID/stat" 2>/dev/null)
+marker="$base/sudo-$PPID"
+retry=0
+[ -n "$start" ] && [ "$(cat "$marker" 2>/dev/null)" = "$start" ] && retry=1
+for m in "$base"/sudo-*; do
+    [ -e "$m" ] && [ ! -d "/proc/${m##*/sudo-}" ] && rm -f "$m"
+done
+[ -n "$start" ] && printf '%s' "$start" >"$marker"
+
+fifo=$(mktemp -u "$base/req.XXXXXX") && mkfifo -m 600 "$fifo" || tty_fallback
+answered=0
+cleanup() {
+    [ "$answered" -eq 0 ] && qs -c caelestia ipc call sudo cancel "$fifo" >/dev/null 2>&1
+    rm -f "$fifo"
+}
+trap cleanup EXIT
+trap 'exit 1' INT TERM HUP
+
+# Read-write open so it never blocks, even if the shell dies before answering
+exec 3<>"$fifo"
+reply=$(qs -c caelestia ipc call sudo ask "$fifo" "$prompt" "$command" "$retry" 2>/dev/null)
+if [ "$reply" != ok ]; then
+    answered=1
+    rm -f "$fifo"
+    tty_fallback
+fi
+
+# sudo's own passwd_timeout is 5 minutes, so give up a little after it
+IFS= read -r -t 330 -u 3 status || exit 1
+answered=1
+[ "$status" = ok ] || exit 1
+IFS= read -r -t 5 -u 3 pass || exit 1
+printf '%s\n' "$pass"

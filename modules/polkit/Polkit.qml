@@ -16,6 +16,7 @@ import qs.components.effects
 import qs.services
 
 // Polkit authentication agent: asks for your password when an app needs root (e.g. pkexec, GParted)
+// The same dialog answers sudo too, through the caend-askpass helper (SUDO_ASKPASS)
 Scope {
     id: root
 
@@ -28,6 +29,32 @@ Scope {
     property bool faceAvailable
     // Kept after the flow ends so the dialog keeps its text during the success animation
     property string message
+    // A sudo request from caend-askpass, answered through the FIFO it waits on
+    property string sudoFifo
+    property string sudoPrompt
+    property string sudoCommand
+    property bool sudoFailed
+    readonly property bool polkitActive: root.agent?.isActive ?? false
+    // polkit goes first, a sudo request waits behind it
+    readonly property bool sudoMode: !polkitActive && sudoFifo !== ""
+    // sudo checks the password itself (Howdy in /etc/pam.d/sudo runs before it asks), so no scan here
+    readonly property bool showFace: faceAvailable && !sudoMode
+
+    function answerSudo(reply: string): void {
+        // The FIFO check keeps a stale path from becoming a regular file holding the password
+        sudoWriter.createObject(root, {
+            reply: reply,
+            command: ["timeout", "5", "sh", "-c", "[ -p \"$1\" ] && cat > \"$1\"", "sh", sudoFifo]
+        });
+        sudoFifo = "";
+    }
+
+    function cancel(): void {
+        if (sudoMode)
+            answerSudo("cancel\n");
+        else
+            agent?.flow?.cancelAuthenticationRequest();
+    }
 
     Process {
         id: faceCheck
@@ -98,13 +125,44 @@ Scope {
         target: root.agent?.flow ?? null
     }
 
+    IpcHandler {
+        // Called by caend-askpass; returns "ok" once the dialog is up, anything else means use the terminal
+        function ask(fifo: string, prompt: string, command: string, retry: string): string {
+            const dir = `${Quickshell.env("XDG_RUNTIME_DIR")}/caend-askpass/`;
+            if (!fifo.startsWith(dir) || fifo.includes("/.."))
+                return "bad fifo";
+            // One request at a time: the older one gives up and its sudo fails
+            if (root.sudoFifo)
+                root.answerSudo("cancel\n");
+            root.sudoFifo = fifo;
+            root.sudoPrompt = prompt;
+            root.sudoCommand = command;
+            root.sudoFailed = retry === "1";
+            return "ok";
+        }
+
+        // The helper went away (Ctrl+C, sudo timed out), so drop its dialog
+        function cancel(fifo: string): void {
+            if (fifo === root.sudoFifo)
+                root.sudoFifo = "";
+        }
+
+        target: "sudo"
+    }
+
     LazyLoader {
-        active: (root.agent?.isActive ?? false) || successHold.running
+        active: root.polkitActive || root.sudoFifo !== "" || successHold.running
 
         StyledWindow {
             id: polkitWindow
 
             function submit(): void {
+                if (root.sudoMode) {
+                    if (input.text)
+                        root.answerSudo(`ok\n${input.text}\n`);
+                    return;
+                }
+
                 const flow = root.agent?.flow;
                 if (!flow || !input.text)
                     return;
@@ -147,6 +205,15 @@ Scope {
                 target: root.agent?.flow ?? null
             }
 
+            // A new sudo request (e.g. sudo's retry after a wrong password) starts with an empty field
+            Connections {
+                function onSudoFifoChanged(): void {
+                    input.text = "";
+                }
+
+                target: root
+            }
+
             StyledRect {
                 id: card
 
@@ -179,7 +246,7 @@ Scope {
 
                     MaterialIcon {
                         Layout.alignment: Qt.AlignHCenter
-                        visible: !root.faceAvailable
+                        visible: !root.showFace
                         text: "security"
                         color: Colours.palette.m3secondary
                         fontStyle: Tokens.font.icon.large
@@ -187,7 +254,7 @@ Scope {
 
                     FaceScan {
                         Layout.alignment: Qt.AlignHCenter
-                        visible: root.faceAvailable
+                        visible: root.showFace
                         // Once PAM asks for a password (or one was sent), the face module has given up
                         status: root.succeeded ? FaceScan.Success : (root.agent?.flow?.isResponseRequired || root.waiting) ? FaceScan.Failed : FaceScan.Scanning
                     }
@@ -200,7 +267,7 @@ Scope {
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
-                        visible: root.faceAvailable
+                        visible: root.showFace
                         animate: true
                         text: root.succeeded ? Tr.tr("Authenticated") : (root.agent?.flow?.isResponseRequired || root.waiting) ? Tr.tr("Face not recognised, use your password") : Tr.tr("Looking for your face...")
                         color: Colours.palette.m3onSurfaceVariant
@@ -209,7 +276,7 @@ Scope {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: root.message
+                        text: root.sudoMode ? Tr.tr("sudo needs your password to run:\n%1").arg(root.sudoCommand) : root.message
                         color: Colours.palette.m3onSurfaceVariant
                         font: Tokens.font.body.small
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -221,7 +288,7 @@ Scope {
                         readonly property var current: root.agent?.flow?.selectedIdentity ?? null
 
                         Layout.alignment: Qt.AlignLeft
-                        visible: ids.length > 1
+                        visible: !root.sudoMode && ids.length > 1
                         type: TextButton.Text
                         text: Tr.tr("Password for %1").arg(current?.displayName || current?.string || "?")
                         onClicked: root.agent.flow.selectedIdentity = ids[(ids.indexOf(current) + 1) % ids.length]
@@ -230,7 +297,7 @@ Scope {
                     StyledTextField {
                         id: input
 
-                        readonly property bool masked: !(root.agent?.flow?.responseVisible ?? false)
+                        readonly property bool masked: root.sudoMode || !(root.agent?.flow?.responseVisible ?? false)
                         readonly property list<int> shapes: {
                             const shapes = [MaterialShape.Slanted, MaterialShape.Arch, MaterialShape.Fan, MaterialShape.Arrow, MaterialShape.SemiCircle, MaterialShape.Triangle, MaterialShape.Diamond, MaterialShape.ClamShell, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.Sunny, MaterialShape.VerySunny, MaterialShape.Cookie4Sided, MaterialShape.Ghostish, MaterialShape.SoftBurst];
                             for (let i = shapes.length - 1; i > 0; i--) {
@@ -243,18 +310,18 @@ Scope {
 
                         Layout.fillWidth: true
                         focus: true
-                        enabled: !root.waiting && !root.queued
-                        placeholderText: (root.agent?.flow?.inputPrompt ?? "").trim().replace(/:$/, "") || Tr.tr("Password")
+                        enabled: root.sudoMode || (!root.waiting && !root.queued)
+                        placeholderText: (root.sudoMode ? root.sudoPrompt : root.agent?.flow?.inputPrompt ?? "").trim().replace(/:$/, "") || Tr.tr("Password")
                         echoMode: masked ? TextInput.Password : TextInput.Normal
                         // Masked input is drawn as end4-style shapes, so hide the real dots and cursor
                         color: masked ? "transparent" : Colours.palette.m3onSurface
                         hideCursor: masked
-                        isError: root.failed
+                        isError: root.sudoMode ? root.sudoFailed : root.failed
                         // polkit's own message says why it failed (e.g. a broken helper), not just "wrong"
                         // With face unlock the latest supplementary error is the face module's, not the password's
-                        errorText: !root.faceAvailable && root.agent?.flow?.supplementaryIsError ? root.agent.flow.supplementaryMessage : Tr.tr("Wrong password, try again")
+                        errorText: !root.sudoMode && !root.showFace && root.agent?.flow?.supplementaryIsError ? root.agent.flow.supplementaryMessage : Tr.tr("Wrong password, try again")
                         onAccepted: submit.clicked()
-                        Keys.onEscapePressed: root.agent?.flow?.cancelAuthenticationRequest()
+                        Keys.onEscapePressed: root.cancel()
                         onEnabledChanged: if (enabled) {
                             text = "";
                             forceActiveFocus();
@@ -348,7 +415,7 @@ Scope {
                         TextButton {
                             text: Tr.trCtx("Cancel", "button")
                             type: TextButton.Text
-                            onClicked: root.agent?.flow?.cancelAuthenticationRequest()
+                            onClicked: root.cancel()
                         }
 
                         TextButton {
@@ -356,12 +423,31 @@ Scope {
 
                             text: Tr.trCtx("Authenticate", "button")
                             type: TextButton.Text
-                            disabled: root.waiting || root.queued || !input.text
+                            disabled: (!root.sudoMode && (root.waiting || root.queued)) || !input.text
                             onClicked: polkitWindow.submit()
                         }
                     }
                 }
             }
+        }
+    }
+
+    Component {
+        id: sudoWriter
+
+        // Writes the reply on stdin, never argv, so the password stays out of the process list
+        Process {
+            property string reply
+
+            stdinEnabled: true
+            running: true
+            onRunningChanged: {
+                if (!running)
+                    return;
+                write(reply);
+                stdinEnabled = false;
+            }
+            onExited: destroy()
         }
     }
 }

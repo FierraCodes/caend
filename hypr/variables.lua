@@ -57,6 +57,8 @@ return {
     shellEnv                   = "",
     -- Path to a local caend build dir (e.g. HOME .. "/caend/build"); unset uses the installed plugin
     devBuildDir                = nil,
+    -- sudo's password dialog helper (docs/sudo.md); unset finds caend-askpass on PATH, false keeps sudo in the terminal
+    sudoAskpass                = nil,
     specialWsCloseAny          = true,
 
     ------------------
