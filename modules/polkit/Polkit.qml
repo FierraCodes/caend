@@ -66,6 +66,11 @@ Scope {
         }
     }
 
+    onPolkitActiveChanged: {
+        if (!polkitActive)
+            closeBridge.restart();
+    }
+
     Process {
         id: faceCheck
 
@@ -80,6 +85,13 @@ Scope {
         value: root.agent.flow.message
         when: !!root.agent?.flow
         restoreMode: Binding.RestoreNone
+    }
+
+    // polkit can end the flow just before it reports success, so keep the window for that gap
+    Timer {
+        id: closeBridge
+
+        interval: 150
     }
 
     // Hold the dialog open briefly so the success tick is seen
@@ -192,7 +204,7 @@ Scope {
     }
 
     LazyLoader {
-        active: root.polkitActive || root.sudoFifo !== "" || root.sudoScanning || successHold.running
+        active: root.polkitActive || root.sudoFifo !== "" || root.sudoScanning || successHold.running || closeBridge.running
 
         StyledWindow {
             id: polkitWindow

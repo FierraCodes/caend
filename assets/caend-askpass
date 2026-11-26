@@ -9,6 +9,9 @@ set -u
 # the command starting means the face (or password) passed, a caend-askpass child means Howdy gave up.
 if [ "${1:-}" = --face ]; then
     ipc() { qs -c caelestia ipc call sudo "$@" >/dev/null 2>&1; }
+    # The fish hook writes sudo's exit status here, for sudos that finish between two polls
+    result="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/caend-askpass-face-${2:?}"
+    rm -f "$result"
     sudo_pid=
     for _ in 1 2 3 4 5 6 7 8 9 10; do
         sudo_pid=$(pgrep -n -x -P "${2:?}" sudo) && break
@@ -38,6 +41,15 @@ if [ "${1:-}" = --face ]; then
         sleep 0.1
         ticks=$((ticks + 1))
     done
+    if [ "$shown" = 1 ] && [ "$asked" = 0 ] && [ ! -d "/proc/$sudo_pid" ]; then
+        for _ in 1 2 3 4 5 6 7 8 9 10; do
+            [ -s "$result" ] && break
+            sleep 0.05
+        done
+        # sudo exits 1 when authentication fails or is interrupted
+        [ -s "$result" ] && [ "$(cat "$result")" != 1 ] && ipc faceOk
+    fi
+    rm -f "$result"
     [ "$shown" = 1 ] && ipc done
     exit 0
 fi
