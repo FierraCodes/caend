@@ -26,8 +26,8 @@ if [ "${1:-}" = --face ]; then
     shown=0 asked=0 ticks=0
     while [ -d "/proc/$sudo_pid" ] && [ "$ticks" -lt 3300 ]; do
         kids=$(ps -o comm=,args= --ppid "$sudo_pid")
-        # Howdy runs its matcher as sudo's child (howdy-next: lib/howdy/howdy-compare, howdy: lib/security/howdy/compare.py)
-        if grep -vE '^caend-askpass |lib/(security/)?howdy/' <<<"$kids" | grep -q .; then
+        # Howdy runs its matcher as sudo's child (howdy-next: lib/howdy/howdy-compare, howdy: lib/security/howdy/compare.py), reaped ones linger as <defunct>
+        if grep -vE '^caend-askpass |lib/(security/)?howdy/|<defunct>' <<<"$kids" | grep -q .; then
             # The command started, so sudo authenticated
             [ "$shown" = 1 ] && [ "$asked" = 0 ] && ipc faceOk
             break
