@@ -102,7 +102,15 @@ GridLayout {
 
     function handleWheel(pos: real, angleDelta: point): void {
         const ch = childAlong(root, pos) as EntryWrapper;
-        if (ch?.entryId === "workspaces" && Config.bar.scrollActions.workspaces) {
+        // Speaker/mic status icons always scroll their own volume, wherever they sit on the bar
+        const iconId = ch?.entryId === "statusIcons" ? (ch.item as StatusIcons).entryId(childAlong((ch.item as StatusIcons).items, pos)) : "";
+        if ((iconId === "audio" || iconId === "microphone") && Config.bar.scrollActions.volume) {
+            const mic = iconId === "microphone";
+            if (angleDelta.y > 0)
+                mic ? Audio.incrementSourceVolume() : Audio.incrementVolume();
+            else if (angleDelta.y < 0)
+                mic ? Audio.decrementSourceVolume() : Audio.decrementVolume();
+        } else if (ch?.entryId === "workspaces" && Config.bar.scrollActions.workspaces) {
             // Workspace scroll
             if (Compositor.isHyprland) {
                 const mon = Hypr.monitorFor(screen);

@@ -35,6 +35,11 @@ StyledRect {
         return -1;
     }
 
+    // Config id of a status icon item from `items` ("" if not one)
+    function entryId(item: Item): string {
+        return (item as EntryWrapper)?.modelData.id ?? "";
+    }
+
     // Entries that can shrink to nothing, spacing included
     function collapsed(entry: var): bool {
         if (entry.id === "lockStatus")
