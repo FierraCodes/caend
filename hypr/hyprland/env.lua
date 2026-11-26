@@ -46,5 +46,28 @@ if askpass == nil then
         askpass = checkout
     end
 end
--- Empty when turned off, so an inherited value doesn't keep the fish hook on
+-- Empty when turned off, so an inherited value doesn't keep caend's sudo on
 hl.env("SUDO_ASKPASS", askpass or "")
+
+-- caend's sudo goes first on PATH, so sudo run by scripts (e.g. cachy-update) uses the dialog too
+if askpass then
+    local home = os.getenv("HOME")
+    -- A user config or dev checkout first, then the install next to the helper (<prefix>/share/caend/bin)
+    local dirs = {
+        home .. "/.config/quickshell/caelestia/assets/bin",
+        home .. "/.config/hypr/../assets/bin",
+        askpass:gsub("/[^/]*$", "") .. "/../share/caend/bin",
+    }
+    local path = os.getenv("PATH") or ""
+    for _, dir in ipairs(dirs) do
+        local f = io.open(dir .. "/sudo", "r")
+        if f then
+            f:close()
+            -- A config reload runs this again with the PATH it set
+            if not (":" .. path .. ":"):find(":" .. dir .. ":", 1, true) then
+                hl.env("PATH", dir .. ":" .. path)
+            end
+            break
+        end
+    end
+end

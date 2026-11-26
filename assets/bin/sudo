@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# caend's sudo: first on PATH in the Hyprland session (hypr/hyprland/env.lua), so every sudo, typed or
+# run by a script like cachy-update, asks for its password in the shell's polkit dialog (docs/sudo.md)
+self=$(realpath -- "$0" 2>/dev/null)
+real=
+IFS=: read -ra dirs <<<"$PATH"
+for d in "${dirs[@]}"; do
+    if [ -n "$d" ] && [ -x "$d/sudo" ] && [ "$(realpath -- "$d/sudo" 2>/dev/null)" != "$self" ]; then
+        real=$d/sudo
+        break
+    fi
+done
+real=${real:-/usr/bin/sudo}
+
+# Only with the dialog's helper in a graphical session, and not when the caller chose how sudo
+# authenticates (-S reads stdin, -n never asks, -A is already there)
+[ -n "${SUDO_ASKPASS:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] || exec "$real" "$@"
+skip=0
+for a in "$@"; do
+    if [ "$skip" = 1 ]; then
+        skip=0
+        continue
+    fi
+    case $a in
+    --stdin | --non-interactive | --askpass) exec "$real" "$@" ;;
+    --close-from | --chdir | --group | --host | --prompt | --chroot | --role | --command-timeout | --type | --other-user | --user) skip=1 ;;
+    --) break ;;
+    --*) ;;
+    -?*)
+        # Short flags group (-nS); one that takes a value ends the group, or takes the next word
+        flags=${a#-}
+        while [ -n "$flags" ]; do
+            c=${flags:0:1} flags=${flags:1}
+            case $c in
+            [SnA]) exec "$real" "$@" ;;
+            [CDghpRrTtUu])
+                [ -z "$flags" ] && skip=1
+                break
+                ;;
+            esac
+        done
+        ;;
+    *) break ;; # The command starts here
+    esac
+done
+
+# Howdy in sudo's PAM stack runs before the dialog exists, so the helper shows its scan from outside.
+# It looks for sudo among this script's children, so sudo can't replace it here.
+grep -qE '^\s*auth\s.*pam_(howdy|visage)\.so' /etc/pam.d/sudo 2>/dev/null || exec "$real" -A "$@"
+"$SUDO_ASKPASS" --face $$ &
+watcher=$!
+"$real" -A "$@"
+status=$?
+# Tells the watcher how a quick sudo ended, so it can show the success tick. Only while it still
+# waits, or the file would be left behind (e.g. a cached sudo it already saw)
+kill -0 "$watcher" 2>/dev/null && echo "$status" >"${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/caend-askpass-face-$watcher"
+exit "$status"

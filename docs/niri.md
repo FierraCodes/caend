@@ -20,7 +20,7 @@ binds {
     Mod+Shift+L allow-when-locked=true { spawn "qs" "-c" "caelestia" "ipc" "call" "session" "sleep"; }
 }
 
-// sudo asks for its password in the shell's polkit dialog (docs/sudo.md)
+// sudo asks for its password in the shell's polkit dialog (docs/sudo.md, which also adds a PATH line)
 environment {
     SUDO_ASKPASS "/usr/bin/caend-askpass"
 }
